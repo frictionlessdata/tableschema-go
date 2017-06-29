@@ -1,0 +1,17 @@
+
+language: go
+sudo: false
+go: 
+ - 1.8
+
+notificaitons:
+  email:
+    recipients: danielfireman@gmail.com
+    on_success: change
+    on_failure: always
+
+before_install:
+  - go get github.com/mattn/goveralls
+
+script:
+ - $HOME/gopath/bin/goveralls -service=travis-ci
