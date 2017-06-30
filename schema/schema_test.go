@@ -30,6 +30,18 @@ func TestReadSucess(t *testing.T) {
 				[]Field{{Name: "n1", Type: "t1", Format: "f1"}, {Name: "n2", Type: "t2", Format: "f2"}},
 			},
 		},
+		{
+			"Multiple fields. Default Values",
+			`{
+                "fields":[{"name":"n1"}, {"name":"n2"}]
+            }`,
+			&Schema{
+				[]Field{
+					{Name: "n1", Type: defaultFieldType, Format: defaultFieldFormat},
+					{Name: "n2", Type: defaultFieldType, Format: defaultFieldFormat},
+				},
+			},
+		},
 	}
 	for _, d := range data {
 		s, err := Read(strings.NewReader(d.JSON))

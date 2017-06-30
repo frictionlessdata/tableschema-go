@@ -5,13 +5,6 @@ import (
 	"io"
 )
 
-// Field represents a cell on a table.
-type Field struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Format string `json:"format"`
-}
-
 // Schema describes tabular data.
 type Schema struct {
 	Fields []Field `json:"fields"`
@@ -35,6 +28,9 @@ func Read(r io.Reader) (*Schema, error) {
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&s); err != nil {
 		return nil, err
+	}
+	for i := range s.Fields {
+		setDefaultValues(&s.Fields[i])
 	}
 	return &s, nil
 }
