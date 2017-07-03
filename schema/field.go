@@ -30,6 +30,14 @@ func (f Field) CastValue(value string) (interface{}, error) {
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
 
+// TestValue checks whether the value can be casted against the field.
+func (f Field) TestValue(value string) bool {
+	if _, err := f.CastValue(value); err != nil {
+		return false
+	}
+	return true
+}
+
 func setDefaultValues(f *Field) {
 	if f.Type == "" {
 		f.Type = defaultFieldType

@@ -15,8 +15,17 @@ func TestCastValue_Integer(t *testing.T) {
 	if !ok {
 		t.Errorf("[Field.CastValue(integer)] cast want:int64, got:%s", reflect.TypeOf(c))
 	}
-
 	if intValue != 42 {
 		t.Errorf("[Field.CastValue(integer)] val want:42, got:%d", intValue)
+	}
+}
+
+func TestTestValue(t *testing.T) {
+	f := Field{Type: "integer"}
+	if !f.TestValue("42") {
+		t.Errorf("[Field.TestValue(42)] want:true, got:false")
+	}
+	if f.TestValue("boo") {
+		t.Errorf("[Field.TestValue(\"boo\")] want:false, got:true")
 	}
 }
