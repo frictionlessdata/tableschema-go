@@ -35,10 +35,8 @@ func (f Field) CastValue(value string) (interface{}, error) {
 
 // TestValue checks whether the value can be casted against the field.
 func (f Field) TestValue(value string) bool {
-	if _, err := f.CastValue(value); err != nil {
-		return false
-	}
-	return true
+	_, err := f.CastValue(value)
+	return err == nil
 }
 
 func setDefaultValues(f *Field) {
