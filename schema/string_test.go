@@ -9,9 +9,9 @@ func TestCastString_URIMustRequireScheme(t *testing.T) {
 	}
 }
 
-func TestCastString_UUIDV5(t *testing.T) {
-	// This is a uuid3, namespace DNS and python.org.
-	if _, err := castString(stringURI, "6fa459ea-ee8a-3ca4-894e-db77e160355e"); err == nil {
+func TestCastString_InvalidUUIDVersion(t *testing.T) {
+	// This is a uuid3: namespace DNS and python.org.
+	if _, err := castString(stringUUID, "6fa459ea-ee8a-3ca4-894e-db77e160355e"); err == nil {
 		t.Errorf("want:err got:nil")
 	}
 }
