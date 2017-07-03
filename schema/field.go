@@ -11,6 +11,7 @@ const (
 // Field Types.
 const (
 	IntegerType = "integer"
+	StringType  = "string"
 )
 
 // Field represents a cell on a table.
@@ -26,6 +27,8 @@ func (f Field) CastValue(value string) (interface{}, error) {
 	switch f.Type {
 	case IntegerType:
 		return CastInt(value)
+	case StringType:
+		return castString(f.Type, value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }

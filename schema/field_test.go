@@ -1,38 +1,40 @@
 package schema
 
-import (
-	"reflect"
-	"testing"
-)
+import "testing"
 
-func TestCastValue_Integer(t *testing.T) {
-	f := Field{Type: "integer"}
-	c, err := f.CastValue("42")
-	if err != nil {
-		t.Errorf("[Field.CastValue(integer)] err want:nil, got:%q", err)
+func TestCastValue(t *testing.T) {
+	data := []struct {
+		Value    string
+		Field    Field
+		Expected interface{}
+	}{
+		{"42", Field{Type: IntegerType}, int64(42)},
+		{"http:/frictionlessdata.io", Field{Type: StringType, Format: "uri"}, "http:/frictionlessdata.io"},
 	}
-	intValue, ok := c.(int64)
-	if !ok {
-		t.Errorf("[Field.CastValue(integer)] cast want:int64, got:%s", reflect.TypeOf(c))
-	}
-	if intValue != 42 {
-		t.Errorf("[Field.CastValue(integer)] val want:42, got:%d", intValue)
+	for _, d := range data {
+		c, err := d.Field.CastValue(d.Value)
+		if err != nil {
+			t.Errorf("err want:nil got:%s", err)
+		}
+		if c != d.Expected {
+			t.Errorf("val want:%v, got:%v", d.Expected, c)
+		}
 	}
 }
 
 func TestCastValue_InvalidFieldType(t *testing.T) {
 	f := Field{Type: "invalidType"}
 	if _, err := f.CastValue("42"); err == nil {
-		t.Errorf("[Field.CastValue(invalidType)] err want:err, got:nil")
+		t.Errorf("err want:err, got:nil")
 	}
 }
 
 func TestTestValue(t *testing.T) {
 	f := Field{Type: "integer"}
 	if !f.TestValue("42") {
-		t.Errorf("[Field.TestValue(42)] want:true, got:false")
+		t.Errorf("want:true, got:false")
 	}
 	if f.TestValue("boo") {
-		t.Errorf("[Field.TestValue(\"boo\")] want:false, got:true")
+		t.Errorf("want:false, got:true")
 	}
 }
