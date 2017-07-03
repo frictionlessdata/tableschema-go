@@ -26,7 +26,7 @@ type Field struct {
 func (f Field) CastValue(value string) (interface{}, error) {
 	switch f.Type {
 	case IntegerType:
-		return CastInt(value)
+		return castInt(value)
 	case StringType:
 		return castString(f.Type, value)
 	}
