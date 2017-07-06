@@ -15,19 +15,22 @@ func TestReadSucess(t *testing.T) {
 		{
 			"One field",
 			`{
-                "fields":[{"name":"n","type":"t","format":"f"}]
+                "fields":[{"name":"n","type":"t","format":"f","trueValues":["ntrue"],"falseValues":["nfalse"]}]
             }`,
 			&Schema{
-				[]Field{{Name: "n", Type: "t", Format: "f"}},
+				[]Field{{Name: "n", Type: "t", Format: "f", TrueValues: []string{"ntrue"}, FalseValues: []string{"nfalse"}}},
 			},
 		},
 		{
 			"Multiple fields",
 			`{
-                "fields":[{"name":"n1","type":"t1","format":"f1"}, {"name":"n2","type":"t2","format":"f2"}]
+                "fields":[{"name":"n1","type":"t1","format":"f1","falseValues":[]}, {"name":"n2","type":"t2","format":"f2","trueValues":[]}]
             }`,
 			&Schema{
-				[]Field{{Name: "n1", Type: "t1", Format: "f1"}, {Name: "n2", Type: "t2", Format: "f2"}},
+				[]Field{
+					{Name: "n1", Type: "t1", Format: "f1", TrueValues: defaultTrueValues, FalseValues: []string{}},
+					{Name: "n2", Type: "t2", Format: "f2", TrueValues: []string{}, FalseValues: defaultFalseValues},
+				},
 			},
 		},
 		{
@@ -37,8 +40,8 @@ func TestReadSucess(t *testing.T) {
             }`,
 			&Schema{
 				[]Field{
-					{Name: "n1", Type: defaultFieldType, Format: defaultFieldFormat},
-					{Name: "n2", Type: defaultFieldType, Format: defaultFieldFormat},
+					{Name: "n1", Type: defaultFieldType, Format: defaultFieldFormat, TrueValues: defaultTrueValues, FalseValues: defaultFalseValues},
+					{Name: "n2", Type: defaultFieldType, Format: defaultFieldFormat, TrueValues: defaultTrueValues, FalseValues: defaultFalseValues},
 				},
 			},
 		},

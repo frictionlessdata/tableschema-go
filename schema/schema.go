@@ -29,8 +29,5 @@ func Read(r io.Reader) (*Schema, error) {
 	if err := dec.Decode(&s); err != nil {
 		return nil, err
 	}
-	for i := range s.Fields {
-		setDefaultValues(&s.Fields[i])
-	}
 	return &s, nil
 }
