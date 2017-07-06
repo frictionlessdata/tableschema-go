@@ -42,6 +42,8 @@ func TestCastValue(t *testing.T) {
 	}{
 		{"42", Field{Type: IntegerType}, int64(42)},
 		{"http:/frictionlessdata.io", Field{Type: StringType, Format: "uri"}, "http:/frictionlessdata.io"},
+		{"1", Field{Type: BooleanType, TrueValues: []string{"1"}}, true},
+		{"0", Field{Type: BooleanType, FalseValues: []string{"0"}}, false},
 	}
 	for _, d := range data {
 		c, err := d.Field.CastValue(d.Value)

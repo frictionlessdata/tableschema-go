@@ -21,6 +21,7 @@ var (
 const (
 	IntegerType = "integer"
 	StringType  = "string"
+	BooleanType = "boolean"
 )
 
 // Field represents a cell on a table.
@@ -61,6 +62,8 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 		return castInt(value)
 	case StringType:
 		return castString(f.Type, value)
+	case BooleanType:
+		return castBoolean(value, f.TrueValues, f.FalseValues)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
