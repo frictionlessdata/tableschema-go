@@ -17,7 +17,7 @@ const (
 	stringUUIDVersion = 4
 )
 
-func castString(format, value string) (interface{}, error) {
+func castString(format, value string) (string, error) {
 	switch format {
 	case stringURI:
 		_, err := url.ParseRequestURI(value)
