@@ -10,6 +10,16 @@ type Schema struct {
 	Fields []Field `json:"fields"`
 }
 
+// Headers returns the headers of the tabular data described
+// by the schema.
+func (s Schema) Headers() []string {
+	var h []string
+	for i := range s.Fields {
+		h = append(h, s.Fields[i].Name)
+	}
+	return h
+}
+
 // Read reads and parses a descriptor to create a schema.
 //
 // Example - Reading a schema from a file:

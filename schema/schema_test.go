@@ -45,6 +45,20 @@ func TestReadSucess(t *testing.T) {
 	}
 }
 
+func TestHeaders(t *testing.T) {
+	// Empty schema, empty headers.
+	s := Schema{}
+	if len(s.Headers()) > 0 {
+		t.Errorf("want:0 got:%d", len(s.Headers()))
+	}
+
+	s1 := Schema{Fields: []Field{{Name: "f1"}, {Name: "f2"}}}
+	expected := []string{"f1", "f2"}
+	if !reflect.DeepEqual(s1.Headers(), expected) {
+		t.Errorf("want:%v got:%v", expected, s1.Headers())
+	}
+}
+
 func TestReadError(t *testing.T) {
 	data := []struct {
 		Desc string
