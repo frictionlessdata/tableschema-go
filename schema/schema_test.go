@@ -15,10 +15,10 @@ func TestReadSucess(t *testing.T) {
 		{
 			"One field",
 			`{
-                "fields":[{"name":"n","type":"t","format":"f","trueValues":["ntrue"],"falseValues":["nfalse"]}]
+                "fields":[{"name":"n","title":"ti","type":"integer","description":"desc","format":"f","trueValues":["ntrue"],"falseValues":["nfalse"]}]
             }`,
 			&Schema{
-				[]Field{{Name: "n", Type: "t", Format: "f", TrueValues: []string{"ntrue"}, FalseValues: []string{"nfalse"}}},
+				Fields: []Field{{Name: "n", Title: "ti", Type: "integer", Description: "desc", Format: "f", TrueValues: []string{"ntrue"}, FalseValues: []string{"nfalse"}}},
 			},
 		},
 		{
@@ -27,7 +27,7 @@ func TestReadSucess(t *testing.T) {
                 "fields":[{"name":"n1","type":"t1","format":"f1","falseValues":[]}, {"name":"n2","type":"t2","format":"f2","trueValues":[]}]
             }`,
 			&Schema{
-				[]Field{
+				Fields: []Field{
 					{Name: "n1", Type: "t1", Format: "f1", TrueValues: defaultTrueValues, FalseValues: []string{}},
 					{Name: "n2", Type: "t2", Format: "f2", TrueValues: []string{}, FalseValues: defaultFalseValues},
 				},
@@ -79,21 +79,21 @@ func TestCastRow_NoImplicitCast(t *testing.T) {
 		Name string
 		Age  int64
 	}{}
-	s := Schema{[]Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
+	s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
 	if err := s.CastRow([]string{"Foo", "42"}, &t1); err != nil {
 		t.Fatalf("err want:nil, got:%q", err)
 	}
 	if t1.Name != "Foo" {
-		t.Errorf("value:Name want:Foo, got:%s", t1.Name)
+		t.Errorf("value:Name want:Foo got:%s", t1.Name)
 	}
 	if t1.Age != 42 {
-		t.Errorf("value:Name want:42, got:%d", t1.Age)
+		t.Errorf("value:Age want:42 got:%d", t1.Age)
 	}
 }
 
 func TestCastRow_ImplicitCastToInt(t *testing.T) {
 	t1 := struct{ Age int }{}
-	s := Schema{[]Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
+	s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
 	if err := s.CastRow([]string{"Foo", "42"}, &t1); err != nil {
 		t.Fatalf("err want:nil, got:%q", err)
 	}
@@ -105,7 +105,7 @@ func TestCastRow_ImplicitCastToInt(t *testing.T) {
 func TestCastRow_SchemaFieldAndStructFieldDifferentTypes(t *testing.T) {
 	// Field is string and struct is int.
 	t1 := struct{ Age int }{}
-	s := Schema{[]Field{{Name: "age", Type: StringType}}}
+	s := Schema{Fields: []Field{{Name: "age", Type: StringType}}}
 	if err := s.CastRow([]string{"42"}, &t1); err == nil {
 		t.Fatalf("want:error, got:nil")
 	}
@@ -113,7 +113,7 @@ func TestCastRow_SchemaFieldAndStructFieldDifferentTypes(t *testing.T) {
 
 func TestCastRow_NotAPointerToStruct(t *testing.T) {
 	t1 := struct{ Age int }{}
-	s := Schema{[]Field{{Name: "name", Type: StringType}}}
+	s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 	if err := s.CastRow([]string{"Foo", "42"}, t1); err == nil {
 		t.Fatalf("want:error, got:nil")
 	}
@@ -122,8 +122,52 @@ func TestCastRow_NotAPointerToStruct(t *testing.T) {
 func TestCastRow_CellCanNotBeCast(t *testing.T) {
 	// Field is string and struct is int.
 	t1 := struct{ Age int }{}
-	s := Schema{[]Field{{Name: "age", Type: IntegerType}}}
+	s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
 	if err := s.CastRow([]string{"foo"}, &t1); err == nil {
 		t.Fatalf("want:error, got:nil")
+	}
+}
+
+func TestValidate_SimpleValid(t *testing.T) {
+	data := []struct {
+		Desc   string
+		Schema Schema
+	}{
+		{"primary key", Schema{Fields: []Field{{Name: "p"}, {Name: "i"}},
+			PrimaryKeys: PrimaryKeys{"p"},
+			ForeignKeys: ForeignKeys{
+				Fields:    []string{"p"},
+				Reference: ForeignKeyReference{Resource: "", Fields: []string{"i"}},
+			}},
+		},
+	}
+	for _, d := range data {
+		if err := d.Schema.Validate(); err != nil {
+			t.Errorf("%s - want:nil got:%q", d.Desc, err)
+		}
+	}
+}
+
+func TestValidate_Invalid(t *testing.T) {
+	data := []struct {
+		Desc   string
+		Schema Schema
+	}{
+		{"name is missing", Schema{Fields: []Field{{Type: IntegerType}}}},
+		{"primary key referencing nonexistent field", Schema{Fields: []Field{{Name: "n1"}}, PrimaryKeys: PrimaryKeys{"n2"}}},
+		{"foreign key referencing nonexistent field", Schema{Fields: []Field{{Name: "n1"}},
+			ForeignKeys: ForeignKeys{Fields: []string{"n2"}},
+		}},
+		{"foreign key resource fields difference from outer fields", Schema{Fields: []Field{{Name: "n1"}},
+			ForeignKeys: ForeignKeys{
+				Fields:    []string{"n1"},
+				Reference: ForeignKeyReference{Resource: "", Fields: []string{"n1", "n2"}},
+			}},
+		},
+	}
+	for _, d := range data {
+		if err := d.Schema.Validate(); err == nil {
+			t.Errorf("%s - want:err got:nil", d.Desc)
+		}
 	}
 }

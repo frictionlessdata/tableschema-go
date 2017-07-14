@@ -24,11 +24,17 @@ const (
 	BooleanType = "boolean"
 )
 
-// Field represents a cell on a table.
+// JSON object that describes a single field.
+// More: https://specs.frictionlessdata.io/table-schema/#field-descriptors
 type Field struct {
+	// Name of the field. It is mandatory and shuold correspond to the name of field/column in the data file (if it has a name).
 	Name   string `json:"name"`
 	Type   string `json:"type"`
 	Format string `json:"format"`
+	// A human readable label or title for the field.
+	Title string `json:"title"`
+	// A description for this field e.g. "The recipient of the funds"
+	Description string `json:"description"`
 
 	// Boolean properties. Define set of the values that represent true and false, respectively.
 	// https://specs.frictionlessdata.io/table-schema/#boolean
