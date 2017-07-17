@@ -13,7 +13,7 @@ func TestReadSucess(t *testing.T) {
 		Schema *Schema
 	}{
 		{
-			"One field",
+			"OneField",
 			`{
                 "fields":[{"name":"n","title":"ti","type":"integer","description":"desc","format":"f","trueValues":["ntrue"],"falseValues":["nfalse"]}]
             }`,
@@ -22,7 +22,7 @@ func TestReadSucess(t *testing.T) {
 			},
 		},
 		{
-			"Multiple fields",
+			"MultipleFields",
 			`{
                 "fields":[{"name":"n1","type":"t1","format":"f1","falseValues":[]}, {"name":"n2","type":"t2","format":"f2","trueValues":[]}]
             }`,
@@ -35,13 +35,15 @@ func TestReadSucess(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		s, err := Read(strings.NewReader(d.JSON))
-		if err != nil {
-			t.Fatalf("[%s] want:nil, got:%q", d.Desc, err)
-		}
-		if !reflect.DeepEqual(s, d.Schema) {
-			t.Errorf("[%s] want:%+v, got:%+v", d.Desc, d.Schema, s)
-		}
+		t.Run(d.Desc, func(t *testing.T) {
+			s, err := Read(strings.NewReader(d.JSON))
+			if err != nil {
+				t.Fatalf("want:nil, got:%q", err)
+			}
+			if !reflect.DeepEqual(s, d.Schema) {
+				t.Errorf("want:%+v, got:%+v", d.Schema, s)
+			}
+		})
 	}
 }
 
@@ -67,10 +69,12 @@ func TestReadError(t *testing.T) {
 		{"empty descriptor", ""},
 	}
 	for _, d := range data {
-		_, err := Read(strings.NewReader(d.JSON))
-		if err == nil {
-			t.Fatalf("[%s] want:error, got:nil", d.Desc)
-		}
+		t.Run(d.Desc, func(t *testing.T) {
+			_, err := Read(strings.NewReader(d.JSON))
+			if err == nil {
+				t.Fatalf("want:error, got:nil")
+			}
+		})
 	}
 }
 
@@ -133,7 +137,7 @@ func TestValidate_SimpleValid(t *testing.T) {
 		Desc   string
 		Schema Schema
 	}{
-		{"primary key", Schema{Fields: []Field{{Name: "p"}, {Name: "i"}},
+		{"PrimaryKey", Schema{Fields: []Field{{Name: "p"}, {Name: "i"}},
 			PrimaryKeys: PrimaryKeys{"p"},
 			ForeignKeys: ForeignKeys{
 				Fields:    []string{"p"},
@@ -142,9 +146,11 @@ func TestValidate_SimpleValid(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		if err := d.Schema.Validate(); err != nil {
-			t.Errorf("%s - want:nil got:%q", d.Desc, err)
-		}
+		t.Run(d.Desc, func(t *testing.T) {
+			if err := d.Schema.Validate(); err != nil {
+				t.Errorf("want:nil got:%q", err)
+			}
+		})
 	}
 }
 
@@ -153,12 +159,12 @@ func TestValidate_Invalid(t *testing.T) {
 		Desc   string
 		Schema Schema
 	}{
-		{"name is missing", Schema{Fields: []Field{{Type: IntegerType}}}},
-		{"primary key referencing nonexistent field", Schema{Fields: []Field{{Name: "n1"}}, PrimaryKeys: PrimaryKeys{"n2"}}},
-		{"foreign key referencing nonexistent field", Schema{Fields: []Field{{Name: "n1"}},
+		{"MissingName", Schema{Fields: []Field{{Type: IntegerType}}}},
+		{"PKNonexistingField", Schema{Fields: []Field{{Name: "n1"}}, PrimaryKeys: PrimaryKeys{"n2"}}},
+		{"FKNonexistingField", Schema{Fields: []Field{{Name: "n1"}},
 			ForeignKeys: ForeignKeys{Fields: []string{"n2"}},
 		}},
-		{"foreign key resource fields difference from outer fields", Schema{Fields: []Field{{Name: "n1"}},
+		{"InvalidReferences", Schema{Fields: []Field{{Name: "n1"}},
 			ForeignKeys: ForeignKeys{
 				Fields:    []string{"n1"},
 				Reference: ForeignKeyReference{Resource: "", Fields: []string{"n1", "n2"}},
@@ -166,8 +172,10 @@ func TestValidate_Invalid(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		if err := d.Schema.Validate(); err == nil {
-			t.Errorf("%s - want:err got:nil", d.Desc)
-		}
+		t.Run(d.Desc, func(t *testing.T) {
+			if err := d.Schema.Validate(); err == nil {
+				t.Errorf("want:err got:nil")
+			}
+		})
 	}
 }
