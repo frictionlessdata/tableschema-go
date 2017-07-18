@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestReadSucess(t *testing.T) {
+func TestRead_Sucess(t *testing.T) {
 	data := []struct {
 		Desc   string
 		JSON   string
@@ -77,6 +77,27 @@ func TestReadSucess(t *testing.T) {
 	}
 }
 
+func TestRead_Error(t *testing.T) {
+	data := []struct {
+		Desc string
+		JSON string
+	}{
+		{"InvalidSchema", `{"fields":"f1"}`},
+		{"EmptyDescriptor", ""},
+		{"InvalidPKType", `{"fields":[{"name":"n1"}], "primaryKey":1}`},
+		{"InvalidFKFieldsType", `{"fields":[{"name":"n1"}], "foreignKeys":{"fields":1}}`},
+		{"InvalidFKReferenceFieldsType", `{"fields":[{"name":"n1"}], "foreignKeys":{"reference":{"fields":1}}}`},
+	}
+	for _, d := range data {
+		t.Run(d.Desc, func(t *testing.T) {
+			_, err := Read(strings.NewReader(d.JSON))
+			if err == nil {
+				t.Fatalf("want:error, got:nil")
+			}
+		})
+	}
+}
+
 func TestHeaders(t *testing.T) {
 	// Empty schema, empty headers.
 	s := Schema{}
@@ -88,23 +109,6 @@ func TestHeaders(t *testing.T) {
 	expected := []string{"f1", "f2"}
 	if !reflect.DeepEqual(s1.Headers(), expected) {
 		t.Errorf("want:%v got:%v", expected, s1.Headers())
-	}
-}
-
-func TestReadError(t *testing.T) {
-	data := []struct {
-		Desc string
-		JSON string
-	}{
-		{"EmptyDescriptor", ""},
-	}
-	for _, d := range data {
-		t.Run(d.Desc, func(t *testing.T) {
-			_, err := Read(strings.NewReader(d.JSON))
-			if err == nil {
-				t.Fatalf("want:error, got:nil")
-			}
-		})
 	}
 }
 
