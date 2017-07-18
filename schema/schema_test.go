@@ -10,14 +10,14 @@ func TestReadSucess(t *testing.T) {
 	data := []struct {
 		Desc   string
 		JSON   string
-		Schema *Schema
+		Schema Schema
 	}{
 		{
 			"OneField",
 			`{
                 "fields":[{"name":"n","title":"ti","type":"integer","description":"desc","format":"f","trueValues":["ntrue"],"falseValues":["nfalse"]}]
             }`,
-			&Schema{
+			Schema{
 				Fields: []Field{{Name: "n", Title: "ti", Type: "integer", Description: "desc", Format: "f", TrueValues: []string{"ntrue"}, FalseValues: []string{"nfalse"}}},
 			},
 		},
@@ -26,12 +26,42 @@ func TestReadSucess(t *testing.T) {
 			`{
                 "fields":[{"name":"n1","type":"t1","format":"f1","falseValues":[]}, {"name":"n2","type":"t2","format":"f2","trueValues":[]}]
             }`,
-			&Schema{
+			Schema{
 				Fields: []Field{
 					{Name: "n1", Type: "t1", Format: "f1", TrueValues: defaultTrueValues, FalseValues: []string{}},
 					{Name: "n2", Type: "t2", Format: "f2", TrueValues: []string{}, FalseValues: defaultFalseValues},
 				},
 			},
+		},
+		{
+			"PKString",
+			`{"fields":[{"name":"n1"}], "primaryKey":"n1"}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, PrimaryKeys: []string{"n1"}},
+		},
+		{
+			"PKSlice",
+			`{"fields":[{"name":"n1"}], "primaryKey":["n1"]}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, PrimaryKeys: []string{"n1"}},
+		},
+		{
+			"FKFieldsString",
+			`{"fields":[{"name":"n1"}], "foreignKeys":{"fields":"n1"}}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Fields: []string{"n1"}}},
+		},
+		{
+			"FKFieldsSlice",
+			`{"fields":[{"name":"n1"}], "foreignKeys":{"fields":["n1"]}}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Fields: []string{"n1"}}},
+		},
+		{
+			"FKReferenceFieldsString",
+			`{"fields":[{"name":"n1"}], "foreignKeys":{"reference":{"fields":"n1"}}}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"n1"}}}},
+		},
+		{
+			"FKReferenceFieldsSlice",
+			`{"fields":[{"name":"n1"}], "foreignKeys":{"reference":{"fields":["n1"]}}}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"n1"}}}},
 		},
 	}
 	for _, d := range data {
@@ -40,7 +70,7 @@ func TestReadSucess(t *testing.T) {
 			if err != nil {
 				t.Fatalf("want:nil, got:%q", err)
 			}
-			if !reflect.DeepEqual(s, d.Schema) {
+			if !reflect.DeepEqual(s, &d.Schema) {
 				t.Errorf("want:%+v, got:%+v", d.Schema, s)
 			}
 		})
@@ -66,7 +96,7 @@ func TestReadError(t *testing.T) {
 		Desc string
 		JSON string
 	}{
-		{"empty descriptor", ""},
+		{"EmptyDescriptor", ""},
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
@@ -138,7 +168,7 @@ func TestValidate_SimpleValid(t *testing.T) {
 		Schema Schema
 	}{
 		{"PrimaryKey", Schema{Fields: []Field{{Name: "p"}, {Name: "i"}},
-			PrimaryKeys: PrimaryKeys{"p"},
+			PrimaryKeys: []string{"p"},
 			ForeignKeys: ForeignKeys{
 				Fields:    []string{"p"},
 				Reference: ForeignKeyReference{Resource: "", Fields: []string{"i"}},
@@ -160,7 +190,7 @@ func TestValidate_Invalid(t *testing.T) {
 		Schema Schema
 	}{
 		{"MissingName", Schema{Fields: []Field{{Type: IntegerType}}}},
-		{"PKNonexistingField", Schema{Fields: []Field{{Name: "n1"}}, PrimaryKeys: PrimaryKeys{"n2"}}},
+		{"PKNonexistingField", Schema{Fields: []Field{{Name: "n1"}}, PrimaryKeys: []string{"n2"}}},
 		{"FKNonexistingField", Schema{Fields: []Field{{Name: "n1"}},
 			ForeignKeys: ForeignKeys{Fields: []string{"n2"}},
 		}},
