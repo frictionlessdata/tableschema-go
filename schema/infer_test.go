@@ -16,6 +16,7 @@ func TestInfer_Success(t *testing.T) {
 		{"1Cell_Date", []string{"Birthday"}, [][]string{[]string{"1983-10-15"}}, Schema{Fields: []Field{{Name: "Birthday", Type: DateType, Format: defaultFieldFormat}}}},
 		{"1Cell_Integer", []string{"Age"}, [][]string{[]string{"10"}}, Schema{Fields: []Field{{Name: "Age", Type: IntegerType, Format: defaultFieldFormat}}}},
 		{"1Cell_Number", []string{"Weight"}, [][]string{[]string{"20.2"}}, Schema{Fields: []Field{{Name: "Weight", Type: NumberType, Format: defaultFieldFormat}}}},
+		{"1Cell_Boolean", []string{"Foo"}, [][]string{[]string{"0"}}, Schema{Fields: []Field{{Name: "Foo", Type: BooleanType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight"},
 			[][]string{

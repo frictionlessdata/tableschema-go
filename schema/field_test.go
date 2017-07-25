@@ -61,6 +61,13 @@ func TestCastValue(t *testing.T) {
 	}
 }
 
+func TestUnmarshalJSON_InvalidField(t *testing.T) {
+	var f Field
+	if err := json.Unmarshal([]byte("{Foo:1}"), &f); err == nil {
+		t.Errorf("want:err got:nil")
+	}
+}
+
 func TestCastValue_InvalidDate(t *testing.T) {
 	data := []struct {
 		desc  string
