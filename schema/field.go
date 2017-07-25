@@ -17,11 +17,18 @@ var (
 	defaultFalseValues = []string{"no", "n", "false", "f", "0"}
 )
 
-// Field Types.
+// Field types.
 const (
 	IntegerType = "integer"
 	StringType  = "string"
 	BooleanType = "boolean"
+	NumberType  = "number"
+	DateType    = "date"
+)
+
+// Formats.
+const (
+	AnyDateFormat = "any"
 )
 
 // JSON object that describes a single field.
@@ -67,9 +74,13 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 	case IntegerType:
 		return castInt(value)
 	case StringType:
-		return castString(f.Type, value)
+		return castString(f.Format, value)
 	case BooleanType:
 		return castBoolean(value, f.TrueValues, f.FalseValues)
+	case NumberType:
+		return castNumber(value)
+	case DateType:
+		return castDate(f.Format, value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }

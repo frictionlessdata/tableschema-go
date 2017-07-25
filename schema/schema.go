@@ -8,6 +8,13 @@ import (
 	"strings"
 )
 
+// Field represents a list of schema fields.
+type Fields []Field
+
+func (f Fields) Len() int           { return len(f) }
+func (f Fields) Swap(i, j int)      { f[i], f[j] = f[j], f[i] }
+func (f Fields) Less(i, j int) bool { return strings.Compare(f[i].Name, f[j].Name) == -1 }
+
 type ForeignKeyReference struct {
 	Resource          string      `json:"resource"`
 	Fields            []string    `json:"-"`
@@ -23,7 +30,7 @@ type ForeignKeys struct {
 
 // Schema describes tabular data.
 type Schema struct {
-	Fields                []Field     `json:"fields"`
+	Fields                Fields      `json:"fields"`
 	PrimaryKeyPlaceholder interface{} `json:"primaryKey"`
 	PrimaryKeys           []string    `json:"-"`
 	ForeignKeys           ForeignKeys `json:"foreignKeys"`

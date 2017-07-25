@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestDefaultValues(t *testing.T) {
@@ -44,11 +45,15 @@ func TestCastValue(t *testing.T) {
 		{"http:/frictionlessdata.io", Field{Type: StringType, Format: "uri"}, "http:/frictionlessdata.io"},
 		{"1", Field{Type: BooleanType, TrueValues: []string{"1"}}, true},
 		{"0", Field{Type: BooleanType, FalseValues: []string{"0"}}, false},
+		{"42.5", Field{Type: NumberType}, 42.5},
+		{"2015-10-15", Field{Type: DateType}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
+		{"2015-10-15", Field{Type: DateType, Format: defaultFieldFormat}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
+		{"15/10/2015", Field{Type: DateType, Format: "%d/%m/%Y"}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
 	}
 	for _, d := range data {
 		c, err := d.Field.CastValue(d.Value)
 		if err != nil {
-			t.Errorf("err want:nil got:%s", err)
+			t.Fatalf("err want:nil got:%s", err)
 		}
 		if c != d.Expected {
 			t.Errorf("val want:%v, got:%v", d.Expected, c)
