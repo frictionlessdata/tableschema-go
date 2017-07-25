@@ -61,6 +61,24 @@ func TestCastValue(t *testing.T) {
 	}
 }
 
+func TestCastValue_InvalidDate(t *testing.T) {
+	data := []struct {
+		desc  string
+		field Field
+		value string
+	}{
+		{"InvalidFormat_Any", Field{Type: DateType, Format: "any"}, "2015-10-15"},
+		{"InvalidFormat_Strftime", Field{Type: DateType, Format: "Fooo"}, "2015-10-15"},
+	}
+	for _, d := range data {
+		t.Run(d.desc, func(t *testing.T) {
+			if _, err := d.field.CastValue(d.value); err == nil {
+				t.Errorf("want:err got:nil")
+			}
+		})
+	}
+}
+
 func TestCastValue_InvalidFieldType(t *testing.T) {
 	f := Field{Type: "invalidType"}
 	if _, err := f.CastValue("42"); err == nil {
