@@ -25,6 +25,7 @@ const (
 	NumberType  = "number"
 	DateType    = "date"
 	ObjectType  = "object"
+	ArrayType   = "array"
 )
 
 // Formats.
@@ -84,6 +85,8 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 		return castDate(f.Format, value)
 	case ObjectType:
 		return castObject(value)
+	case ArrayType:
+		return castArray(value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }

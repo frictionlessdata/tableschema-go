@@ -62,15 +62,52 @@ func TestCastValue(t *testing.T) {
 			}
 		})
 	}
-	t.Run("Object", func(t *testing.T) {
+	t.Run("Object_Success", func(t *testing.T) {
 		f := Field{Type: ObjectType}
 		obj, err := f.CastValue(`{"name":"foo"}`)
 		if err != nil {
 			t.Fatalf("err want:nil got:%s", err)
 		}
-		objMap := obj.(map[string]interface{})
-		if objMap["name"] != "foo" || len(objMap) != 1 {
+		objMap, ok := obj.(map[string]interface{})
+		if !ok {
+			t.Errorf("want:true got:false")
+		}
+		if len(objMap) != 1 {
+			t.Errorf("want:1 got:%d", len(objMap))
+		}
+		if objMap["name"] != "foo" {
 			t.Errorf("val want:map[name:foo], got:%v", objMap)
+		}
+	})
+	t.Run("Object_Failure", func(t *testing.T) {
+		f := Field{Type: ObjectType}
+		_, err := f.CastValue(`{"name"}`)
+		if err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+	})
+	t.Run("Array_Success", func(t *testing.T) {
+		f := Field{Type: ArrayType}
+		obj, err := f.CastValue(`["foo"]`)
+		if err != nil {
+			t.Fatalf("err want:nil got:%s", err)
+		}
+		arr, ok := obj.([]interface{})
+		if !ok {
+			t.Errorf("want:true got:false")
+		}
+		if len(arr) != 1 {
+			t.Errorf("want:1 got:%d", len(arr))
+		}
+		if arr[0] != "foo" {
+			t.Errorf("val want:foo, got:%v", arr)
+		}
+	})
+	t.Run("Array_Failure", func(t *testing.T) {
+		f := Field{Type: ArrayType}
+		_, err := f.CastValue(`{"name":"foo"}`)
+		if err == nil {
+			t.Fatalf("err want:err got:nil")
 		}
 	})
 }
