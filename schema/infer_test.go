@@ -19,6 +19,7 @@ func TestInfer_Success(t *testing.T) {
 		{"1Cell_Boolean", []string{"Foo"}, [][]string{[]string{"0"}}, Schema{Fields: []Field{{Name: "Foo", Type: BooleanType, Format: defaultFieldFormat}}}},
 		{"1Cell_Object", []string{"Foo"}, [][]string{[]string{`{"name":"foo"}`}}, Schema{Fields: []Field{{Name: "Foo", Type: ObjectType, Format: defaultFieldFormat}}}},
 		{"1Cell_Array", []string{"Foo"}, [][]string{[]string{`["name"]`}}, Schema{Fields: []Field{{Name: "Foo", Type: ArrayType, Format: defaultFieldFormat}}}},
+		{"1Cell_String", []string{"Foo"}, [][]string{[]string{"name"}}, Schema{Fields: []Field{{Name: "Foo", Type: StringType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight"},
 			[][]string{
