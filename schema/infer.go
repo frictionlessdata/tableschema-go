@@ -60,6 +60,11 @@ func Infer(headers []string, table [][]string) (*Schema, error) {
 						inferredTypes[cellIndex][DateType]++
 						found = true
 					}
+				case ObjectType:
+					if _, err := castObject(cell); err == nil {
+						inferredTypes[cellIndex][ObjectType]++
+						found = true
+					}
 				}
 				if found {
 					break

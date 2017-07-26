@@ -37,28 +37,42 @@ func TestDefaultValues(t *testing.T) {
 
 func TestCastValue(t *testing.T) {
 	data := []struct {
+		Desc     string
 		Value    string
 		Field    Field
 		Expected interface{}
 	}{
-		{"42", Field{Type: IntegerType}, int64(42)},
-		{"http:/frictionlessdata.io", Field{Type: StringType, Format: "uri"}, "http:/frictionlessdata.io"},
-		{"1", Field{Type: BooleanType, TrueValues: []string{"1"}}, true},
-		{"0", Field{Type: BooleanType, FalseValues: []string{"0"}}, false},
-		{"42.5", Field{Type: NumberType}, 42.5},
-		{"2015-10-15", Field{Type: DateType}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
-		{"2015-10-15", Field{Type: DateType, Format: defaultFieldFormat}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
-		{"15/10/2015", Field{Type: DateType, Format: "%d/%m/%Y"}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
+		{"Integer", "42", Field{Type: IntegerType}, int64(42)},
+		{"String_URI", "http:/frictionlessdata.io", Field{Type: StringType, Format: "uri"}, "http:/frictionlessdata.io"},
+		{"Boolean_TrueValues", "1", Field{Type: BooleanType, TrueValues: []string{"1"}}, true},
+		{"Boolean_FalseValues", "0", Field{Type: BooleanType, FalseValues: []string{"0"}}, false},
+		{"Number", "42.5", Field{Type: NumberType}, 42.5},
+		{"Date_NoFormat", "2015-10-15", Field{Type: DateType}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
+		{"Date_DefaultFormat", "2015-10-15", Field{Type: DateType, Format: defaultFieldFormat}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
+		{"Date_CustomFormat", "15/10/2015", Field{Type: DateType, Format: "%d/%m/%Y"}, time.Date(2015, time.October, 15, 0, 0, 0, 0, time.UTC)},
 	}
 	for _, d := range data {
-		c, err := d.Field.CastValue(d.Value)
+		t.Run(d.Desc, func(t *testing.T) {
+			c, err := d.Field.CastValue(d.Value)
+			if err != nil {
+				t.Fatalf("err want:nil got:%s", err)
+			}
+			if c != d.Expected {
+				t.Errorf("val want:%v, got:%v", d.Expected, c)
+			}
+		})
+	}
+	t.Run("Object", func(t *testing.T) {
+		f := Field{Type: ObjectType}
+		obj, err := f.CastValue(`{"name":"foo"}`)
 		if err != nil {
 			t.Fatalf("err want:nil got:%s", err)
 		}
-		if c != d.Expected {
-			t.Errorf("val want:%v, got:%v", d.Expected, c)
+		objMap := obj.(map[string]interface{})
+		if objMap["name"] != "foo" || len(objMap) != 1 {
+			t.Errorf("val want:map[name:foo], got:%v", objMap)
 		}
-	}
+	})
 }
 
 func TestUnmarshalJSON_InvalidField(t *testing.T) {
