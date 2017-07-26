@@ -36,7 +36,7 @@ func Infer(headers []string, table [][]string) (*Schema, error) {
 				inferredTypes[cellIndex] = make(map[string]int)
 			}
 			// The list bellow must ordered by the narrower fieldt type.
-			for _, t := range []string{BooleanType, IntegerType, NumberType, DateType} {
+			for _, t := range []string{BooleanType, IntegerType, NumberType, DateType, ArrayType, ObjectType} {
 				found := false
 				switch t {
 				case BooleanType:
@@ -63,6 +63,11 @@ func Infer(headers []string, table [][]string) (*Schema, error) {
 				case ObjectType:
 					if _, err := castObject(cell); err == nil {
 						inferredTypes[cellIndex][ObjectType]++
+						found = true
+					}
+				case ArrayType:
+					if _, err := castArray(cell); err == nil {
+						inferredTypes[cellIndex][ArrayType]++
 						found = true
 					}
 				}
