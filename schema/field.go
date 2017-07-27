@@ -19,13 +19,14 @@ var (
 
 // Field types.
 const (
-	IntegerType = "integer"
-	StringType  = "string"
-	BooleanType = "boolean"
-	NumberType  = "number"
-	DateType    = "date"
-	ObjectType  = "object"
-	ArrayType   = "array"
+	IntegerType  = "integer"
+	StringType   = "string"
+	BooleanType  = "boolean"
+	NumberType   = "number"
+	DateType     = "date"
+	ObjectType   = "object"
+	ArrayType    = "array"
+	DateTimeType = "datetime"
 )
 
 // Formats.
