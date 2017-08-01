@@ -1,10 +1,45 @@
 package schema
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
 )
+
+func ExampleInfer() {
+	headers := []string{"Person", "Height"}
+	table := [][]string{
+		[]string{"Foo", "5"},
+		[]string{"Bar", "4"},
+		[]string{"Bez", "5.5"},
+	}
+	s, _ := Infer(headers, table)
+	fmt.Println("Fields:")
+	for _, f := range s.Fields {
+		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
+	}
+	// Output: Fields:
+	// {Name:Person Type:string Format:default}
+	// {Name:Height Type:integer Format:default}
+}
+
+func ExampleInferImplicitCasting() {
+	headers := []string{"Person", "Height"}
+	table := [][]string{
+		[]string{"Foo", "5"},
+		[]string{"Bar", "4"},
+		[]string{"Bez", "5.5"},
+	}
+	s, _ := InferImplicitCasting(headers, table)
+	fmt.Println("Fields:")
+	for _, f := range s.Fields {
+		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
+	}
+	// Output: Fields:
+	// {Name:Person Type:string Format:default}
+	// {Name:Height Type:number Format:default}
+}
 
 func TestInfer_Success(t *testing.T) {
 	data := []struct {

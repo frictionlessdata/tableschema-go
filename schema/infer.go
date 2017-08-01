@@ -14,7 +14,7 @@ var (
 		"FALSE": struct{}{},
 		"0":     struct{}{},
 	}
-	// This structure is optmized for querying. It a set inside a map.
+	// This structure is optmized for querying.
 	// It should point a type to what is allowed to be implicitly cast.
 	// The inner set must be sorted by the narrower first.
 	implicitCast = map[string][]string{
@@ -28,7 +28,10 @@ var (
 	}
 )
 
-// Infer infers a schema from tabular data.
+// Infer infers a schema from a slice of the tabular data. For columns that contain
+// cells that can inferred as different types, the most popular type is set as the field
+// type. For instance, a column with values 10.1, 10, 10 will inferred as being of type
+// "integer".
 func Infer(headers []string, table [][]string) (*Schema, error) {
 	inferredTypes := make([]map[string]int, len(headers))
 	for rowID := range table {
@@ -68,9 +71,8 @@ func Infer(headers []string, table [][]string) (*Schema, error) {
 }
 
 // InferImplicitCasting uses a implicit casting for infering the type of columns
-// that have cells of diference types. For instance, if a certain column has a cell
-// with value 1 and another cell with value 1.2, the type inferred type of this column
-// would end up with the type "number" ("integer" can be implicitly cast to "number").
+// that have cells of diference types. For instance, a column with values 10.1, 10, 10
+// will inferred as being of type "number" ("integer" can be implicitly cast to "number").
 //
 // For medium to big tables, this method is faster than the Infer.
 func InferImplicitCasting(headers []string, table [][]string) (*Schema, error) {
