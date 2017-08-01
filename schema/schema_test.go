@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"bytes"
 	"reflect"
 	"strings"
 	"testing"
@@ -211,5 +212,40 @@ func TestValidate_Invalid(t *testing.T) {
 				t.Errorf("want:err got:nil")
 			}
 		})
+	}
+}
+
+func TestSave(t *testing.T) {
+	s := Schema{
+		Fields:      []Field{{Name: "Foo"}, {Name: "Bar"}},
+		PrimaryKeys: []string{"Foo"},
+		ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"Foo"}}},
+	}
+	buf := bytes.NewBufferString("")
+	if err := s.Save(buf); err != nil {
+		t.Errorf("want:nil got:err")
+	}
+	want := `{
+    "fields": [
+    {
+        "name": "Foo"
+    },
+    {
+        "name": "Bar"
+    }
+    ],
+    "primaryKey": [
+        "Foo"
+    ],
+    "foreignKeys": {
+        "reference": {
+            "fields": [
+                "Foo"
+            ]
+        }
+    }
+}`
+	if reflect.DeepEqual(buf.String(), want) {
+		t.Errorf("val want:%s got:%s", want, buf.String())
 	}
 }

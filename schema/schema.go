@@ -8,6 +8,28 @@ import (
 	"strings"
 )
 
+// Read reads, parses and validates a descriptor to create a schema.
+//
+// Example - Reading a schema from a file:
+//
+//  f, err := os.Open("foo/bar/schema.json")
+//  if err != nil {
+//    panic(err)
+//  }
+//  s, err := Read(f)
+//  if err != nil {
+//    panic(err)
+//  }
+//  fmt.Println(s)
+func Read(r io.Reader) (*Schema, error) {
+	var s Schema
+	dec := json.NewDecoder(r)
+	if err := dec.Decode(&s); err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
 // Field represents a list of schema fields.
 type Fields []Field
 
@@ -16,24 +38,24 @@ func (f Fields) Swap(i, j int)      { f[i], f[j] = f[j], f[i] }
 func (f Fields) Less(i, j int) bool { return strings.Compare(f[i].Name, f[j].Name) == -1 }
 
 type ForeignKeyReference struct {
-	Resource          string      `json:"resource"`
+	Resource          string      `json:"resource,omitempty"`
 	Fields            []string    `json:"-"`
-	FieldsPlaceholder interface{} `json:"fields"`
+	FieldsPlaceholder interface{} `json:"fields,omitempty"`
 }
 
 // ForeignKeys defines a schema foreign key
 type ForeignKeys struct {
 	Fields            []string            `json:"-"`
-	FieldsPlaceholder interface{}         `json:"fields"`
-	Reference         ForeignKeyReference `json:"reference"`
+	FieldsPlaceholder interface{}         `json:"fields,omitempty"`
+	Reference         ForeignKeyReference `json:"reference,omitempty"`
 }
 
 // Schema describes tabular data.
 type Schema struct {
-	Fields                Fields      `json:"fields"`
-	PrimaryKeyPlaceholder interface{} `json:"primaryKey"`
+	Fields                Fields      `json:"fields,omitempty"`
+	PrimaryKeyPlaceholder interface{} `json:"primaryKey,omitempty"`
 	PrimaryKeys           []string    `json:"-"`
-	ForeignKeys           ForeignKeys `json:"foreignKeys"`
+	ForeignKeys           ForeignKeys `json:"foreignKeys,omitempty"`
 }
 
 // Headers returns the headers of the tabular data described
@@ -86,26 +108,14 @@ func (s *Schema) Validate() error {
 	return nil
 }
 
-// Read reads, parses and validates a descriptor to create a schema.
-//
-// Example - Reading a schema from a file:
-//
-//  f, err := os.Open("foo/bar/schema.json")
-//  if err != nil {
-//    panic(err)
-//  }
-//  s, err := Read(f)
-//  if err != nil {
-//    panic(err)
-//  }
-//  fmt.Println(s)
-func Read(r io.Reader) (*Schema, error) {
-	var s Schema
-	dec := json.NewDecoder(r)
-	if err := dec.Decode(&s); err != nil {
-		return nil, err
+// Save writes the schema descriptor.
+func (s *Schema) Save(w io.Writer) error {
+	pp, err := json.MarshalIndent(s, "", "    ")
+	if err != nil {
+		return err
 	}
-	return &s, nil
+	w.Write(pp)
+	return nil
 }
 
 // CastRow casts a row to schema types. The out value must be pointer to a
@@ -169,6 +179,15 @@ func (s *Schema) UnmarshalJSON(data []byte) error {
 	a.ForeignKeys.Reference.FieldsPlaceholder = nil
 	*s = Schema(a)
 	return nil
+}
+
+// MarshalJSON returns the JSON encoding of s.
+func (s *Schema) MarshalJSON() ([]byte, error) {
+	type schemaAlias Schema
+	a := schemaAlias(*s)
+	a.PrimaryKeyPlaceholder = a.PrimaryKeys
+	a.ForeignKeys.Reference.FieldsPlaceholder = a.ForeignKeys.Reference.Fields
+	return json.Marshal(a)
 }
 
 func processPlaceholder(ph interface{}, v *[]string) error {
