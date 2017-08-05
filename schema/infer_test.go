@@ -55,6 +55,7 @@ func TestInfer_Success(t *testing.T) {
 		{"1Cell_Object", []string{"Foo"}, [][]string{[]string{`{"name":"foo"}`}}, Schema{Fields: []Field{{Name: "Foo", Type: ObjectType, Format: defaultFieldFormat}}}},
 		{"1Cell_Array", []string{"Foo"}, [][]string{[]string{`["name"]`}}, Schema{Fields: []Field{{Name: "Foo", Type: ArrayType, Format: defaultFieldFormat}}}},
 		{"1Cell_String", []string{"Foo"}, [][]string{[]string{"name"}}, Schema{Fields: []Field{{Name: "Foo", Type: StringType, Format: defaultFieldFormat}}}},
+		{"1Cell_Time", []string{"Foo"}, [][]string{[]string{"10:15:50"}}, Schema{Fields: []Field{{Name: "Foo", Type: TimeType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Boolean1"},
 			[][]string{
@@ -119,6 +120,7 @@ func TestInferImplicitCasting_Success(t *testing.T) {
 		{"1Cell_Object", []string{"Foo"}, [][]string{[]string{`{"name":"foo"}`}}, Schema{Fields: []Field{{Name: "Foo", Type: ObjectType, Format: defaultFieldFormat}}}},
 		{"1Cell_Array", []string{"Foo"}, [][]string{[]string{`["name"]`}}, Schema{Fields: []Field{{Name: "Foo", Type: ArrayType, Format: defaultFieldFormat}}}},
 		{"1Cell_String", []string{"Foo"}, [][]string{[]string{"name"}}, Schema{Fields: []Field{{Name: "Foo", Type: StringType, Format: defaultFieldFormat}}}},
+		{"1Cell_Time", []string{"Foo"}, [][]string{[]string{"10:15:50"}}, Schema{Fields: []Field{{Name: "Foo", Type: TimeType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Int"},
 			[][]string{

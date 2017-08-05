@@ -22,10 +22,14 @@ var (
 		NumberType:  []string{NumberType, StringType},
 		BooleanType: []string{BooleanType, IntegerType, NumberType, StringType},
 		DateType:    []string{DateType, DateTimeType, StringType},
+		TimeType:    []string{TimeType, DateTimeType, StringType},
 		ObjectType:  []string{ObjectType, StringType},
 		ArrayType:   []string{ArrayType, StringType},
 		StringType:  []string{},
 	}
+
+	// Types ordered from narrower to wider.
+	orderedTypes = []string{BooleanType, IntegerType, NumberType, DateType, TimeType, ArrayType, ObjectType}
 )
 
 // Infer infers a schema from a slice of the tabular data. For columns that contain
@@ -46,7 +50,7 @@ func Infer(headers []string, table [][]string) (*Schema, error) {
 				inferredTypes[cellIndex] = make(map[string]int)
 			}
 			// The list bellow must be ordered by the narrower field type.
-			t := findType(cell, []string{BooleanType, IntegerType, NumberType, DateType, ArrayType, ObjectType})
+			t := findType(cell, orderedTypes)
 			inferredTypes[cellIndex][t]++
 		}
 	}
@@ -86,8 +90,7 @@ func InferImplicitCasting(headers []string, table [][]string) (*Schema, error) {
 		}
 		for cellIndex, cell := range row {
 			if inferredTypes[cellIndex] == "" {
-				// The list bellow must be ordered by the narrower field type.
-				t := findType(cell, []string{BooleanType, IntegerType, NumberType, DateType, ArrayType, ObjectType})
+				t := findType(cell, orderedTypes)
 				inferredTypes[cellIndex] = t
 			} else {
 				inferredTypes[cellIndex] = findType(cell, implicitCast[inferredTypes[cellIndex]])
@@ -133,6 +136,11 @@ func findType(value string, checkOrder []string) string {
 			if _, err := castObject(value); err == nil {
 				return ObjectType
 			}
+		case TimeType:
+			if _, err := castTime(defaultFieldFormat, value); err == nil {
+				return TimeType
+			}
+
 		}
 	}
 	return StringType

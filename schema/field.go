@@ -27,6 +27,7 @@ const (
 	ObjectType   = "object"
 	ArrayType    = "array"
 	DateTimeType = "datetime"
+	TimeType     = "time"
 )
 
 // Formats.
@@ -88,6 +89,8 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 		return castObject(value)
 	case ArrayType:
 		return castArray(value)
+	case TimeType:
+		return castTime(f.Format, value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }

@@ -44,3 +44,17 @@ func castDate(format, value string) (time.Time, error) {
 	}
 	return time.Parse(goFormat, value)
 }
+
+func castTime(format, value string) (time.Time, error) {
+	switch format {
+	case "", defaultFieldFormat:
+		return time.Parse("03:04:05", value)
+	case AnyDateFormat:
+		return time.Unix(0, 0), fmt.Errorf("any date format not yet supported. Please file an issue at github.com/frictionlessdata/tableschema-go")
+	}
+	goFormat := format
+	for f, s := range strftimeToGoConversionTable {
+		goFormat = strings.Replace(goFormat, f, s, -1)
+	}
+	return time.Parse(goFormat, value)
+}
