@@ -22,6 +22,7 @@ var (
 		NumberType:    []string{NumberType, StringType},
 		BooleanType:   []string{BooleanType, IntegerType, NumberType, StringType},
 		YearMonthType: []string{YearMonthType, DateType, StringType},
+		YearType:      []string{YearType, IntegerType, NumberType, YearMonthType, DateType, StringType},
 		DateType:      []string{DateType, DateTimeType, StringType},
 		TimeType:      []string{TimeType, DateTimeType, StringType},
 		ObjectType:    []string{ObjectType, StringType},
@@ -30,7 +31,7 @@ var (
 	}
 
 	// Types ordered from narrower to wider.
-	orderedTypes = []string{BooleanType, IntegerType, NumberType, YearMonthType, DateType, TimeType, ArrayType, ObjectType}
+	orderedTypes = []string{BooleanType, YearType, IntegerType, NumberType, YearMonthType, DateType, TimeType, ArrayType, ObjectType}
 )
 
 // Infer infers a schema from a slice of the tabular data. For columns that contain
@@ -144,6 +145,10 @@ func findType(value string, checkOrder []string) string {
 		case YearMonthType:
 			if _, err := castYearMonth(value); err == nil {
 				return YearMonthType
+			}
+		case YearType:
+			if _, err := castYear(value); err == nil {
+				return YearType
 			}
 		}
 	}

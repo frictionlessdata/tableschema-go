@@ -56,7 +56,8 @@ func TestInfer_Success(t *testing.T) {
 		{"1Cell_Array", []string{"Foo"}, [][]string{[]string{`["name"]`}}, Schema{Fields: []Field{{Name: "Foo", Type: ArrayType, Format: defaultFieldFormat}}}},
 		{"1Cell_String", []string{"Foo"}, [][]string{[]string{"name"}}, Schema{Fields: []Field{{Name: "Foo", Type: StringType, Format: defaultFieldFormat}}}},
 		{"1Cell_Time", []string{"Foo"}, [][]string{[]string{"10:15:50"}}, Schema{Fields: []Field{{Name: "Foo", Type: TimeType, Format: defaultFieldFormat}}}},
-		{"1Cell_Year", []string{"Year"}, [][]string{[]string{"2017-08"}}, Schema{Fields: []Field{{Name: "Year", Type: YearMonthType, Format: defaultFieldFormat}}}},
+		{"1Cell_YearMonth", []string{"YearMonth"}, [][]string{[]string{"2017-08"}}, Schema{Fields: []Field{{Name: "YearMonth", Type: YearMonthType, Format: defaultFieldFormat}}}},
+		{"1Cell_Year", []string{"Year"}, [][]string{[]string{"2017"}}, Schema{Fields: []Field{{Name: "Year", Type: YearType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Boolean1"},
 			[][]string{
@@ -122,6 +123,8 @@ func TestInferImplicitCasting_Success(t *testing.T) {
 		{"1Cell_Array", []string{"Foo"}, [][]string{[]string{`["name"]`}}, Schema{Fields: []Field{{Name: "Foo", Type: ArrayType, Format: defaultFieldFormat}}}},
 		{"1Cell_String", []string{"Foo"}, [][]string{[]string{"name"}}, Schema{Fields: []Field{{Name: "Foo", Type: StringType, Format: defaultFieldFormat}}}},
 		{"1Cell_Time", []string{"Foo"}, [][]string{[]string{"10:15:50"}}, Schema{Fields: []Field{{Name: "Foo", Type: TimeType, Format: defaultFieldFormat}}}},
+		{"1Cell_YearMonth", []string{"YearMonth"}, [][]string{[]string{"2017-08"}}, Schema{Fields: []Field{{Name: "YearMonth", Type: YearMonthType, Format: defaultFieldFormat}}}},
+		{"1Cell_Year", []string{"Year"}, [][]string{[]string{"2017"}}, Schema{Fields: []Field{{Name: "Year", Type: YearType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Int"},
 			[][]string{
