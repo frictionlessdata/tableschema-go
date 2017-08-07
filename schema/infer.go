@@ -18,18 +18,19 @@ var (
 	// It should point a type to what is allowed to be implicitly cast.
 	// The inner set must be sorted by the narrower first.
 	implicitCast = map[string][]string{
-		IntegerType: []string{IntegerType, NumberType, StringType},
-		NumberType:  []string{NumberType, StringType},
-		BooleanType: []string{BooleanType, IntegerType, NumberType, StringType},
-		DateType:    []string{DateType, DateTimeType, StringType},
-		TimeType:    []string{TimeType, DateTimeType, StringType},
-		ObjectType:  []string{ObjectType, StringType},
-		ArrayType:   []string{ArrayType, StringType},
-		StringType:  []string{},
+		IntegerType:   []string{IntegerType, NumberType, StringType},
+		NumberType:    []string{NumberType, StringType},
+		BooleanType:   []string{BooleanType, IntegerType, NumberType, StringType},
+		YearMonthType: []string{YearMonthType, DateType, StringType},
+		DateType:      []string{DateType, DateTimeType, StringType},
+		TimeType:      []string{TimeType, DateTimeType, StringType},
+		ObjectType:    []string{ObjectType, StringType},
+		ArrayType:     []string{ArrayType, StringType},
+		StringType:    []string{},
 	}
 
 	// Types ordered from narrower to wider.
-	orderedTypes = []string{BooleanType, IntegerType, NumberType, DateType, TimeType, ArrayType, ObjectType}
+	orderedTypes = []string{BooleanType, IntegerType, NumberType, YearMonthType, DateType, TimeType, ArrayType, ObjectType}
 )
 
 // Infer infers a schema from a slice of the tabular data. For columns that contain
@@ -140,7 +141,10 @@ func findType(value string, checkOrder []string) string {
 			if _, err := castTime(defaultFieldFormat, value); err == nil {
 				return TimeType
 			}
-
+		case YearMonthType:
+			if _, err := castYearMonth(value); err == nil {
+				return YearMonthType
+			}
 		}
 	}
 	return StringType

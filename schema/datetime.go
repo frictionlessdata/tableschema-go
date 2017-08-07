@@ -58,3 +58,7 @@ func castTime(format, value string) (time.Time, error) {
 	}
 	return time.Parse(goFormat, value)
 }
+
+func castYearMonth(value string) (time.Time, error) {
+	return time.Parse("2006-01", value)
+}

@@ -19,15 +19,16 @@ var (
 
 // Field types.
 const (
-	IntegerType  = "integer"
-	StringType   = "string"
-	BooleanType  = "boolean"
-	NumberType   = "number"
-	DateType     = "date"
-	ObjectType   = "object"
-	ArrayType    = "array"
-	DateTimeType = "datetime"
-	TimeType     = "time"
+	IntegerType   = "integer"
+	StringType    = "string"
+	BooleanType   = "boolean"
+	NumberType    = "number"
+	DateType      = "date"
+	ObjectType    = "object"
+	ArrayType     = "array"
+	DateTimeType  = "datetime"
+	TimeType      = "time"
+	YearMonthType = "yearmonth"
 )
 
 // Formats.
@@ -91,6 +92,8 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 		return castArray(value)
 	case TimeType:
 		return castTime(f.Format, value)
+	case YearMonthType:
+		return castYearMonth(value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
