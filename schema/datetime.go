@@ -32,31 +32,11 @@ var strftimeToGoConversionTable = map[string]string{
 }
 
 func castDate(format, value string) (time.Time, error) {
-	switch format {
-	case "", defaultFieldFormat:
-		return time.Parse("2006-01-02", value)
-	case AnyDateFormat:
-		return time.Unix(0, 0), fmt.Errorf("any date format not yet supported. Please file an issue at github.com/frictionlessdata/tableschema-go")
-	}
-	goFormat := format
-	for f, s := range strftimeToGoConversionTable {
-		goFormat = strings.Replace(goFormat, f, s, -1)
-	}
-	return time.Parse(goFormat, value)
+	return castDefaultOrCustomTime("2006-01-02", format, value)
 }
 
 func castTime(format, value string) (time.Time, error) {
-	switch format {
-	case "", defaultFieldFormat:
-		return time.Parse("03:04:05", value)
-	case AnyDateFormat:
-		return time.Unix(0, 0), fmt.Errorf("any date format not yet supported. Please file an issue at github.com/frictionlessdata/tableschema-go")
-	}
-	goFormat := format
-	for f, s := range strftimeToGoConversionTable {
-		goFormat = strings.Replace(goFormat, f, s, -1)
-	}
-	return time.Parse(goFormat, value)
+	return castDefaultOrCustomTime("03:04:05", format, value)
 }
 
 func castYearMonth(value string) (time.Time, error) {
@@ -65,4 +45,30 @@ func castYearMonth(value string) (time.Time, error) {
 
 func castYear(value string) (time.Time, error) {
 	return time.Parse("2006", value)
+}
+
+func castDateTime(format, value string) (time.Time, error) {
+	return castDefaultOrCustomTime(time.RFC3339, format, value)
+}
+
+func castDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, error) {
+	switch format {
+	case "", defaultFieldFormat:
+		t, err := time.Parse(defaultFormat, value)
+		if err != nil {
+			return time.Now(), err
+		}
+		return t.In(time.UTC), nil
+	case AnyDateFormat:
+		return time.Unix(0, 0), fmt.Errorf("any date format not yet supported. Please file an issue at github.com/frictionlessdata/tableschema-go")
+	}
+	goFormat := format
+	for f, s := range strftimeToGoConversionTable {
+		goFormat = strings.Replace(goFormat, f, s, -1)
+	}
+	t, err := time.Parse(goFormat, value)
+	if err != nil {
+		return time.Now(), err
+	}
+	return t.In(time.UTC), nil
 }

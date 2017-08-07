@@ -97,6 +97,8 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 		return castYearMonth(value)
 	case YearType:
 		return castYear(value)
+	case DateTimeType:
+		return castDateTime(f.Format, value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }

@@ -58,6 +58,7 @@ func TestInfer_Success(t *testing.T) {
 		{"1Cell_Time", []string{"Foo"}, [][]string{[]string{"10:15:50"}}, Schema{Fields: []Field{{Name: "Foo", Type: TimeType, Format: defaultFieldFormat}}}},
 		{"1Cell_YearMonth", []string{"YearMonth"}, [][]string{[]string{"2017-08"}}, Schema{Fields: []Field{{Name: "YearMonth", Type: YearMonthType, Format: defaultFieldFormat}}}},
 		{"1Cell_Year", []string{"Year"}, [][]string{[]string{"2017"}}, Schema{Fields: []Field{{Name: "Year", Type: YearType, Format: defaultFieldFormat}}}},
+		{"1Cell_DateTime", []string{"DateTime"}, [][]string{[]string{"2008-09-15T15:53:00+05:00"}}, Schema{Fields: []Field{{Name: "DateTime", Type: DateTimeType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Boolean1"},
 			[][]string{
@@ -125,6 +126,7 @@ func TestInferImplicitCasting_Success(t *testing.T) {
 		{"1Cell_Time", []string{"Foo"}, [][]string{[]string{"10:15:50"}}, Schema{Fields: []Field{{Name: "Foo", Type: TimeType, Format: defaultFieldFormat}}}},
 		{"1Cell_YearMonth", []string{"YearMonth"}, [][]string{[]string{"2017-08"}}, Schema{Fields: []Field{{Name: "YearMonth", Type: YearMonthType, Format: defaultFieldFormat}}}},
 		{"1Cell_Year", []string{"Year"}, [][]string{[]string{"2017"}}, Schema{Fields: []Field{{Name: "Year", Type: YearType, Format: defaultFieldFormat}}}},
+		{"1Cell_DateTime", []string{"DateTime"}, [][]string{[]string{"2008-09-15T15:53:00+05:00"}}, Schema{Fields: []Field{{Name: "DateTime", Type: DateTimeType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Int"},
 			[][]string{

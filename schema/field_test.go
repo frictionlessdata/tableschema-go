@@ -55,6 +55,8 @@ func TestCastValue(t *testing.T) {
 		{"Time_CustomFormat", "10-10-10", Field{Type: TimeType, Format: "%H-%M-%S"}, time.Date(0000, time.January, 01, 10, 10, 10, 00, time.UTC)},
 		{"YearMonth", "2017-08", Field{Type: YearMonthType}, time.Date(2017, time.August, 01, 00, 00, 00, 00, time.UTC)},
 		{"Year", "2017", Field{Type: YearType}, time.Date(2017, time.January, 01, 00, 00, 00, 00, time.UTC)},
+		{"DateTime_NoFormat", "2008-09-15T15:53:00+05:00", Field{Type: DateTimeType}, time.Date(2008, time.September, 15, 10, 53, 00, 00, time.UTC)},
+		{"DateTime_DefaultFormat", "2008-09-15T15:53:00+05:00", Field{Type: DateTimeType, Format: defaultFieldFormat}, time.Date(2008, time.September, 15, 10, 53, 00, 00, time.UTC)},
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
