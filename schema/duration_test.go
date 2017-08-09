@@ -32,3 +32,20 @@ func TestCastDuration_Success(t *testing.T) {
 		})
 	}
 }
+
+func TestCastDuration_Error(t *testing.T) {
+	data := []struct {
+		desc  string
+		value string
+	}{
+		{"WrongStartChar", "C2H"},
+	}
+	for _, d := range data {
+		t.Run(d.desc, func(t *testing.T) {
+			_, err := castDuration(d.value)
+			if err == nil {
+				t.Errorf("want:err got:nil")
+			}
+		})
+	}
+}
