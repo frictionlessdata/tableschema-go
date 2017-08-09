@@ -30,6 +30,7 @@ const (
 	TimeType      = "time"
 	YearMonthType = "yearmonth"
 	YearType      = "year"
+	DurationType  = "duration"
 )
 
 // Formats.
@@ -99,6 +100,8 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 		return castYear(value)
 	case DateTimeType:
 		return castDateTime(f.Format, value)
+	case DurationType:
+		return castDuration(value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
