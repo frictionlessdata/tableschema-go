@@ -8,7 +8,7 @@ import (
 )
 
 var durationRegexp = regexp.MustCompile(
-	`P(?P<years>\d+Y)?(?P<months>\d+M)?(?P<days>\d+D)?T?(?P<hours>\d+H)?(?P<minutes>\d+M)?(?P<seconds>\d+S)?`)
+	`P(?P<years>\d+Y)?(?P<months>\d+M)?(?P<days>\d+D)?T?(?P<hours>\d+H)?(?P<minutes>\d+M)?(?P<seconds>\d+\.?\d*S)?`)
 
 const (
 	hoursInYear  = time.Duration(24*36) * time.Hour
@@ -19,46 +19,31 @@ const (
 func castDuration(value string) (time.Duration, error) {
 	matches := durationRegexp.FindStringSubmatch(value)
 	if len(matches) == 0 {
-		return 0, invalidDurationError(value)
+		return 0, fmt.Errorf("Invalid duration:\"%s\"", value)
 	}
-	years, err := parseDuration(matches[1], hoursInYear)
-	if err != nil {
-		return 0, invalidDurationError(value)
-	}
-	months, err := parseDuration(matches[2], hoursInMonth)
-	if err != nil {
-		return 0, invalidDurationError(value)
-	}
-	days, err := parseDuration(matches[3], hoursInDay)
-	if err != nil {
-		return 0, invalidDurationError(value)
-	}
-	hours, err := parseDuration(matches[4], time.Hour)
-	if err != nil {
-		return 0, invalidDurationError(value)
-	}
-	minutes, err := parseDuration(matches[5], time.Minute)
-	if err != nil {
-		return 0, invalidDurationError(value)
-	}
-	seconds, err := parseDuration(matches[6], time.Second)
-	if err != nil {
-		return 0, invalidDurationError(value)
-	}
+	years := parseIntDuration(matches[1], hoursInYear)
+	months := parseIntDuration(matches[2], hoursInMonth)
+	days := parseIntDuration(matches[3], hoursInDay)
+	hours := parseIntDuration(matches[4], time.Hour)
+	minutes := parseIntDuration(matches[5], time.Minute)
+	seconds := parseSeconds(matches[6])
 	return years + months + days + hours + minutes + seconds, nil
 }
 
-func parseDuration(v string, multiplier time.Duration) (time.Duration, error) {
+func parseIntDuration(v string, multiplier time.Duration) time.Duration {
 	if len(v) == 0 {
-		return 0, nil
+		return 0
 	}
-	d, err := strconv.ParseFloat(v[0:len(v)-1], 64)
-	if err != nil {
-		return 0, err
-	}
-	return time.Duration(d) * multiplier, nil
+	// Ignoring error here because only digits could come from the regular expression.
+	d, _ := strconv.Atoi(v[0 : len(v)-1])
+	return time.Duration(d) * multiplier
 }
 
-func invalidDurationError(v string) error {
-	return fmt.Errorf("Invalid duration:\"%s\"", v)
+func parseSeconds(v string) time.Duration {
+	if len(v) == 0 {
+		return 0
+	}
+	// Ignoring error here because only valid arbitrary precision floats could come from the regular expression.
+	d, _ := strconv.ParseFloat(v[0:len(v)-1], 64)
+	return time.Duration(d * 10e8)
 }
