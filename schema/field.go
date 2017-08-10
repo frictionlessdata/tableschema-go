@@ -31,6 +31,7 @@ const (
 	YearMonthType = "yearmonth"
 	YearType      = "year"
 	DurationType  = "duration"
+	GeoPointType  = "geopoint"
 )
 
 // Formats.
@@ -102,6 +103,8 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 		return castDateTime(f.Format, value)
 	case DurationType:
 		return castDuration(value)
+	case GeoPointType:
+		return castGeoPoint(f.Format, value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }

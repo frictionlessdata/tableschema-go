@@ -58,6 +58,7 @@ func TestCastValue(t *testing.T) {
 		{"DateTime_NoFormat", "2008-09-15T15:53:00+05:00", Field{Type: DateTimeType}, time.Date(2008, time.September, 15, 10, 53, 00, 00, time.UTC)},
 		{"DateTime_DefaultFormat", "2008-09-15T15:53:00+05:00", Field{Type: DateTimeType, Format: defaultFieldFormat}, time.Date(2008, time.September, 15, 10, 53, 00, 00, time.UTC)},
 		{"Duration", "P2H", Field{Type: DurationType}, 2 * time.Hour},
+		{"GeoPoint", "90,45", Field{Type: GeoPointType}, GeoPoint{90, 45}},
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {

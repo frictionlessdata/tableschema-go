@@ -10,8 +10,7 @@ func TestRead(t *testing.T) {
 	in := `first,last
 "Foo","Bar"
 "Bez","Boo"`
-	table := Table{strings.NewReader(in)}
-	rows, err := table.Read()
+	rows, err := ReadCSV(strings.NewReader(in))
 	if err != nil {
 		t.Errorf("err want:nil got:%q", err)
 	}

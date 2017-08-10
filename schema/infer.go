@@ -29,11 +29,12 @@ var (
 		DurationType:  []string{DurationType, StringType},
 		ObjectType:    []string{ObjectType, StringType},
 		ArrayType:     []string{ArrayType, StringType},
+		GeoPointType:  []string{GeoPointType, ArrayType, StringType},
 		StringType:    []string{},
 	}
 
 	// Types ordered from narrower to wider.
-	orderedTypes = []string{BooleanType, YearType, IntegerType, NumberType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, ArrayType, ObjectType}
+	orderedTypes = []string{BooleanType, YearType, IntegerType, NumberType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, GeoPointType, ArrayType, ObjectType}
 )
 
 // Infer infers a schema from a slice of the tabular data. For columns that contain
@@ -159,6 +160,10 @@ func findType(value string, checkOrder []string) string {
 		case DurationType:
 			if _, err := castDuration(value); err == nil {
 				return DurationType
+			}
+		case GeoPointType:
+			if _, err := castGeoPoint(defaultFieldFormat, value); err == nil {
+				return GeoPointType
 			}
 		}
 	}

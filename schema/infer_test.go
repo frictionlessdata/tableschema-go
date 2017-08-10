@@ -60,6 +60,7 @@ func TestInfer_Success(t *testing.T) {
 		{"1Cell_Year", []string{"Year"}, [][]string{[]string{"2017"}}, Schema{Fields: []Field{{Name: "Year", Type: YearType, Format: defaultFieldFormat}}}},
 		{"1Cell_DateTime", []string{"DateTime"}, [][]string{[]string{"2008-09-15T15:53:00+05:00"}}, Schema{Fields: []Field{{Name: "DateTime", Type: DateTimeType, Format: defaultFieldFormat}}}},
 		{"1Cell_Duration", []string{"Duration"}, [][]string{[]string{"P3Y6M4DT12H30M5S"}}, Schema{Fields: []Field{{Name: "Duration", Type: DurationType, Format: defaultFieldFormat}}}},
+		{"1Cell_GeoPoint", []string{"GeoPoint"}, [][]string{[]string{"90,45"}}, Schema{Fields: []Field{{Name: "GeoPoint", Type: GeoPointType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Boolean1"},
 			[][]string{
@@ -129,6 +130,7 @@ func TestInferImplicitCasting_Success(t *testing.T) {
 		{"1Cell_Year", []string{"Year"}, [][]string{[]string{"2017"}}, Schema{Fields: []Field{{Name: "Year", Type: YearType, Format: defaultFieldFormat}}}},
 		{"1Cell_DateTime", []string{"DateTime"}, [][]string{[]string{"2008-09-15T15:53:00+05:00"}}, Schema{Fields: []Field{{Name: "DateTime", Type: DateTimeType, Format: defaultFieldFormat}}}},
 		{"1Cell_Duration", []string{"Duration"}, [][]string{[]string{"P3Y6M4DT12H30M5S"}}, Schema{Fields: []Field{{Name: "Duration", Type: DurationType, Format: defaultFieldFormat}}}},
+		{"1Cell_GeoPoint", []string{"GeoPoint"}, [][]string{[]string{"90,45"}}, Schema{Fields: []Field{{Name: "GeoPoint", Type: GeoPointType, Format: defaultFieldFormat}}}},
 		{"ManyCells",
 			[]string{"Name", "Age", "Weight", "Bogus", "Boolean", "Int"},
 			[][]string{
