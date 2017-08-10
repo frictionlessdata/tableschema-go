@@ -56,7 +56,7 @@ func castGeoPoint(format, value string) (GeoPoint, error) {
 		}
 		return p, nil
 	}
-	return GeoPoint{}, nil
+	return GeoPoint{}, fmt.Errorf("invalid geopoint format:%s", format)
 }
 
 func applyGeoPointRegexp(r *regexp.Regexp, value string) (GeoPoint, error) {

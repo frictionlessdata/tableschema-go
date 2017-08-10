@@ -35,7 +35,9 @@ func TestCastGeoPoint_Error(t *testing.T) {
 		format string
 		value  string
 	}{
-		{"BadJSON", GeoPointObjectFormat, `{"longi": 90, "lat": 45}`},
+		{"BadJSON", GeoPointObjectFormat, ""},
+		{"BadGeoPointJSON", GeoPointObjectFormat, `{"longi": 90, "lat": 45}`},
+		{"BadFormat", "badformat", `{"longi": 90, "lat": 45}`},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
