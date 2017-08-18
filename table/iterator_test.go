@@ -12,21 +12,18 @@ type iterTestValue struct {
 	Name string
 }
 
-func TestNext(t *testing.T) {
+func TestIterator_Next(t *testing.T) {
 	data := []struct {
-		desc         string
-		want         []iterTestValue
-		skipFirstRow bool
+		desc string
+		want []iterTestValue
 	}{
-		{"AllTable", []iterTestValue{{"name"}, {"foo"}, {"bar"}}, false},
-		{"SkipFirstRow", []iterTestValue{{"foo"}, {"bar"}}, true},
+		{"AllTable", []iterTestValue{{"name"}, {"foo"}, {"bar"}}},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
 			iter := newCSVIterator(
 				strings.NewReader("name\nfoo\nbar"),
 				&schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}},
-				d.skipFirstRow,
 			)
 			for _, want := range d.want {
 				var got iterTestValue
@@ -48,18 +45,27 @@ func TestNext(t *testing.T) {
 			}
 		})
 	}
-
-}
-
-func TestNext_Error(t *testing.T) {
-	t.Run("NilSchema", func(t *testing.T) {
-		iter := newCSVIterator(strings.NewReader("name"), nil, true)
+	t.Run("EmptyString", func(t *testing.T) {
+		iter := newCSVIterator(
+			strings.NewReader(""),
+			&schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}},
+		)
+		var nothing iterTestValue
+		if iter.Next(&nothing) {
+			t.Fatalf("more iterations then it should.")
+		}
+		if iter.Err() != nil {
+			t.Fatalf("err want:nil got:%v", iter.Err())
+		}
+	})
+	t.Run("Error_NilSchema", func(t *testing.T) {
+		iter := newCSVIterator(strings.NewReader("name"), nil)
 		if iter.Err() == nil {
 			t.Fatalf("want:err got:nil")
 		}
 	})
-	t.Run("ErrorCasting", func(t *testing.T) {
-		iter := newCSVIterator(strings.NewReader("name"), nil, true)
+	t.Run("Error_Casting", func(t *testing.T) {
+		iter := newCSVIterator(strings.NewReader("name"), nil)
 		if iter.Next(nil) {
 			t.Fatalf("want:err got:nil")
 		}

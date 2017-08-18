@@ -1,11 +1,13 @@
 package table
 
 import (
-	"encoding/csv"
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/frictionlessdata/tableschema-go/schema"
 )
@@ -27,16 +29,30 @@ func CSV(source io.Reader, opts ...CreationOpts) (Table, error) {
 // LoadCSVHeaders uses the first line of the CSV as table headers.
 func LoadCSVHeaders() CreationOpts {
 	return func(t *Table) error {
-		r := csv.NewReader(t.Source)
-		record, err := r.Read()
-		if err == io.EOF {
-			return nil
+		r := bufio.NewReader(t.Source)
+		t.Source = r
+		var line string
+		var err error
+		for {
+			line, err = r.ReadString('\n')
+			if err == io.EOF {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			if strings.HasPrefix(line, "#") {
+				continue
+			}
+			break
 		}
-		if err != nil {
-			return err
+		t.Headers = strings.Split(line[:len(line)-1], ",")
+		for i, h := range t.Headers {
+			t.Headers[i], err = strconv.Unquote(h)
+			if err != nil {
+				return err
+			}
 		}
-		t.Headers = record
-		t.skipFirstRow = true
 		return nil
 	}
 }
@@ -50,19 +66,8 @@ func CSVFile(path string, opts ...CreationOpts) (Table, error) {
 	return CSV(f, opts...)
 }
 
-// CSVHeaders sets the table headers. It would override headers
-// that might exist in the first line of the CSV.
+// CSVHeaders sets the table headers.
 func CSVHeaders(headers ...string) CreationOpts {
-	return func(t *Table) error {
-		t.Headers = headers
-		t.skipFirstRow = true
-		return nil
-	}
-}
-
-// NoCSVHeaders signals the reading library that your CSV has no headers
-// defined the first line.
-func NoCSVHeaders(headers ...string) CreationOpts {
 	return func(t *Table) error {
 		t.Headers = headers
 		return nil
@@ -74,8 +79,6 @@ type Table struct {
 	Headers []string
 	Source  io.Reader
 	Schema  *schema.Schema
-
-	skipFirstRow bool
 }
 
 // CastAll loads and casts all rows of the table to schema types. The table
@@ -107,5 +110,5 @@ func (t *Table) CastAll(out interface{}) error {
 
 // Iter returns an Iterator to read the table.
 func (t *Table) Iter() Iterator {
-	return newCSVIterator(t.Source, t.Schema, t.skipFirstRow)
+	return newCSVIterator(t.Source, t.Schema)
 }
