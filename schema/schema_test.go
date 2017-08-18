@@ -113,58 +113,64 @@ func TestHeaders(t *testing.T) {
 	}
 }
 
-func TestCastRow_NoImplicitCast(t *testing.T) {
-	t1 := struct {
-		Name string
-		Age  int64
-	}{}
-	s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
-	if err := s.CastRow([]string{"Foo", "42"}, &t1); err != nil {
-		t.Fatalf("err want:nil, got:%q", err)
-	}
-	if t1.Name != "Foo" {
-		t.Errorf("value:Name want:Foo got:%s", t1.Name)
-	}
-	if t1.Age != 42 {
-		t.Errorf("value:Age want:42 got:%d", t1.Age)
-	}
-}
-
-func TestCastRow_ImplicitCastToInt(t *testing.T) {
-	t1 := struct{ Age int }{}
-	s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
-	if err := s.CastRow([]string{"Foo", "42"}, &t1); err != nil {
-		t.Fatalf("err want:nil, got:%q", err)
-	}
-	if t1.Age != 42 {
-		t.Errorf("value:Name want:42, got:%d", t1.Age)
-	}
-}
-
-func TestCastRow_SchemaFieldAndStructFieldDifferentTypes(t *testing.T) {
-	// Field is string and struct is int.
-	t1 := struct{ Age int }{}
-	s := Schema{Fields: []Field{{Name: "age", Type: StringType}}}
-	if err := s.CastRow([]string{"42"}, &t1); err == nil {
-		t.Fatalf("want:error, got:nil")
-	}
-}
-
-func TestCastRow_NotAPointerToStruct(t *testing.T) {
-	t1 := struct{ Age int }{}
-	s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
-	if err := s.CastRow([]string{"Foo", "42"}, t1); err == nil {
-		t.Fatalf("want:error, got:nil")
-	}
-}
-
-func TestCastRow_CellCanNotBeCast(t *testing.T) {
-	// Field is string and struct is int.
-	t1 := struct{ Age int }{}
-	s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
-	if err := s.CastRow([]string{"foo"}, &t1); err == nil {
-		t.Fatalf("want:error, got:nil")
-	}
+func TestSchema_CastRow(t *testing.T) {
+	t.Run("NoImplicitCast", func(t *testing.T) {
+		t1 := struct {
+			Name string
+			Age  int64
+		}{}
+		s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
+		if err := s.CastRow([]string{"Foo", "42"}, &t1); err != nil {
+			t.Fatalf("err want:nil, got:%q", err)
+		}
+		if t1.Name != "Foo" {
+			t.Errorf("value:Name want:Foo got:%s", t1.Name)
+		}
+		if t1.Age != 42 {
+			t.Errorf("value:Age want:42 got:%d", t1.Age)
+		}
+	})
+	t.Run("ImplicitCastToInt", func(t *testing.T) {
+		t1 := struct{ Age int }{}
+		s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
+		if err := s.CastRow([]string{"Foo", "42"}, &t1); err != nil {
+			t.Fatalf("err want:nil, got:%q", err)
+		}
+		if t1.Age != 42 {
+			t.Errorf("value:Name want:42, got:%d", t1.Age)
+		}
+	})
+	t.Run("Error_SchemaFieldAndStructFieldDifferentTypes", func(t *testing.T) {
+		// Field is string and struct is int.
+		t1 := struct{ Age int }{}
+		s := Schema{Fields: []Field{{Name: "age", Type: StringType}}}
+		if err := s.CastRow([]string{"42"}, &t1); err == nil {
+			t.Fatalf("want:error, got:nil")
+		}
+	})
+	t.Run("Error_NotAPointerToStruct", func(t *testing.T) {
+		t1 := struct{ Age int }{}
+		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		if err := s.CastRow([]string{"Foo", "42"}, t1); err == nil {
+			t.Fatalf("want:error, got:nil")
+		}
+	})
+	t.Run("Error_CellCanNotBeCast", func(t *testing.T) {
+		// Field is string and struct is int.
+		t1 := struct{ Age int }{}
+		s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
+		if err := s.CastRow([]string{"foo"}, &t1); err == nil {
+			t.Fatalf("want:error, got:nil")
+		}
+	})
+	t.Run("Error_CastToNil", func(t *testing.T) {
+		t1 := &struct{ Age int }{}
+		t1 = nil
+		s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
+		if err := s.CastRow([]string{"foo"}, &t1); err == nil {
+			t.Fatalf("want:error, got:nil")
+		}
+	})
 }
 
 func TestValidate_SimpleValid(t *testing.T) {
