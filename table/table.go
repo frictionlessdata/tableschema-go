@@ -84,38 +84,28 @@ type Table struct {
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
 func (t *Table) CastAll(out interface{}) error {
-	if t.Schema == nil {
-		return fmt.Errorf("table has no schema")
-	}
-	r := csv.NewReader(t.Source)
-	records, err := r.ReadAll()
-	if err != nil {
-		return err
-	}
-	if t.skipFirstRow {
-		records = records[1:]
-	}
 	outv := reflect.ValueOf(out)
 	if outv.Kind() != reflect.Ptr || outv.Elem().Kind() != reflect.Slice {
 		return fmt.Errorf("out argument must be a slice address")
 	}
 	slicev := outv.Elem()
-	slicev = slicev.Slice(0, slicev.Cap())
+	slicev = slicev.Slice(0, 0) // Trucantes the passed-in slice.
 	elemt := slicev.Type().Elem()
-	for i, record := range records {
-		if slicev.Len() == i {
-			elemp := reflect.New(elemt)
-			if err := t.Schema.CastRow(record, elemp.Interface()); err != nil {
-				return err
-			}
-			slicev = reflect.Append(slicev, elemp.Elem())
-			slicev = slicev.Slice(0, slicev.Cap())
-		} else {
-			if err := t.Schema.CastRow(record, slicev.Index(i).Addr().Interface()); err != nil {
-				return err
-			}
-		}
+	iter := t.Iter()
+	i := 0
+	for elemp := reflect.New(elemt); iter.Next(elemp.Interface()); {
+		slicev = reflect.Append(slicev, elemp.Elem())
+		slicev = slicev.Slice(0, slicev.Cap())
+		i++
 	}
-	outv.Elem().Set(slicev.Slice(0, len(records)))
+	if iter.Err() != nil {
+		return iter.Err()
+	}
+	outv.Elem().Set(slicev.Slice(0, i))
 	return nil
+}
+
+// Iter returns an Iterator to read the table.
+func (t *Table) Iter() Iterator {
+	return newCSVIterator(t.Source, t.Schema, t.skipFirstRow)
 }

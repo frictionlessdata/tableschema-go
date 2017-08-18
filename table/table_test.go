@@ -76,7 +76,7 @@ func TestCastAll(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			tab, err := CSV(strings.NewReader("name"))
+			tab, err := CSV(strings.NewReader("name\nfoo\nbar"))
 			if err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
@@ -84,7 +84,7 @@ func TestCastAll(t *testing.T) {
 			if err := tab.CastAll(&d.got); err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
-			want := []foo{{"name"}}
+			want := []foo{{"name"}, {"foo"}, {"bar"}}
 			if !reflect.DeepEqual(want, d.got) {
 				t.Fatalf("val want:%v got:%v", want, d.got)
 			}

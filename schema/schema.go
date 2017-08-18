@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 )
@@ -116,6 +117,15 @@ func (s *Schema) Save(w io.Writer) error {
 	}
 	w.Write(pp)
 	return nil
+}
+
+// SaveToFile writes the schema descriptor in local file.
+func (s *Schema) SaveToFile(path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	return s.Save(f)
 }
 
 // CastRow casts a row to schema types. The out value must be pointer to a
