@@ -2,28 +2,31 @@ package table
 
 import (
 	"fmt"
-	"io"
 	"reflect"
-
-	"github.com/frictionlessdata/tableschema-go/schema"
 )
 
-// CreationOpts defines functional options for creating Tables.
-type CreationOpts func(t *Table) error
+// Table makes it easy to deal with physical tabular data.
+type Table interface {
+	// Iter returns an Iterator to read the table. Iter returns an error
+	// if the table physical source can not be iterated.
+	Iter() (Iterator, error)
 
-// Table makes it easy to deal with tabular data.
-type Table struct {
-	Headers []string
-	Source  io.Reader
-	Schema  *schema.Schema
+	// Infer tries to infer a suitable schema for the table.
+	Infer() error
+
+	// CastAll loads and casts all rows of the table to schema types. The table
+	// schema must be previously assigned or inferred.
+	//
+	// The result argument must necessarily be the address for a slice. The slice
+	// may be nil or previously allocated.
+	CastAll(out interface{}) error
 }
 
-// CastAll loads and casts all rows of the table to schema types. The table
-// schema must be previously assigned or inferred.
+// CastAll loads and casts all rows returned by the iterator to schema types.
 //
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
-func (t *Table) CastAll(out interface{}) error {
+func CastAll(iter Iterator, out interface{}) error {
 	outv := reflect.ValueOf(out)
 	if outv.Kind() != reflect.Ptr || outv.Elem().Kind() != reflect.Slice {
 		return fmt.Errorf("out argument must be a slice address")
@@ -31,9 +34,11 @@ func (t *Table) CastAll(out interface{}) error {
 	slicev := outv.Elem()
 	slicev = slicev.Slice(0, 0) // Trucantes the passed-in slice.
 	elemt := slicev.Type().Elem()
-	iter := t.Iter()
 	i := 0
-	for elemp := reflect.New(elemt); iter.Next(elemp.Interface()); {
+	for elemp := reflect.New(elemt); iter.Next(); {
+		if err := iter.CastRow(elemp.Interface()); err != nil {
+			return err
+		}
 		slicev = reflect.Append(slicev, elemp.Elem())
 		slicev = slicev.Slice(0, slicev.Cap())
 		i++
@@ -43,9 +48,4 @@ func (t *Table) CastAll(out interface{}) error {
 	}
 	outv.Elem().Set(slicev.Slice(0, i))
 	return nil
-}
-
-// Iter returns an Iterator to read the table.
-func (t *Table) Iter() Iterator {
-	return newCSVIterator(t.Source, t.Schema)
 }

@@ -1,9 +1,7 @@
-package table
+package csv
 
 import (
-	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/frictionlessdata/tableschema-go/schema"
@@ -13,16 +11,56 @@ type foo struct {
 	Name string
 }
 
-func ExampleTable_Iter() {
-	tab, _ := CSV(strings.NewReader("\"name\"\nfoo\nbar"), LoadCSVHeaders())
-	tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-	iter := tab.Iter()
-	var data foo
-	for iter.Next(&data) {
-		fmt.Println(data.Name)
+func TestLoadHeaders(t *testing.T) {
+	t.Run("EmptyString", func(t *testing.T) {
+		tab, err := New(StringSource(""), LoadHeaders())
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		if len(tab.Headers) != 0 {
+			t.Fatalf("len(headers) want:0 got:%v", len(tab.Headers))
+		}
+	})
+	t.Run("SimpleCase", func(t *testing.T) {
+		in := `"name"
+"bar"`
+		tab, err := New(StringSource(in), LoadHeaders())
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []string{"name"}
+		if !reflect.DeepEqual(want, tab.Headers) {
+			t.Fatalf("headers want:%v got:%v", want, tab.Headers)
+		}
+		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+		var out []foo
+		if err := tab.CastAll(&out); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		if len(out) != 1 {
+			t.Fatalf("LoadHeaders content must skip first row")
+		}
+	})
+}
+
+func TestSetHeaders(t *testing.T) {
+	in := "Foo"
+	tab, err := New(StringSource(in), SetHeaders("name"))
+	if err != nil {
+		t.Fatalf("err want:nil got:%q", err)
 	}
-	// Output:foo
-	// bar
+	want := []string{"name"}
+	if !reflect.DeepEqual(want, tab.Headers) {
+		t.Fatalf("val want:%v got:%v", want, tab.Headers)
+	}
+	tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+	var out []foo
+	if err := tab.CastAll(&out); err != nil {
+		t.Fatalf("err want:nil got:%q", err)
+	}
+	if len(out) == 0 {
+		t.Fatalf("CSVHeaders must not skip first row")
+	}
 }
 
 func TestTable_CastAll(t *testing.T) {
@@ -36,7 +74,7 @@ func TestTable_CastAll(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			tab, err := CSV(strings.NewReader("name\nfoo\nbar"))
+			tab, err := New(StringSource("name\nfoo\nbar"))
 			if err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
@@ -51,7 +89,7 @@ func TestTable_CastAll(t *testing.T) {
 		})
 	}
 	t.Run("EmptyString", func(t *testing.T) {
-		tab, err := CSV(strings.NewReader(""))
+		tab, err := New(StringSource(""))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -65,7 +103,7 @@ func TestTable_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("Error_TableWithNoSchema", func(t *testing.T) {
-		tab, err := CSV(strings.NewReader("name"))
+		tab, err := New(StringSource("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -74,7 +112,7 @@ func TestTable_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
-		tab, err := CSV(strings.NewReader("name"))
+		tab, err := New(StringSource("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
