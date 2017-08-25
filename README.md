@@ -30,11 +30,11 @@ $ govendor fetch github.com/frictionlessdata/tableschema-go@0.1
 ```go
 import (
     "fmt"
-    "github.com/github.com/frictionlessdata/tableschema-go/table"
+    "github.com/github.com/frictionlessdata/tableschema-go/csv"
 )
 
 func main() {
-    t, _ := table.CSVFile("data.csv", table.LoadCSVHeaders())
+    t, _ := csv.New(csv.FileSource("data.csv"), csv.LoadHeaders())
     fmt.Println(t.Headers)
 
     t.Infer()
