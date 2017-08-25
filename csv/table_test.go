@@ -27,6 +27,7 @@ func ExampleTable_Iter() {
 
 func ExampleTable_Infer() {
 	tab, _ := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+	tab.Infer()
 	iter, _ := tab.Iter()
 	for iter.Next() {
 		var data csvRow
