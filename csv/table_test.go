@@ -1,14 +1,43 @@
 package csv
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/frictionlessdata/tableschema-go/schema"
 )
 
-type foo struct {
+type csvRow struct {
 	Name string
+}
+
+func ExampleTable_Iter() {
+	tab, _ := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+	tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+	iter, _ := tab.Iter()
+	for iter.Next() {
+		var data csvRow
+		iter.CastRow(&data)
+		fmt.Println(data.Name)
+	}
+	// Output:foo
+	// bar
+}
+
+func ExampleTable_Infer() {
+	tab, _ := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+	if err := tab.Infer(); err != nil {
+		fmt.Println(err)
+	}
+	iter, _ := tab.Iter()
+	for iter.Next() {
+		var data csvRow
+		iter.CastRow(&data)
+		fmt.Println(data.Name)
+	}
+	// Output:foo
+	// bar
 }
 
 func TestLoadHeaders(t *testing.T) {
@@ -33,7 +62,7 @@ func TestLoadHeaders(t *testing.T) {
 			t.Fatalf("headers want:%v got:%v", want, tab.Headers)
 		}
 		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-		var out []foo
+		var out []csvRow
 		if err := tab.CastAll(&out); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -54,7 +83,7 @@ func TestSetHeaders(t *testing.T) {
 		t.Fatalf("val want:%v got:%v", want, tab.Headers)
 	}
 	tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-	var out []foo
+	var out []csvRow
 	if err := tab.CastAll(&out); err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
@@ -66,11 +95,11 @@ func TestSetHeaders(t *testing.T) {
 func TestTable_CastAll(t *testing.T) {
 	data := []struct {
 		desc string
-		got  []foo
+		got  []csvRow
 	}{
-		{"OutEmpty", []foo{}},
+		{"OutEmpty", []csvRow{}},
 		{"OutNil", nil},
-		{"OutInitialized", []foo{{"fooooo"}}},
+		{"OutInitialized", []csvRow{{"fooooo"}}},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
@@ -82,7 +111,7 @@ func TestTable_CastAll(t *testing.T) {
 			if err := tab.CastAll(&d.got); err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
-			want := []foo{{"name"}, {"foo"}, {"bar"}}
+			want := []csvRow{{"name"}, {"foo"}, {"bar"}}
 			if !reflect.DeepEqual(want, d.got) {
 				t.Fatalf("val want:%v got:%v", want, d.got)
 			}
@@ -94,7 +123,7 @@ func TestTable_CastAll(t *testing.T) {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-		var got []foo
+		var got []csvRow
 		if err := tab.CastAll(&got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -107,7 +136,7 @@ func TestTable_CastAll(t *testing.T) {
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		if err := tab.CastAll(&[]foo{}); err == nil {
+		if err := tab.CastAll(&[]csvRow{}); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
@@ -117,7 +146,7 @@ func TestTable_CastAll(t *testing.T) {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-		if err := tab.CastAll([]foo{}); err == nil {
+		if err := tab.CastAll([]csvRow{}); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
