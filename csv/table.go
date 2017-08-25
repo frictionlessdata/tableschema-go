@@ -2,6 +2,7 @@ package csv
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -91,6 +92,12 @@ func StringSource(str string) Source {
 	}
 }
 
+func errorSource() Source {
+	return func() (io.Reader, error) {
+		return nil, fmt.Errorf("error source")
+	}
+}
+
 // New creates a Table from the CSV physical representation.
 func New(source Source, opts ...CreationOpts) (*Table, error) {
 	t := Table{Source: source}
@@ -123,5 +130,11 @@ func SetHeaders(headers ...string) CreationOpts {
 	return func(t *Table) error {
 		t.Headers = headers
 		return nil
+	}
+}
+
+func errorOpts(headers ...string) CreationOpts {
+	return func(t *Table) error {
+		return fmt.Errorf("error opts")
 	}
 }

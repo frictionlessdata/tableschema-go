@@ -27,9 +27,6 @@ func ExampleTable_Iter() {
 
 func ExampleTable_Infer() {
 	tab, _ := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
-	if err := tab.Infer(); err != nil {
-		fmt.Println(err)
-	}
 	iter, _ := tab.Iter()
 	for iter.Next() {
 		var data csvRow
@@ -72,6 +69,24 @@ func TestLoadHeaders(t *testing.T) {
 	})
 }
 
+func TestNew(t *testing.T) {
+	t.Run("ErrorOpts", func(t *testing.T) {
+		tab, err := New(StringSource(""), errorOpts())
+		if tab != nil {
+			t.Fatalf("tab want:nil got:%v", tab)
+		}
+		if err == nil {
+			t.Fatalf("err want:error got:nil")
+		}
+	})
+	t.Run("ErrorSource", func(t *testing.T) {
+		_, err := New(errorSource(), LoadHeaders())
+		if err == nil {
+			t.Fatalf("want:err got:nil")
+		}
+	})
+}
+
 func TestSetHeaders(t *testing.T) {
 	in := "Foo"
 	tab, err := New(StringSource(in), SetHeaders("name"))
@@ -90,6 +105,73 @@ func TestSetHeaders(t *testing.T) {
 	if len(out) == 0 {
 		t.Fatalf("CSVHeaders must not skip first row")
 	}
+}
+
+func TestTable_Infer(t *testing.T) {
+	t.Run("SimpleCase", func(t *testing.T) {
+		tab, err := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		if err := tab.Infer(); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		var got []csvRow
+		if err := tab.CastAll(&got); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []csvRow{{"foo"}, {"bar"}}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%v got:%v", want, got)
+		}
+	})
+	t.Run("WithErrorSource", func(t *testing.T) {
+		tab, err := New(errorSource())
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		if err := tab.Infer(); err == nil {
+			t.Fatalf("want:err got:nil")
+		}
+	})
+}
+
+func TestTable_Iter(t *testing.T) {
+	t.Run("SimpleCase", func(t *testing.T) {
+		tab, err := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		if err := tab.Infer(); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		iter, err := tab.Iter()
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := [][]string{{"foo"}, {"bar"}}
+		for i := range want {
+			if !iter.Next() {
+				t.Fatalf("want more values")
+			}
+			if !reflect.DeepEqual(want[i], iter.Row()) {
+				t.Fatalf("val want:%v got:%v", want[i], iter.Row())
+			}
+			if iter.Err() != nil {
+				t.Fatalf("err want:nil got:%q", err)
+			}
+		}
+	})
+	t.Run("WithErrorSource", func(t *testing.T) {
+		tab, err := New(errorSource())
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		_, err = tab.Iter()
+		if err == nil {
+			t.Fatalf("want:err got:nil")
+		}
+	})
 }
 
 func TestTable_CastAll(t *testing.T) {
