@@ -200,6 +200,36 @@ func TestTable_CastAll(t *testing.T) {
 			}
 		})
 	}
+	t.Run("MoarData", func(t *testing.T) {
+		tab, err := New(FromString(`1,39,Paul
+2,23,Jimmy
+3,36,Jane
+4,28,Judy
+5,37,Iñtërnâtiônàlizætiøn`))
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		type data struct {
+			ID   int
+			Age  int
+			Name string
+		}
+		got := []data{}
+		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "id", Type: schema.IntegerType}, {Name: "age", Type: schema.IntegerType}, {Name: "name", Type: schema.StringType}}}
+		if err := tab.CastAll(&got); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []data{
+			{1, 39, "Paul"},
+			{2, 23, "Jimmy"},
+			{3, 36, "Jane"},
+			{4, 28, "Judy"},
+			{5, 37, "Iñtërnâtiônàlizætiøn"},
+		}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%v got:%v", want, got)
+		}
+	})
 	t.Run("EmptyString", func(t *testing.T) {
 		tab, err := New(FromString(""))
 		if err != nil {

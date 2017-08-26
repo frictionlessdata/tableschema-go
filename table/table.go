@@ -35,12 +35,13 @@ func CastAll(iter Iterator, out interface{}) error {
 	slicev = slicev.Slice(0, 0) // Trucantes the passed-in slice.
 	elemt := slicev.Type().Elem()
 	i := 0
-	for elemp := reflect.New(elemt); iter.Next(); {
+	for iter.Next() {
+		elemp := reflect.New(elemt)
 		if err := iter.CastRow(elemp.Interface()); err != nil {
 			return err
 		}
 		slicev = reflect.Append(slicev, elemp.Elem())
-		slicev = slicev.Slice(0, slicev.Cap())
+		slicev = slicev.Slice(0, slicev.Len())
 		i++
 	}
 	if iter.Err() != nil {
