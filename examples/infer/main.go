@@ -24,7 +24,7 @@ func main() {
 	}
 	// Writing schema to stdout.
 	table.Schema.Save(os.Stdout)
-
+	// Casting and writing data to stdout.
 	var data []user
 	if err := table.CastAll(&data); err != nil {
 		log.Fatal(err)
