@@ -264,3 +264,14 @@ func TestTable_CastAll(t *testing.T) {
 		}
 	})
 }
+
+func TestTable_WithSchema(t *testing.T) {
+	s := schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+	tab, err := New(FromString("name\nfoo\nbar"), WithSchema(&s))
+	if err != nil {
+		t.Fatalf("err want:nil got:%q", err)
+	}
+	if !reflect.DeepEqual(&s, tab.Schema) {
+		t.Fatalf("schema want:%v got:%v", s, tab.Schema)
+	}
+}
