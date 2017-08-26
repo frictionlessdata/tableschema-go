@@ -9,7 +9,11 @@ import (
 	"strings"
 )
 
-// Read reads, parses and validates a descriptor to create a schema.
+// InvalidPosition is returned by GetField call when
+// it refers to a field that does not exist in the schema.
+const InvalidPosition = -1
+
+// Read reads and parses a descriptor to create a schema.
 //
 // Example - Reading a schema from a file:
 //
@@ -29,6 +33,15 @@ func Read(r io.Reader) (*Schema, error) {
 		return nil, err
 	}
 	return &s, nil
+}
+
+// ReadFromFile reads and parses a schema descrptor from a local file.
+func ReadFromFile(path string) (*Schema, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	return Read(f)
 }
 
 // Field represents a list of schema fields.
@@ -69,16 +82,20 @@ func (s *Schema) Headers() []string {
 	return h
 }
 
-// GetField fetches the index and field referenced by the name argument. The third
-// return value is true if there is a field with the passed-in name in
-// the schema and false otherwise.
-func (s *Schema) GetField(name string) (int, *Field, bool) {
+// GetField fetches the index and field referenced by the name argument.
+func (s *Schema) GetField(name string) (*Field, int) {
 	for i := range s.Fields {
 		if name == s.Fields[i].Name {
-			return i, &s.Fields[i], true
+			return &s.Fields[i], i
 		}
 	}
-	return 0, nil, false
+	return nil, InvalidPosition
+}
+
+// HasField returns checks whether the schema has a field with the passed-in.
+func (s *Schema) HasField(name string) bool {
+	_, pos := s.GetField(name)
+	return pos != InvalidPosition
 }
 
 // Validate checks whether the schema is valid. If it is not, returns an error
@@ -93,13 +110,13 @@ func (s *Schema) Validate() error {
 	}
 	// Checking primary keys.
 	for _, pk := range s.PrimaryKeys {
-		if _, _, ok := s.GetField(pk); !ok {
+		if !s.HasField(pk) {
 			return fmt.Errorf("invalid primary key: there is no field %s", pk)
 		}
 	}
 	// Checking foreign keys.
 	for _, fk := range s.ForeignKeys.Fields {
-		if _, _, ok := s.GetField(fk); !ok {
+		if !s.HasField(fk) {
 			return fmt.Errorf("invalid foreign keys: there is no field %s", fk)
 		}
 	}
@@ -147,8 +164,8 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 		if fieldValue.CanSet() { // Only consider exported fields.
 			field := outt.Field(i)
 			fieldName := strings.ToLower(field.Name)
-			fieldIndex, f, ok := s.GetField(fieldName)
-			if ok {
+			f, fieldIndex := s.GetField(fieldName)
+			if fieldIndex != InvalidPosition {
 				cell := row[fieldIndex]
 				v, err := f.CastValue(cell)
 				if err != nil {

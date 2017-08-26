@@ -74,8 +74,8 @@ type CreationOpts func(t *Table) error
 // Source defines a table physical data source.
 type Source func() (io.Reader, error)
 
-// FileSource defines a file-based Source.
-func FileSource(path string) Source {
+// FromFile defines a file-based Source.
+func FromFile(path string) Source {
 	return func() (io.Reader, error) {
 		f, err := os.Open(path)
 		if err != nil {
@@ -85,8 +85,8 @@ func FileSource(path string) Source {
 	}
 }
 
-// StringSource defines a string-based source.
-func StringSource(str string) Source {
+// FromString defines a string-based source.
+func FromString(str string) Source {
 	return func() (io.Reader, error) {
 		return strings.NewReader(str), nil
 	}
@@ -129,6 +129,14 @@ func LoadHeaders() CreationOpts {
 func SetHeaders(headers ...string) CreationOpts {
 	return func(t *Table) error {
 		t.Headers = headers
+		return nil
+	}
+}
+
+// WithSchema associates an schema to the CSV table being created.
+func WithSchema(s *schema.Schema) CreationOpts {
+	return func(t *Table) error {
+		t.Schema = s
 		return nil
 	}
 }

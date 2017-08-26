@@ -255,3 +255,51 @@ func TestSave(t *testing.T) {
 		t.Errorf("val want:%s got:%s", want, buf.String())
 	}
 }
+
+func TestGetField(t *testing.T) {
+	t.Run("HasField", func(t *testing.T) {
+		s := Schema{Fields: []Field{{Name: "Foo"}, {Name: "Bar"}}}
+		field, pos := s.GetField("Foo")
+		if pos != 0 {
+			t.Fatalf("pos want:0 got:%d", pos)
+		}
+		if field == nil {
+			t.Fatalf("field want:field got nil")
+		}
+		field, pos = s.GetField("Bar")
+		if pos != 1 {
+			t.Fatalf("pos want:1 got:%d", pos)
+		}
+		if field == nil {
+			t.Fatalf("field value want:field got nil")
+		}
+	})
+	t.Run("DoesNotHaveField", func(t *testing.T) {
+		s := Schema{Fields: []Field{{Name: "Bez"}}}
+		field, pos := s.GetField("Foo")
+		if pos != InvalidPosition {
+			t.Fatalf("pos want:InvalidPosition got:%d", pos)
+		}
+		if field != nil {
+			t.Fatalf("field value want:nil got:%v", field)
+		}
+	})
+}
+
+func TestHasField(t *testing.T) {
+	t.Run("HasField", func(t *testing.T) {
+		s := Schema{Fields: []Field{{Name: "Foo"}, {Name: "Bar"}}}
+		if !s.HasField("Foo") {
+			t.Fatalf("field exist want:true got:false")
+		}
+		if !s.HasField("Bar") {
+			t.Fatalf("field existence want:true got:false")
+		}
+	})
+	t.Run("DoesNotHaveField", func(t *testing.T) {
+		s := Schema{Fields: []Field{{Name: "Bez"}}}
+		if s.HasField("Bar") {
+			t.Fatalf("field existence want:false got:true")
+		}
+	})
+}

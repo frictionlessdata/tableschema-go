@@ -13,7 +13,7 @@ type csvRow struct {
 }
 
 func ExampleTable_Iter() {
-	tab, _ := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+	tab, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
 	tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 	iter, _ := tab.Iter()
 	for iter.Next() {
@@ -26,7 +26,7 @@ func ExampleTable_Iter() {
 }
 
 func ExampleTable_Infer() {
-	tab, _ := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+	tab, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
 	tab.Infer()
 	iter, _ := tab.Iter()
 	for iter.Next() {
@@ -40,7 +40,7 @@ func ExampleTable_Infer() {
 
 func TestLoadHeaders(t *testing.T) {
 	t.Run("EmptyString", func(t *testing.T) {
-		tab, err := New(StringSource(""), LoadHeaders())
+		tab, err := New(FromString(""), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -51,7 +51,7 @@ func TestLoadHeaders(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
 		in := `"name"
 "bar"`
-		tab, err := New(StringSource(in), LoadHeaders())
+		tab, err := New(FromString(in), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -72,7 +72,7 @@ func TestLoadHeaders(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	t.Run("ErrorOpts", func(t *testing.T) {
-		tab, err := New(StringSource(""), errorOpts())
+		tab, err := New(FromString(""), errorOpts())
 		if tab != nil {
 			t.Fatalf("tab want:nil got:%v", tab)
 		}
@@ -90,7 +90,7 @@ func TestNew(t *testing.T) {
 
 func TestSetHeaders(t *testing.T) {
 	in := "Foo"
-	tab, err := New(StringSource(in), SetHeaders("name"))
+	tab, err := New(FromString(in), SetHeaders("name"))
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
@@ -110,7 +110,7 @@ func TestSetHeaders(t *testing.T) {
 
 func TestTable_Infer(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
-		tab, err := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+		tab, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -139,7 +139,7 @@ func TestTable_Infer(t *testing.T) {
 
 func TestTable_Iter(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
-		tab, err := New(StringSource("\"name\"\nfoo\nbar"), LoadHeaders())
+		tab, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -186,7 +186,7 @@ func TestTable_CastAll(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			tab, err := New(StringSource("name\nfoo\nbar"))
+			tab, err := New(FromString("name\nfoo\nbar"))
 			if err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
@@ -201,7 +201,7 @@ func TestTable_CastAll(t *testing.T) {
 		})
 	}
 	t.Run("EmptyString", func(t *testing.T) {
-		tab, err := New(StringSource(""))
+		tab, err := New(FromString(""))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -215,7 +215,7 @@ func TestTable_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("Error_TableWithNoSchema", func(t *testing.T) {
-		tab, err := New(StringSource("name"))
+		tab, err := New(FromString("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -224,7 +224,7 @@ func TestTable_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
-		tab, err := New(StringSource("name"))
+		tab, err := New(FromString("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
