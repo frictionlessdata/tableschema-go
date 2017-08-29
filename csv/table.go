@@ -68,6 +68,19 @@ func (t *Table) CastAll(out interface{}) error {
 	return table.CastAll(iter, out)
 }
 
+// All returns all rows of the table.
+func (t *Table) All() ([][]string, error) {
+	iter, err := t.Iter()
+	if err != nil {
+		return nil, err
+	}
+	var all [][]string
+	for iter.Next() {
+		all = append(all, iter.Row())
+	}
+	return all, nil
+}
+
 // CreationOpts defines functional options for creating Tables.
 type CreationOpts func(t *Table) error
 

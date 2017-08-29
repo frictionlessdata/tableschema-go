@@ -275,3 +275,22 @@ func TestTable_WithSchema(t *testing.T) {
 		t.Fatalf("schema want:%v got:%v", s, tab.Schema)
 	}
 }
+
+func TestTable_All(t *testing.T) {
+	tab, err := New(FromString("name\nfoo\nbar"))
+	if err != nil {
+		t.Fatalf("err want:nil got:%q", err)
+	}
+	want := [][]string{
+		[]string{"name"},
+		[]string{"foo"},
+		[]string{"bar"},
+	}
+	got, err := tab.All()
+	if err != nil {
+		t.Fatalf("err want:nil got:%q", err)
+	}
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("schema want:%v got:%v", want, got)
+	}
+}
