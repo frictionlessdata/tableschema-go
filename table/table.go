@@ -20,6 +20,9 @@ type Table interface {
 	// The result argument must necessarily be the address for a slice. The slice
 	// may be nil or previously allocated.
 	CastAll(out interface{}) error
+
+	// All returns all rows of the table.
+	All() ([][]string, error)
 }
 
 // CastAll loads and casts all rows returned by the iterator to schema types.
