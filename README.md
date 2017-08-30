@@ -56,3 +56,71 @@ func main() {
     t.CastAll(&data)  // casts the table data into the data slice.
 }
 ```
+# Documentation
+
+## Table
+
+A table is a core concept in a tabular data world. It represents a data with a metadata (Table Schema). Let's see how we could use it in practice.
+
+Consider we have some local CSV file, `data.csv`:
+
+```csv
+city,location
+london,"51.50,-0.11"
+paris,"48.85,2.30"
+rome,N/A
+```
+
+To read its contents we use [csv.New](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#New) to create a table and use the [File](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#FromFile) [Source](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Source).
+
+```go
+    table, _ := csv.New(csv.FromFile("data.csv"), csv.LoadHeaders())
+    table.Headers // ["city", "location"]
+    table.All() // [[london 51.50,-0.11], [paris 48.85,2.30], [rome N/A]]
+```
+
+As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. First we have to infer Table Schema:
+
+```go
+    table.Infer()
+    fmt.Println(table.Schema)
+	// "fields": [
+	//     {"name": "city", "type": "string", "format": "default"},
+	//     {"name": "location", "type": "geopoint", "format": "default"},
+	// ],
+	// "missingValues": []
+    // ...
+```
+
+Then we could create a struct and automatically cast the table data to schema types. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. First thing we need is to create the struct which will represent each row.
+
+```go
+type Location struct {
+    City string
+    Location schema.GeoPoint
+}
+```
+
+Then we are ready to cast the table.
+
+```go
+var locations []Location
+table.CastAll(&locations)
+// Fails with cast error: "Invalid geopoint:\"N/A\""
+```
+
+The problem is that the library does not know that N/A is not an empty value. For those cases, there is a `missingValues` property in Table Schema specification. As a first try we set `missingValues` to N/A in table.Schema.
+
+```go
+table.Schema.MissingValues = []string{"N/A"}
+var locations []Location
+table.CastAll(&locations)
+fmt.Println(rows)
+// [{london {51.5 -0.11}} {paris {48.85 2.3}} {rome {0 0}}]
+```
+
+And because there are no errors on data reading we could be sure that our data is valid againt our schema. Let's save it:
+
+```go
+table.Schema.SaveToFile("schema.json")
+```
