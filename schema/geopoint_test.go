@@ -10,12 +10,14 @@ func TestCastGeoPoint(t *testing.T) {
 		want   GeoPoint
 	}{
 		{"DefaultNoParentheses", defaultFieldFormat, "90,40", GeoPoint{90, 40}},
-		{"DefaultNoParenthesesNegative", defaultFieldFormat, "-90,-40", GeoPoint{-90, -40}},
+		{"DefaultNoParenthesesFloats", defaultFieldFormat, "90.5,40.44", GeoPoint{90.5, 40.44}},
+		{"DefaultNoParenthesesNegative", defaultFieldFormat, "-90.10,-40", GeoPoint{-90.10, -40}},
 		{"DefaultNoParenthesesEmptyFormat", "", "90,40", GeoPoint{90, 40}},
 		{"DefaultWithSpace", "", "90, 40", GeoPoint{90, 40}},
 		{"DefaultWithSpaceNegative", "", "-90, -40", GeoPoint{-90, -40}},
 		{"Array", GeoPointArrayFormat, "[90,40]", GeoPoint{90, 40}},
-		{"ArrayNegative", GeoPointArrayFormat, "[-90,-40]", GeoPoint{-90, -40}},
+		{"ArrayFloat", GeoPointArrayFormat, "[90.5,40.44]", GeoPoint{90.5, 40.44}},
+		{"ArrayNegative", GeoPointArrayFormat, "[-90.5,-40]", GeoPoint{-90.5, -40}},
 		{"ArrayWithSpace", GeoPointArrayFormat, "[90, 40]", GeoPoint{90, 40}},
 		{"ArrayWithSpaceNegative", GeoPointArrayFormat, "[-90, -40]", GeoPoint{-90, -40}},
 		{"Object", GeoPointObjectFormat, `{"lon": 90, "lat": 45}`, GeoPoint{90, 45}},
