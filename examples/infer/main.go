@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 	// Writing schema to stdout.
-	table.Schema.Save(os.Stdout)
+	table.Schema.Write(os.Stdout)
 	// Casting and writing data to stdout.
 	var data []user
 	if err := table.CastAll(&data); err != nil {

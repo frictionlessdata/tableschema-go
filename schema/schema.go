@@ -127,8 +127,8 @@ func (s *Schema) Validate() error {
 	return nil
 }
 
-// Save writes the schema descriptor.
-func (s *Schema) Save(w io.Writer) error {
+// Write writes the schema descriptor.
+func (s *Schema) Write(w io.Writer) error {
 	pp, err := json.MarshalIndent(s, "", "    ")
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (s *Schema) SaveToFile(path string) error {
 	if err != nil {
 		return err
 	}
-	return s.Save(f)
+	return s.Write(f)
 }
 
 // CastRow casts a row to schema types. The out value must be pointer to a

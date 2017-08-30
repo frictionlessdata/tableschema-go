@@ -221,14 +221,14 @@ func TestValidate_Invalid(t *testing.T) {
 	}
 }
 
-func TestSave(t *testing.T) {
+func TestWrite(t *testing.T) {
 	s := Schema{
 		Fields:      []Field{{Name: "Foo"}, {Name: "Bar"}},
 		PrimaryKeys: []string{"Foo"},
 		ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"Foo"}}},
 	}
 	buf := bytes.NewBufferString("")
-	if err := s.Save(buf); err != nil {
+	if err := s.Write(buf); err != nil {
 		t.Errorf("want:nil got:err")
 	}
 	want := `{
