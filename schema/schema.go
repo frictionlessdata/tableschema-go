@@ -70,6 +70,7 @@ type Schema struct {
 	PrimaryKeyPlaceholder interface{} `json:"primaryKey,omitempty"`
 	PrimaryKeys           []string    `json:"-"`
 	ForeignKeys           ForeignKeys `json:"foreignKeys,omitempty"`
+	MissingValues         []string    `json:"missingValues,omitempty"`
 }
 
 // Headers returns the headers of the tabular data described
@@ -167,6 +168,9 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 			f, fieldIndex := s.GetField(fieldName)
 			if fieldIndex != InvalidPosition {
 				cell := row[fieldIndex]
+				if s.isMissingValue(cell) {
+					continue
+				}
 				v, err := f.CastValue(cell)
 				if err != nil {
 					return err
@@ -181,6 +185,15 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 		}
 	}
 	return nil
+}
+
+func (s *Schema) isMissingValue(value string) bool {
+	for _, mv := range s.MissingValues {
+		if mv == value {
+			return true
+		}
+	}
+	return false
 }
 
 // UnmarshalJSON sets *f to a copy of data. It will respect the default values

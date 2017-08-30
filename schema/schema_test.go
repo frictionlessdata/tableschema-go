@@ -303,3 +303,17 @@ func TestHasField(t *testing.T) {
 		}
 	})
 }
+
+func TestMissingValues(t *testing.T) {
+	s := Schema{
+		Fields:        []Field{{Name: "Foo"}},
+		MissingValues: []string{"f"},
+	}
+	row := struct {
+		Foo string
+	}{}
+	s.CastRow([]string{"f"}, &row)
+	if row.Foo != "" {
+		t.Fatalf("want:\"\" got:%s", row.Foo)
+	}
+}
