@@ -24,14 +24,7 @@ This package uses [semantic versioning 2.0.0](http://semver.org/).
 
 ```sh
 $ dep init
-$ dep ensure -add github.com/frictionlessdata/tableschema-go@0.1
-```
-
-### Using govendor
-
-```sh
-$ govendor init
-$ govendor fetch github.com/frictionlessdata/tableschema-go@0.1
+$ dep ensure -add github.com/frictionlessdata/tableschema-go/csv@>=0.1
 ```
 
 # Examples
