@@ -2,7 +2,7 @@ package schema
 
 import "testing"
 
-func TestCastGeoPoint_Success(t *testing.T) {
+func TestCastGeoPoint(t *testing.T) {
 	data := []struct {
 		desc   string
 		format string
@@ -10,10 +10,14 @@ func TestCastGeoPoint_Success(t *testing.T) {
 		want   GeoPoint
 	}{
 		{"DefaultNoParentheses", defaultFieldFormat, "90,40", GeoPoint{90, 40}},
+		{"DefaultNoParenthesesNegative", defaultFieldFormat, "-90,-40", GeoPoint{-90, -40}},
 		{"DefaultNoParenthesesEmptyFormat", "", "90,40", GeoPoint{90, 40}},
 		{"DefaultWithSpace", "", "90, 40", GeoPoint{90, 40}},
+		{"DefaultWithSpaceNegative", "", "-90, -40", GeoPoint{-90, -40}},
 		{"Array", GeoPointArrayFormat, "[90,40]", GeoPoint{90, 40}},
+		{"ArrayNegative", GeoPointArrayFormat, "[-90,-40]", GeoPoint{-90, -40}},
 		{"ArrayWithSpace", GeoPointArrayFormat, "[90, 40]", GeoPoint{90, 40}},
+		{"ArrayWithSpaceNegative", GeoPointArrayFormat, "[-90, -40]", GeoPoint{-90, -40}},
 		{"Object", GeoPointObjectFormat, `{"lon": 90, "lat": 45}`, GeoPoint{90, 45}},
 	}
 	for _, d := range data {
@@ -27,24 +31,23 @@ func TestCastGeoPoint_Success(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestCastGeoPoint_Error(t *testing.T) {
-	data := []struct {
-		desc   string
-		format string
-		value  string
-	}{
-		{"BadJSON", GeoPointObjectFormat, ""},
-		{"BadGeoPointJSON", GeoPointObjectFormat, `{"longi": 90, "lat": 45}`},
-		{"BadFormat", "badformat", `{"longi": 90, "lat": 45}`},
-	}
-	for _, d := range data {
-		t.Run(d.desc, func(t *testing.T) {
-			_, err := castGeoPoint(d.format, d.value)
-			if err == nil {
-				t.Errorf("want:err got:nil")
-			}
-		})
-	}
+	t.Run("Error", func(t *testing.T) {
+		data := []struct {
+			desc   string
+			format string
+			value  string
+		}{
+			{"BadJSON", GeoPointObjectFormat, ""},
+			{"BadGeoPointJSON", GeoPointObjectFormat, `{"longi": 90, "lat": 45}`},
+			{"BadFormat", "badformat", `{"longi": 90, "lat": 45}`},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				_, err := castGeoPoint(d.format, d.value)
+				if err == nil {
+					t.Errorf("want:err got:nil")
+				}
+			})
+		}
+	})
 }

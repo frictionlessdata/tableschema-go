@@ -39,8 +39,8 @@ func (p *GeoPoint) UnmarshalJSON(data []byte) error {
 }
 
 var (
-	geoPointDefaultRegexp = regexp.MustCompile(`(\d\d?), ?(\d\d?)`)
-	geoPointArrayRegexp   = regexp.MustCompile(`\[(\d\d?), ?(\d\d?)\]`)
+	geoPointDefaultRegexp = regexp.MustCompile(`(-?\d\d?), ?(-?\d\d?)`)
+	geoPointArrayRegexp   = regexp.MustCompile(`\[(-?\d\d?), ?(-?\d\d?)\]`)
 )
 
 func castGeoPoint(format, value string) (GeoPoint, error) {
