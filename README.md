@@ -34,7 +34,7 @@ Code examples in this readme requires Go 1.8+. You can find more examples in the
 ```go
 import (
     "fmt"
-    "github.com/github.com/frictionlessdata/tableschema-go/csv"
+    "github.com/frictionlessdata/tableschema-go/csv"
 )
 // struct representing each row of the table.
 type person struct {
