@@ -42,10 +42,10 @@ type person struct {
     Age uint16
 }
 func main() {
-    t, _ := csv.New(csv.FileSource("data.csv"), csv.LoadHeaders())  // load table
+    t, _ := csv.New(csv.FromFile("data.csv"), csv.LoadHeaders())  // load table
     t.Infer()  // infer the table schema
     t.Schema.SaveToFile("schema.json")  // save inferred schema to file
-    data := []person
+    data := []person{}
     t.CastAll(&data)  // casts the table data into the data slice.
 }
 ```
