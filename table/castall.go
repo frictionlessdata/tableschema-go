@@ -5,26 +5,6 @@ import (
 	"reflect"
 )
 
-// Table makes it easy to deal with physical tabular data.
-type Table interface {
-	// Iter returns an Iterator to read the table. Iter returns an error
-	// if the table physical source can not be iterated.
-	Iter() (Iterator, error)
-
-	// Infer tries to infer a suitable schema for the table.
-	Infer() error
-
-	// CastAll loads and casts all rows of the table to schema types. The table
-	// schema must be previously assigned or inferred.
-	//
-	// The result argument must necessarily be the address for a slice. The slice
-	// may be nil or previously allocated.
-	CastAll(out interface{}) error
-
-	// All returns all rows of the table.
-	All() ([][]string, error)
-}
-
 // CastAll loads and casts all rows returned by the iterator to schema types.
 //
 // The result argument must necessarily be the address for a slice. The slice
