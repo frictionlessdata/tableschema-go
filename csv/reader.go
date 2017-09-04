@@ -14,45 +14,27 @@ import (
 // Maximum number of rows used to infer schema.
 const maxNumRowsInfer = 100
 
-// Table implements a Table which is backed by a CSV source.
-type Table struct {
+type tableDef struct {
 	Headers []string
 	Source  Source
 	Schema  *schema.Schema
+}
+
+// Reader provides funcionality to read a table which is backed by a CSV source.
+type Reader struct {
+	tableDef
 
 	skipHeaders bool
 }
 
 // Iter returns an Iterator to read the table. Iter returns an error
 // if the table physical source can not be iterated.
-func (t *Table) Iter() (table.Iterator, error) {
-	reader, err := t.Source()
+func (reader *Reader) Iter() (table.Iterator, error) {
+	src, err := reader.Source()
 	if err != nil {
 		return nil, err
 	}
-	return newIterator(reader, t.Schema, t.skipHeaders), nil
-}
-
-// Infer tries to infer a suitable schema for the table.
-func (t *Table) Infer() error {
-	iter, err := t.Iter()
-	if err != nil {
-		return err
-	}
-	var table [][]string
-	for i := 0; i < maxNumRowsInfer; i++ {
-		if !iter.Next() {
-			break
-		}
-
-		table = append(table, iter.Row())
-	}
-	s, err := schema.Infer(t.Headers, table)
-	if err != nil {
-		return err
-	}
-	t.Schema = s
-	return nil
+	return newIterator(src, reader.Schema, reader.skipHeaders), nil
 }
 
 // CastAll loads and casts all rows of the table to schema types. The table
@@ -60,8 +42,8 @@ func (t *Table) Infer() error {
 //
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
-func (t *Table) CastAll(out interface{}) error {
-	iter, err := t.Iter()
+func (reader *Reader) CastAll(out interface{}) error {
+	iter, err := reader.Iter()
 	if err != nil {
 		return err
 	}
@@ -69,8 +51,8 @@ func (t *Table) CastAll(out interface{}) error {
 }
 
 // All returns all rows of the table.
-func (t *Table) All() ([][]string, error) {
-	iter, err := t.Iter()
+func (reader *Reader) All() ([][]string, error) {
+	iter, err := reader.Iter()
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +64,7 @@ func (t *Table) All() ([][]string, error) {
 }
 
 // CreationOpts defines functional options for creating Tables.
-type CreationOpts func(t *Table) error
+type CreationOpts func(t *Reader) error
 
 // Source defines a table physical data source.
 type Source func() (io.Reader, error)
@@ -112,8 +94,9 @@ func errorSource() Source {
 }
 
 // New creates a Table from the CSV physical representation.
-func New(source Source, opts ...CreationOpts) (*Table, error) {
-	t := Table{Source: source}
+// CreationOpts are executed in the order they are declared.
+func New(source Source, opts ...CreationOpts) (*Reader, error) {
+	t := Reader{tableDef: tableDef{Source: source}, skipHeaders: false}
 	for _, opt := range opts {
 		if err := opt(&t); err != nil {
 			return nil, err
@@ -125,37 +108,60 @@ func New(source Source, opts ...CreationOpts) (*Table, error) {
 // LoadHeaders uses the first line of the CSV as table headers.
 // The header line will be skipped during iteration
 func LoadHeaders() CreationOpts {
-	return func(t *Table) error {
-		iter, err := t.Iter()
+	return func(reader *Reader) error {
+		iter, err := reader.Iter()
 		if err != nil {
 			return err
 		}
 		if iter.Next() {
-			t.Headers = iter.Row()
+			reader.Headers = iter.Row()
 		}
-		t.skipHeaders = true
+		reader.skipHeaders = true
 		return nil
 	}
 }
 
 // SetHeaders sets the table headers.
 func SetHeaders(headers ...string) CreationOpts {
-	return func(t *Table) error {
-		t.Headers = headers
+	return func(reader *Reader) error {
+		reader.Headers = headers
 		return nil
 	}
 }
 
 // WithSchema associates an schema to the CSV table being created.
 func WithSchema(s *schema.Schema) CreationOpts {
-	return func(t *Table) error {
-		t.Schema = s
+	return func(reader *Reader) error {
+		reader.Schema = s
+		return nil
+	}
+}
+
+// InferSchema tries to infer a suitable schema for the table data being read.
+func InferSchema() CreationOpts {
+	return func(reader *Reader) error {
+		iter, err := reader.Iter()
+		if err != nil {
+			return err
+		}
+		var table [][]string
+		for i := 0; i < maxNumRowsInfer; i++ {
+			if !iter.Next() {
+				break
+			}
+			table = append(table, iter.Row())
+		}
+		s, err := schema.Infer(reader.Headers, table)
+		if err != nil {
+			return err
+		}
+		reader.Schema = s
 		return nil
 	}
 }
 
 func errorOpts(headers ...string) CreationOpts {
-	return func(t *Table) error {
+	return func(_ *Reader) error {
 		return fmt.Errorf("error opts")
 	}
 }

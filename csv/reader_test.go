@@ -12,10 +12,10 @@ type csvRow struct {
 	Name string
 }
 
-func ExampleTable_Iter() {
-	tab, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
-	tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-	iter, _ := tab.Iter()
+func ExampleReader_Iter() {
+	reader, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
+	reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+	iter, _ := reader.Iter()
 	for iter.Next() {
 		var data csvRow
 		iter.CastRow(&data)
@@ -25,10 +25,9 @@ func ExampleTable_Iter() {
 	// bar
 }
 
-func ExampleTable_Infer() {
-	tab, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
-	tab.Infer()
-	iter, _ := tab.Iter()
+func ExampleInferSchema() {
+	reader, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
+	iter, _ := reader.Iter()
 	for iter.Next() {
 		var data csvRow
 		iter.CastRow(&data)
@@ -40,28 +39,28 @@ func ExampleTable_Infer() {
 
 func TestLoadHeaders(t *testing.T) {
 	t.Run("EmptyString", func(t *testing.T) {
-		tab, err := New(FromString(""), LoadHeaders())
+		reader, err := New(FromString(""), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		if len(tab.Headers) != 0 {
-			t.Fatalf("len(headers) want:0 got:%v", len(tab.Headers))
+		if len(reader.Headers) != 0 {
+			t.Fatalf("len(headers) want:0 got:%v", len(reader.Headers))
 		}
 	})
 	t.Run("SimpleCase", func(t *testing.T) {
 		in := `"name"
 "bar"`
-		tab, err := New(FromString(in), LoadHeaders())
+		reader, err := New(FromString(in), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		want := []string{"name"}
-		if !reflect.DeepEqual(want, tab.Headers) {
-			t.Fatalf("headers want:%v got:%v", want, tab.Headers)
+		if !reflect.DeepEqual(want, reader.Headers) {
+			t.Fatalf("headers want:%v got:%v", want, reader.Headers)
 		}
-		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 		var out []csvRow
-		if err := tab.CastAll(&out); err != nil {
+		if err := reader.CastAll(&out); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		if len(out) != 1 {
@@ -72,9 +71,9 @@ func TestLoadHeaders(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	t.Run("ErrorOpts", func(t *testing.T) {
-		tab, err := New(FromString(""), errorOpts())
-		if tab != nil {
-			t.Fatalf("tab want:nil got:%v", tab)
+		reader, err := New(FromString(""), errorOpts())
+		if reader != nil {
+			t.Fatalf("reader want:nil got:%v", reader)
 		}
 		if err == nil {
 			t.Fatalf("err want:error got:nil")
@@ -90,17 +89,17 @@ func TestNew(t *testing.T) {
 
 func TestSetHeaders(t *testing.T) {
 	in := "Foo"
-	tab, err := New(FromString(in), SetHeaders("name"))
+	reader, err := New(FromString(in), SetHeaders("name"))
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
 	want := []string{"name"}
-	if !reflect.DeepEqual(want, tab.Headers) {
-		t.Fatalf("val want:%v got:%v", want, tab.Headers)
+	if !reflect.DeepEqual(want, reader.Headers) {
+		t.Fatalf("val want:%v got:%v", want, reader.Headers)
 	}
-	tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+	reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 	var out []csvRow
-	if err := tab.CastAll(&out); err != nil {
+	if err := reader.CastAll(&out); err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
 	if len(out) == 0 {
@@ -108,17 +107,14 @@ func TestSetHeaders(t *testing.T) {
 	}
 }
 
-func TestTable_Infer(t *testing.T) {
+func TestInferSchema(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
-		tab, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
+		reader, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		if err := tab.Infer(); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
 		var got []csvRow
-		if err := tab.CastAll(&got); err != nil {
+		if err := reader.CastAll(&got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		want := []csvRow{{"foo"}, {"bar"}}
@@ -127,26 +123,20 @@ func TestTable_Infer(t *testing.T) {
 		}
 	})
 	t.Run("WithErrorSource", func(t *testing.T) {
-		tab, err := New(errorSource())
-		if err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
-		if err := tab.Infer(); err == nil {
+		_, err := New(errorSource(), InferSchema())
+		if err == nil {
 			t.Fatalf("want:err got:nil")
 		}
 	})
 }
 
-func TestTable_Iter(t *testing.T) {
+func TestReader_Iter(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
-		tab, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
+		reader, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		if err := tab.Infer(); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
-		iter, err := tab.Iter()
+		iter, err := reader.Iter()
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -164,18 +154,18 @@ func TestTable_Iter(t *testing.T) {
 		}
 	})
 	t.Run("WithErrorSource", func(t *testing.T) {
-		tab, err := New(errorSource())
+		reader, err := New(errorSource())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		_, err = tab.Iter()
+		_, err = reader.Iter()
 		if err == nil {
 			t.Fatalf("want:err got:nil")
 		}
 	})
 }
 
-func TestTable_CastAll(t *testing.T) {
+func TestReader_CastAll(t *testing.T) {
 	data := []struct {
 		desc string
 		got  []csvRow
@@ -186,12 +176,12 @@ func TestTable_CastAll(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			tab, err := New(FromString("name\nfoo\nbar"))
+			reader, err := New(FromString("name\nfoo\nbar"))
 			if err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
-			tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-			if err := tab.CastAll(&d.got); err != nil {
+			reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+			if err := reader.CastAll(&d.got); err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
 			want := []csvRow{{"name"}, {"foo"}, {"bar"}}
@@ -201,7 +191,7 @@ func TestTable_CastAll(t *testing.T) {
 		})
 	}
 	t.Run("MoarData", func(t *testing.T) {
-		tab, err := New(FromString(`1,39,Paul
+		reader, err := New(FromString(`1,39,Paul
 2,23,Jimmy
 3,36,Jane
 4,28,Judy
@@ -215,8 +205,8 @@ func TestTable_CastAll(t *testing.T) {
 			Name string
 		}
 		got := []data{}
-		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "id", Type: schema.IntegerType}, {Name: "age", Type: schema.IntegerType}, {Name: "name", Type: schema.StringType}}}
-		if err := tab.CastAll(&got); err != nil {
+		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "id", Type: schema.IntegerType}, {Name: "age", Type: schema.IntegerType}, {Name: "name", Type: schema.StringType}}}
+		if err := reader.CastAll(&got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		want := []data{
@@ -231,53 +221,53 @@ func TestTable_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("EmptyString", func(t *testing.T) {
-		tab, err := New(FromString(""))
+		reader, err := New(FromString(""))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 		var got []csvRow
-		if err := tab.CastAll(&got); err != nil {
+		if err := reader.CastAll(&got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		if len(got) != 0 {
 			t.Fatalf("len(got) want:0 got:%v", len(got))
 		}
 	})
-	t.Run("Error_TableWithNoSchema", func(t *testing.T) {
-		tab, err := New(FromString("name"))
+	t.Run("Error_ReaderWithNoSchema", func(t *testing.T) {
+		reader, err := New(FromString("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		if err := tab.CastAll(&[]csvRow{}); err == nil {
+		if err := reader.CastAll(&[]csvRow{}); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
 	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
-		tab, err := New(FromString("name"))
+		reader, err := New(FromString("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		tab.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-		if err := tab.CastAll([]csvRow{}); err == nil {
+		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
+		if err := reader.CastAll([]csvRow{}); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
 }
 
-func TestTable_WithSchema(t *testing.T) {
+func TestWithSchema(t *testing.T) {
 	s := &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-	tab, err := New(FromString("name\nfoo\nbar"), WithSchema(s))
+	reader, err := New(FromString("name\nfoo\nbar"), WithSchema(s))
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
-	if !reflect.DeepEqual(s, tab.Schema) {
-		t.Fatalf("schema want:%v got:%v", s, tab.Schema)
+	if !reflect.DeepEqual(s, reader.Schema) {
+		t.Fatalf("schema want:%v got:%v", s, reader.Schema)
 	}
 }
 
-func TestTable_All(t *testing.T) {
-	tab, err := New(FromString("name\nfoo\nbar"))
+func TestReader_All(t *testing.T) {
+	reader, err := New(FromString("name\nfoo\nbar"))
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
@@ -286,7 +276,7 @@ func TestTable_All(t *testing.T) {
 		[]string{"foo"},
 		[]string{"bar"},
 	}
-	got, err := tab.All()
+	got, err := reader.All()
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}

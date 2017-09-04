@@ -15,11 +15,8 @@ type user struct {
 }
 
 func main() {
-	table, err := csv.New(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"))
+	table, err := csv.New(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"), csv.InferSchema())
 	if err != nil {
-		log.Fatal(err)
-	}
-	if err := table.Infer(); err != nil {
 		log.Fatal(err)
 	}
 	// Writing schema to stdout.
