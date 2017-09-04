@@ -93,9 +93,9 @@ func errorSource() Source {
 	}
 }
 
-// New creates a Table from the CSV physical representation.
+// NewReader creates a Reader from the CSV table physical representation.
 // CreationOpts are executed in the order they are declared.
-func New(source Source, opts ...CreationOpts) (*Reader, error) {
+func NewReader(source Source, opts ...CreationOpts) (*Reader, error) {
 	t := Reader{tableDef: tableDef{Source: source}, skipHeaders: false}
 	for _, opt := range opts {
 		if err := opt(&t); err != nil {

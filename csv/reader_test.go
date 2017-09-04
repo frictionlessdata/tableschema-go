@@ -13,7 +13,7 @@ type csvRow struct {
 }
 
 func ExampleReader_Iter() {
-	reader, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
+	reader, _ := NewReader(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
 	reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 	iter, _ := reader.Iter()
 	for iter.Next() {
@@ -26,7 +26,7 @@ func ExampleReader_Iter() {
 }
 
 func ExampleInferSchema() {
-	reader, _ := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
+	reader, _ := NewReader(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
 	iter, _ := reader.Iter()
 	for iter.Next() {
 		var data csvRow
@@ -39,7 +39,7 @@ func ExampleInferSchema() {
 
 func TestLoadHeaders(t *testing.T) {
 	t.Run("EmptyString", func(t *testing.T) {
-		reader, err := New(FromString(""), LoadHeaders())
+		reader, err := NewReader(FromString(""), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -50,7 +50,7 @@ func TestLoadHeaders(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
 		in := `"name"
 "bar"`
-		reader, err := New(FromString(in), LoadHeaders())
+		reader, err := NewReader(FromString(in), LoadHeaders())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -69,9 +69,9 @@ func TestLoadHeaders(t *testing.T) {
 	})
 }
 
-func TestNew(t *testing.T) {
+func TestNewReader(t *testing.T) {
 	t.Run("ErrorOpts", func(t *testing.T) {
-		reader, err := New(FromString(""), errorOpts())
+		reader, err := NewReader(FromString(""), errorOpts())
 		if reader != nil {
 			t.Fatalf("reader want:nil got:%v", reader)
 		}
@@ -80,7 +80,7 @@ func TestNew(t *testing.T) {
 		}
 	})
 	t.Run("ErrorSource", func(t *testing.T) {
-		_, err := New(errorSource(), LoadHeaders())
+		_, err := NewReader(errorSource(), LoadHeaders())
 		if err == nil {
 			t.Fatalf("want:err got:nil")
 		}
@@ -89,7 +89,7 @@ func TestNew(t *testing.T) {
 
 func TestSetHeaders(t *testing.T) {
 	in := "Foo"
-	reader, err := New(FromString(in), SetHeaders("name"))
+	reader, err := NewReader(FromString(in), SetHeaders("name"))
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
@@ -109,7 +109,7 @@ func TestSetHeaders(t *testing.T) {
 
 func TestInferSchema(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
-		reader, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
+		reader, err := NewReader(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -123,7 +123,7 @@ func TestInferSchema(t *testing.T) {
 		}
 	})
 	t.Run("WithErrorSource", func(t *testing.T) {
-		_, err := New(errorSource(), InferSchema())
+		_, err := NewReader(errorSource(), InferSchema())
 		if err == nil {
 			t.Fatalf("want:err got:nil")
 		}
@@ -132,7 +132,7 @@ func TestInferSchema(t *testing.T) {
 
 func TestReader_Iter(t *testing.T) {
 	t.Run("SimpleCase", func(t *testing.T) {
-		reader, err := New(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
+		reader, err := NewReader(FromString("\"name\"\nfoo\nbar"), LoadHeaders(), InferSchema())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -154,7 +154,7 @@ func TestReader_Iter(t *testing.T) {
 		}
 	})
 	t.Run("WithErrorSource", func(t *testing.T) {
-		reader, err := New(errorSource())
+		reader, err := NewReader(errorSource())
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -176,7 +176,7 @@ func TestReader_CastAll(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			reader, err := New(FromString("name\nfoo\nbar"))
+			reader, err := NewReader(FromString("name\nfoo\nbar"))
 			if err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
@@ -191,7 +191,7 @@ func TestReader_CastAll(t *testing.T) {
 		})
 	}
 	t.Run("MoarData", func(t *testing.T) {
-		reader, err := New(FromString(`1,39,Paul
+		reader, err := NewReader(FromString(`1,39,Paul
 2,23,Jimmy
 3,36,Jane
 4,28,Judy
@@ -221,7 +221,7 @@ func TestReader_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("EmptyString", func(t *testing.T) {
-		reader, err := New(FromString(""))
+		reader, err := NewReader(FromString(""))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -235,7 +235,7 @@ func TestReader_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("Error_ReaderWithNoSchema", func(t *testing.T) {
-		reader, err := New(FromString("name"))
+		reader, err := NewReader(FromString("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -244,7 +244,7 @@ func TestReader_CastAll(t *testing.T) {
 		}
 	})
 	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
-		reader, err := New(FromString("name"))
+		reader, err := NewReader(FromString("name"))
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -257,7 +257,7 @@ func TestReader_CastAll(t *testing.T) {
 
 func TestWithSchema(t *testing.T) {
 	s := &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-	reader, err := New(FromString("name\nfoo\nbar"), WithSchema(s))
+	reader, err := NewReader(FromString("name\nfoo\nbar"), WithSchema(s))
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
@@ -267,7 +267,7 @@ func TestWithSchema(t *testing.T) {
 }
 
 func TestReader_All(t *testing.T) {
-	reader, err := New(FromString("name\nfoo\nbar"))
+	reader, err := NewReader(FromString("name\nfoo\nbar"))
 	if err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}

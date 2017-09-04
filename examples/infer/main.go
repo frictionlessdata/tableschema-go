@@ -15,15 +15,15 @@ type user struct {
 }
 
 func main() {
-	table, err := csv.New(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"), csv.InferSchema())
+	reader, err := csv.NewReader(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"), csv.InferSchema())
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Writing schema to stdout.
-	table.Schema.Write(os.Stdout)
+	reader.Schema.Write(os.Stdout)
 	// Casting and writing data to stdout.
 	var data []user
-	if err := table.CastAll(&data); err != nil {
+	if err := reader.CastAll(&data); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("\n\nData:%+v\n", data)

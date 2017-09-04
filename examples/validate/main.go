@@ -40,16 +40,16 @@ func main() {
 	}
 
 	// Dealing with tabular data associated with the schema.
-	table, err := csv.New(
+	reader, err := csv.NewReader(
 		csv.FromFile("capital.csv"),
 		csv.WithSchema(capitalSchema),
 		csv.LoadHeaders())
 	capitalRow := struct {
 		ID      int
 		Capital float64
-		Type    string
+		URL     string
 	}{}
-	iter, _ := table.Iter()
+	iter, _ := reader.Iter()
 	for iter.Next() {
 		if err := iter.CastRow(&capitalRow); err != nil {
 			log.Fatalf("Couldn't cast row:%v err:%q", iter.Row(), err)
