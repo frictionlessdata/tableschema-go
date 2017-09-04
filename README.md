@@ -42,7 +42,7 @@ type person struct {
     Age uint16
 }
 func main() {
-    t, _ := csv.New(csv.FromFile("data.csv"), csv.LoadHeaders())  // load table
+    t, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders())  // load table
     t.Infer()  // infer the table schema
     t.Schema.SaveToFile("schema.json")  // save inferred schema to file
     data := []person{}
@@ -64,18 +64,18 @@ paris,"48.85,2.30"
 rome,N/A
 ```
 
-To read its contents we use [csv.New](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#New) to create a table reader and use [csv.FromFile](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#FromFile) as [Source](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Source).
+To read its contents we use [csv.NewReader](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#NewReader) to create a table reader and use [csv.FromFile](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#FromFile) as [Source](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Source).
 
 ```go
-    reader, _ := csv.New(csv.FromFile("data.csv"), csv.LoadHeaders())
+    reader, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders())
     reader.Headers // ["city", "location"]
     reader.All() // [[london 51.50,-0.11], [paris 48.85,2.30], [rome N/A]]
 ```
 
-As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. One way to deal with this data is to ask [csv.New](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#New) to infer the Table Schema:
+As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. One way to deal with this data is to ask [csv.NewReader](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#NewReader) to infer the Table Schema:
 
 ```go
-    reader, _ := csv.New(csv.FromFile("data.csv"), csv.LoadHeaders(), csv.InferSchema())
+    reader, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders(), csv.InferSchema())
     fmt.Println(reader.Schema)
 	// "fields": [
 	//     {"name": "city", "type": "string", "format": "default"},
