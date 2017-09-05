@@ -18,7 +18,7 @@ func ExampleReader_Iter() {
 	iter, _ := reader.Iter()
 	for iter.Next() {
 		var data csvRow
-		iter.CastRow(&data)
+		iter.UnmarshalRow(&data)
 		fmt.Println(data.Name)
 	}
 	// Output:foo
@@ -30,7 +30,7 @@ func ExampleInferSchema() {
 	iter, _ := reader.Iter()
 	for iter.Next() {
 		var data csvRow
-		iter.CastRow(&data)
+		iter.UnmarshalRow(&data)
 		fmt.Println(data.Name)
 	}
 	// Output:foo
@@ -60,7 +60,7 @@ func TestLoadHeaders(t *testing.T) {
 		}
 		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 		var out []csvRow
-		if err := reader.CastAll(&out); err != nil {
+		if err := reader.UnmarshalAll(&out); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		if len(out) != 1 {
@@ -99,7 +99,7 @@ func TestSetHeaders(t *testing.T) {
 	}
 	reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 	var out []csvRow
-	if err := reader.CastAll(&out); err != nil {
+	if err := reader.UnmarshalAll(&out); err != nil {
 		t.Fatalf("err want:nil got:%q", err)
 	}
 	if len(out) == 0 {
@@ -114,7 +114,7 @@ func TestInferSchema(t *testing.T) {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		var got []csvRow
-		if err := reader.CastAll(&got); err != nil {
+		if err := reader.UnmarshalAll(&got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		want := []csvRow{{"foo"}, {"bar"}}
@@ -165,7 +165,7 @@ func TestReader_Iter(t *testing.T) {
 	})
 }
 
-func TestReader_CastAll(t *testing.T) {
+func TestReader_UnmarshalAll(t *testing.T) {
 	data := []struct {
 		desc string
 		got  []csvRow
@@ -181,7 +181,7 @@ func TestReader_CastAll(t *testing.T) {
 				t.Fatalf("err want:nil got:%q", err)
 			}
 			reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-			if err := reader.CastAll(&d.got); err != nil {
+			if err := reader.UnmarshalAll(&d.got); err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
 			want := []csvRow{{"name"}, {"foo"}, {"bar"}}
@@ -206,7 +206,7 @@ func TestReader_CastAll(t *testing.T) {
 		}
 		got := []data{}
 		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "id", Type: schema.IntegerType}, {Name: "age", Type: schema.IntegerType}, {Name: "name", Type: schema.StringType}}}
-		if err := reader.CastAll(&got); err != nil {
+		if err := reader.UnmarshalAll(&got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		want := []data{
@@ -227,7 +227,7 @@ func TestReader_CastAll(t *testing.T) {
 		}
 		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
 		var got []csvRow
-		if err := reader.CastAll(&got); err != nil {
+		if err := reader.UnmarshalAll(&got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		if len(got) != 0 {
@@ -239,7 +239,7 @@ func TestReader_CastAll(t *testing.T) {
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
-		if err := reader.CastAll(&[]csvRow{}); err == nil {
+		if err := reader.UnmarshalAll(&[]csvRow{}); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
@@ -249,7 +249,7 @@ func TestReader_CastAll(t *testing.T) {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		reader.Schema = &schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}}
-		if err := reader.CastAll([]csvRow{}); err == nil {
+		if err := reader.UnmarshalAll([]csvRow{}); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})

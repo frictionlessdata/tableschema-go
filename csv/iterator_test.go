@@ -61,7 +61,7 @@ func TestIterator_Next(t *testing.T) {
 	})
 }
 
-func TestIterator_CastRow(t *testing.T) {
+func TestIterator_UnmarshalRow(t *testing.T) {
 	t.Run("OneRow", func(t *testing.T) {
 		iter := newIterator(
 			strings.NewReader("name"),
@@ -72,7 +72,7 @@ func TestIterator_CastRow(t *testing.T) {
 			t.Fatalf("want:one iteration got:zero")
 		}
 		var got iterTestValue
-		if err := iter.CastRow(&got); err != nil {
+		if err := iter.UnmarshalRow(&got); err != nil {
 			t.Fatalf("err want:nil got:%v", iter.Err())
 		}
 		want := iterTestValue{"name"}
@@ -86,7 +86,7 @@ func TestIterator_CastRow(t *testing.T) {
 			t.Fatalf("next want:true got:false")
 		}
 		var got iterTestValue
-		if err := iter.CastRow(&got); err == nil {
+		if err := iter.UnmarshalRow(&got); err == nil {
 			t.Fatalf("want:err got:nil")
 		}
 	})
@@ -95,7 +95,7 @@ func TestIterator_CastRow(t *testing.T) {
 		if !iter.Next() {
 			t.Fatalf("next want:true got:false")
 		}
-		if err := iter.CastRow(nil); err == nil {
+		if err := iter.UnmarshalRow(nil); err == nil {
 			t.Fatalf("want:err got:nil")
 		}
 	})

@@ -39,7 +39,7 @@ const (
 	AnyDateFormat = "any"
 )
 
-// JSON object that describes a single field.
+// Field describes a single field in the table schema.
 // More: https://specs.frictionlessdata.io/table-schema/#field-descriptors
 type Field struct {
 	// Name of the field. It is mandatory and shuold correspond to the name of field/column in the data file (if it has a name).
@@ -75,9 +75,9 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// CastValue casts a value against field. Returns an error if the value can
-// not be cast or any field constraint can no be satisfied.
-func (f *Field) CastValue(value string) (interface{}, error) {
+// UnmarshalString unmarshal the passed-in string against field type. Returns an error
+// if the value can not be cast or any field constraint can not be satisfied.
+func (f *Field) UnmarshalString(value string) (interface{}, error) {
 	switch f.Type {
 	case IntegerType:
 		return castInt(value)
@@ -109,9 +109,9 @@ func (f *Field) CastValue(value string) (interface{}, error) {
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
 
-// TestValue checks whether the value can be casted against the field.
-func (f *Field) TestValue(value string) bool {
-	_, err := f.CastValue(value)
+// Test checks whether the value can be unmarshalled to the field type.
+func (f *Field) Test(value string) bool {
+	_, err := f.UnmarshalString(value)
 	return err == nil
 }
 

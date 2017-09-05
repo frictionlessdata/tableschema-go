@@ -10,9 +10,9 @@ type Iterator interface {
 	// Next could automatically buffer some data, improving reading performance. It could also block, if necessary.
 	Next() bool
 
-	// CastRow casts the most recent row fetched by a call to Next. Cast will error if the table has no schema
-	// associateed to it of if the row can not be cast to its respective schema. More at Schema.CastRow.
-	CastRow(out interface{}) error
+	// UnmarshalRow unmarshal the most recent row fetched by a call to Next. UnmarshalRow will error if the table has no schema
+	// associateed to it of if the row can not be unmarshalled to its respective schema. More at Schema.UnmarshalRow.
+	UnmarshalRow(out interface{}) error
 
 	// Row returns the most recent row fetched by a call to Next as a newly allocated string slice
 	// holding its fields.

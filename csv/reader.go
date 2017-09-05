@@ -37,12 +37,12 @@ func (reader *Reader) Iter() (table.Iterator, error) {
 	return newIterator(src, reader.Schema, reader.skipHeaders), nil
 }
 
-// CastAll loads and casts all rows of the table to schema types. The table
-// schema must be previously assigned or inferred.
+// UnmarshalAll loads and unmarshalls all rows of the table. The table schema must
+// be previously assigned or inferred.
 //
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
-func (reader *Reader) CastAll(out interface{}) error {
+func (reader *Reader) UnmarshalAll(out interface{}) error {
 	iter, err := reader.Iter()
 	if err != nil {
 		return err

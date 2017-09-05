@@ -44,13 +44,14 @@ func ReadFromFile(path string) (*Schema, error) {
 	return Read(f)
 }
 
-// Field represents a list of schema fields.
+// Fields represents a list of schema fields.
 type Fields []Field
 
 func (f Fields) Len() int           { return len(f) }
 func (f Fields) Swap(i, j int)      { f[i], f[j] = f[j], f[i] }
 func (f Fields) Less(i, j int) bool { return strings.Compare(f[i].Name, f[j].Name) == -1 }
 
+// ForeignKeyReference represents the field reference by a foreign key.
 type ForeignKeyReference struct {
 	Resource          string      `json:"resource,omitempty"`
 	Fields            []string    `json:"-"`
@@ -146,17 +147,16 @@ func (s *Schema) SaveToFile(path string) error {
 	return s.Write(f)
 }
 
-// CastRow casts a row to schema types. The out value must be pointer to a
-// struct. Only exported fields will be cast. The lowercased field name is used
-// as the key for each exported field.
+// UnmarshalRow decodes the passed-in row to schema types and stores it in the value pointed
+// by out. The out value must be pointer to a struct. Only exported fields will be unmarshalled.
+// The lowercased field name is used as the key for each exported field.
 //
-// If a value in the row cannot be cast to its respective schema field
-// (Field.CastValue), this call will return an error. Furthermore, this call
-// is also going to return an error if the schema field value can not be cast
-// to the struct field type.
-func (s *Schema) CastRow(row []string, out interface{}) error {
+// If a value in the row cannot be marshalled to its respective schema field (Field.Unmarshal),
+// this call will return an error. Furthermore, this call is also going to return an error if
+// the schema field value can not be unmarshalled to the struct field type.
+func (s *Schema) UnmarshalRow(row []string, out interface{}) error {
 	if reflect.ValueOf(out).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(out)).Kind() != reflect.Struct {
-		return fmt.Errorf("CastRow only accepts a pointer to a struct.")
+		return fmt.Errorf("UnmarshalRow only accepts a pointer to a struct.")
 	}
 	outv := reflect.Indirect(reflect.ValueOf(out))
 	outt := outv.Type()
@@ -171,7 +171,7 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 				if s.isMissingValue(cell) {
 					continue
 				}
-				v, err := f.CastValue(cell)
+				v, err := f.UnmarshalString(cell)
 				if err != nil {
 					return err
 				}

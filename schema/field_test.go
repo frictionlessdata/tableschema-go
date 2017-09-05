@@ -35,7 +35,7 @@ func TestDefaultValues(t *testing.T) {
 	}
 }
 
-func TestCastValue(t *testing.T) {
+func TestField_UnmarshalString(t *testing.T) {
 	data := []struct {
 		Desc     string
 		Value    string
@@ -62,7 +62,7 @@ func TestCastValue(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
-			c, err := d.Field.CastValue(d.Value)
+			c, err := d.Field.UnmarshalString(d.Value)
 			if err != nil {
 				t.Fatalf("err want:nil got:%s", err)
 			}
@@ -73,7 +73,7 @@ func TestCastValue(t *testing.T) {
 	}
 	t.Run("Object_Success", func(t *testing.T) {
 		f := Field{Type: ObjectType}
-		obj, err := f.CastValue(`{"name":"foo"}`)
+		obj, err := f.UnmarshalString(`{"name":"foo"}`)
 		if err != nil {
 			t.Fatalf("err want:nil got:%s", err)
 		}
@@ -90,14 +90,14 @@ func TestCastValue(t *testing.T) {
 	})
 	t.Run("Object_Failure", func(t *testing.T) {
 		f := Field{Type: ObjectType}
-		_, err := f.CastValue(`{"name"}`)
+		_, err := f.UnmarshalString(`{"name"}`)
 		if err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
 	t.Run("Array_Success", func(t *testing.T) {
 		f := Field{Type: ArrayType}
-		obj, err := f.CastValue(`["foo"]`)
+		obj, err := f.UnmarshalString(`["foo"]`)
 		if err != nil {
 			t.Fatalf("err want:nil got:%s", err)
 		}
@@ -114,9 +114,32 @@ func TestCastValue(t *testing.T) {
 	})
 	t.Run("Array_Failure", func(t *testing.T) {
 		f := Field{Type: ArrayType}
-		_, err := f.CastValue(`{"name":"foo"}`)
+		_, err := f.UnmarshalString(`{"name":"foo"}`)
 		if err == nil {
 			t.Fatalf("err want:err got:nil")
+		}
+	})
+	t.Run("InvalidDate", func(t *testing.T) {
+		data := []struct {
+			desc  string
+			field Field
+			value string
+		}{
+			{"InvalidFormat_Any", Field{Type: DateType, Format: "any"}, "2015-10-15"},
+			{"InvalidFormat_Strftime", Field{Type: DateType, Format: "Fooo"}, "2015-10-15"},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				if _, err := d.field.UnmarshalString(d.value); err == nil {
+					t.Errorf("want:err got:nil")
+				}
+			})
+		}
+	})
+	t.Run("InvalidFieldType", func(t *testing.T) {
+		f := Field{Type: "invalidType"}
+		if _, err := f.UnmarshalString("42"); err == nil {
+			t.Errorf("err want:err, got:nil")
 		}
 	})
 }
@@ -128,36 +151,12 @@ func TestUnmarshalJSON_InvalidField(t *testing.T) {
 	}
 }
 
-func TestCastValue_InvalidDate(t *testing.T) {
-	data := []struct {
-		desc  string
-		field Field
-		value string
-	}{
-		{"InvalidFormat_Any", Field{Type: DateType, Format: "any"}, "2015-10-15"},
-		{"InvalidFormat_Strftime", Field{Type: DateType, Format: "Fooo"}, "2015-10-15"},
-	}
-	for _, d := range data {
-		t.Run(d.desc, func(t *testing.T) {
-			if _, err := d.field.CastValue(d.value); err == nil {
-				t.Errorf("want:err got:nil")
-			}
-		})
-	}
-}
-
-func TestCastValue_InvalidFieldType(t *testing.T) {
-	f := Field{Type: "invalidType"}
-	if _, err := f.CastValue("42"); err == nil {
-		t.Errorf("err want:err, got:nil")
-	}
-}
 func TestTestValue(t *testing.T) {
 	f := Field{Type: "integer"}
-	if !f.TestValue("42") {
+	if !f.Test("42") {
 		t.Errorf("want:true, got:false")
 	}
-	if f.TestValue("boo") {
+	if f.Test("boo") {
 		t.Errorf("want:false, got:true")
 	}
 }

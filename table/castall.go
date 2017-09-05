@@ -5,11 +5,11 @@ import (
 	"reflect"
 )
 
-// CastAll loads and casts all rows returned by the iterator to schema types.
+// UnmarshalAll loads and unmarshals all rows returned by the iterator.
 //
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
-func CastAll(iter Iterator, out interface{}) error {
+func UnmarshalAll(iter Iterator, out interface{}) error {
 	outv := reflect.ValueOf(out)
 	if outv.Kind() != reflect.Ptr || outv.Elem().Kind() != reflect.Slice {
 		return fmt.Errorf("out argument must be a slice address")
@@ -20,7 +20,7 @@ func CastAll(iter Iterator, out interface{}) error {
 	i := 0
 	for iter.Next() {
 		elemp := reflect.New(elemt)
-		if err := iter.CastRow(elemp.Interface()); err != nil {
+		if err := iter.UnmarshalRow(elemp.Interface()); err != nil {
 			return err
 		}
 		slicev = reflect.Append(slicev, elemp.Elem())

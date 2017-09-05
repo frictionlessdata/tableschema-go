@@ -41,11 +41,11 @@ func (i *csvIterator) Next() bool {
 	return err == nil
 }
 
-func (i *csvIterator) CastRow(out interface{}) error {
+func (i *csvIterator) UnmarshalRow(out interface{}) error {
 	if i.schema == nil {
 		return fmt.Errorf("table has no schema")
 	}
-	return i.schema.CastRow(i.current, out)
+	return i.schema.UnmarshalRow(i.current, out)
 }
 
 func (i *csvIterator) Row() []string {
