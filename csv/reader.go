@@ -47,7 +47,7 @@ func (reader *Reader) UnmarshalAll(out interface{}) error {
 	if err != nil {
 		return err
 	}
-	return table.CastAll(iter, out)
+	return table.UnmarshalAll(iter, out)
 }
 
 // All returns all rows of the table.
