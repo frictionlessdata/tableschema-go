@@ -23,7 +23,7 @@ func main() {
 	reader.Schema.Write(os.Stdout)
 	// Casting and writing data to stdout.
 	var data []user
-	if err := reader.CastAll(&data); err != nil {
+	if err := reader.UnmarshalAll(&data); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("\n\nData:%+v\n", data)

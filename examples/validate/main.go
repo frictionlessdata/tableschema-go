@@ -29,9 +29,9 @@ func main() {
 		log.Fatalf("Schema must have the field capital")
 	}
 	field, _ := capitalSchema.GetField("url")
-	if field.TestValue("http://new.url.com") {
-		value, err := field.CastValue("http://new.url.com")
-		log.Printf("URL cast to value: %v\n", value)
+	if field.TestString("http://new.url.com") {
+		value, err := field.UnmarshalString("http://new.url.com")
+		log.Printf("URL unmarshal to value: %v\n", value)
 		if err != nil {
 			log.Fatalf("Error casting value: %q", err)
 		}
@@ -51,9 +51,9 @@ func main() {
 	}{}
 	iter, _ := reader.Iter()
 	for iter.Next() {
-		if err := iter.CastRow(&capitalRow); err != nil {
-			log.Fatalf("Couldn't cast row:%v err:%q", iter.Row(), err)
+		if err := iter.UnmarshalRow(&capitalRow); err != nil {
+			log.Fatalf("Couldn't unmarshal row:%v err:%q", iter.Row(), err)
 		}
-		log.Printf("Cast Row: %+v\n", capitalRow)
+		log.Printf("Unmarshal Row: %+v\n", capitalRow)
 	}
 }

@@ -109,8 +109,8 @@ func (f *Field) UnmarshalString(value string) (interface{}, error) {
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
 
-// Test checks whether the value can be unmarshalled to the field type.
-func (f *Field) Test(value string) bool {
+// TestString checks whether the value can be unmarshalled to the field type.
+func (f *Field) TestString(value string) bool {
 	_, err := f.UnmarshalString(value)
 	return err == nil
 }

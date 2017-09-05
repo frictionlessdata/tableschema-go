@@ -151,12 +151,12 @@ func TestUnmarshalJSON_InvalidField(t *testing.T) {
 	}
 }
 
-func TestTestValue(t *testing.T) {
+func TestTestString(t *testing.T) {
 	f := Field{Type: "integer"}
-	if !f.Test("42") {
+	if !f.TestString("42") {
 		t.Errorf("want:true, got:false")
 	}
-	if f.Test("boo") {
+	if f.TestString("boo") {
 		t.Errorf("want:false, got:true")
 	}
 }
