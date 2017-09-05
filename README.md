@@ -46,7 +46,7 @@ func main() {
     t.Infer()  // infer the table schema
     t.Schema.SaveToFile("schema.json")  // save inferred schema to file
     data := []person{}
-    t.CastAll(&data)  // casts the table data into the data slice.
+    t.UnmarshalAll(&data)  // unmarshals the table data into the data slice.
 }
 ```
 # Documentation
@@ -85,7 +85,7 @@ As we could see our locations are just a strings. But it should be geopoints. Al
     // ...
 ```
 
-Then we could create a struct and automatically cast the table data to schema types. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. First thing we need is to create the struct which will represent each row.
+Then we could create a struct and automatically unmarshal the table data into go structs. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. First thing we need is to create the struct which will represent each row.
 
 ```go
 type Location struct {
@@ -94,12 +94,12 @@ type Location struct {
 }
 ```
 
-Then we are ready to cast the table.
+Then we are ready to unmarshal the table and process it using Go's values/types.
 
 ```go
 var locations []Location
-reader.CastAll(&locations)
-// Fails with cast error: "Invalid geopoint:\"N/A\""
+reader.UnmarshalAll(&locations)
+// Fails with: "Invalid geopoint:\"N/A\""
 ```
 
 The problem is that the library does not know that N/A is not an empty value. For those cases, there is a `missingValues` property in Table Schema specification. As a first try we set `missingValues` to N/A in table.Schema.
@@ -107,7 +107,7 @@ The problem is that the library does not know that N/A is not an empty value. Fo
 ```go
 reader.Schema.MissingValues = []string{"N/A"}
 var locations []Location
-reader.CastAll(&locations)
+reader.UnmarshalAll(&locations)
 fmt.Println(rows)
 // [{london {51.5 -0.11}} {paris {48.85 2.3}} {rome {0 0}}]
 ```
