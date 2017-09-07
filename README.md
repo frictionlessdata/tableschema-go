@@ -32,23 +32,31 @@ $ dep ensure -add github.com/frictionlessdata/tableschema-go/csv@>=0.1
 Code examples in this readme requires Go 1.8+. You can find more examples in the [examples](https://github.com/frictionlessdata/tableschema-go/tree/master/examples) directory.
 
 ```go
-import (
-    "fmt"
-    "github.com/frictionlessdata/tableschema-go/csv"
-    "github.com/frictionlessdata/tableschema-go/schema"
-)
-// struct representing each row of the table.
-type person struct {
-    Name string
-    Age uint16
-}
-func main() {
-    t, _ := csv.NewTable(csv.FromFile("data.csv"), csv.LoadHeaders())  // load table and headers from file.
-    s, _ := schema.Infer(t) // infer the table schema
-    s.SaveToFile("schema.json")  // save inferred schema to file
+package main
 
-    var p []person
-    schema.DecodeTable(t, s, &p) // unmarshals the table data into the slice.
+import (
+	"github.com/frictionlessdata/tableschema-go/csv"
+	"github.com/frictionlessdata/tableschema-go/schema"
+)
+
+type user struct {
+	ID   int
+	Age  int
+	Name string
+}
+
+func main() {
+	tab, err := csv.NewTable(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"))
+	if err != nil {
+		panic(err)
+	}
+	sch, err := schema.Infer(tab) // infer the table schema
+	if err != nil {
+		panic(err)
+	}
+    sch.SaveToFile("schema.json") // save inferred schema to file
+	var users []user
+	sch.DecodeTable(tab, &users) // unmarshals the table data into the slice.
 }
 ```
 # Documentation

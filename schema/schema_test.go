@@ -338,8 +338,8 @@ func TestDecodeTable(t *testing.T) {
 			tab := table.FromSlices(
 				[]string{"name"},
 				[][]string{{"foo"}, {"bar"}})
-			s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
-			if err := DecodeTable(tab, s, &d.got); err != nil {
+			s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+			if err := s.DecodeTable(tab, &d.got); err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
 			want := []csvRow{{"foo"}, {"bar"}}
@@ -358,9 +358,9 @@ func TestDecodeTable(t *testing.T) {
 			Age  int
 			Name string
 		}
-		s := Schema{Fields: []Field{{Name: "id", Type: IntegerType}, {Name: "age", Type: IntegerType}, {Name: "name", Type: StringType}}}
+		s := &Schema{Fields: []Field{{Name: "id", Type: IntegerType}, {Name: "age", Type: IntegerType}, {Name: "name", Type: StringType}}}
 		got := []data{}
-		if err := DecodeTable(tab, s, &got); err != nil {
+		if err := s.DecodeTable(tab, &got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		want := []data{{1, 39, "Paul"}, {2, 23, "Jimmy"}, {3, 36, "Jane"}, {4, 28, "Judy"}, {5, 37, "Iñtërnâtiônàlizætiøn"}}
@@ -370,9 +370,9 @@ func TestDecodeTable(t *testing.T) {
 	})
 	t.Run("EmptyTable", func(t *testing.T) {
 		tab := table.FromSlices([]string{}, [][]string{})
-		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		var got []csvRow
-		if err := DecodeTable(tab, s, &got); err != nil {
+		if err := s.DecodeTable(tab, &got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
 		if len(got) != 0 {
@@ -381,8 +381,8 @@ func TestDecodeTable(t *testing.T) {
 	})
 	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
 		tab := table.FromSlices([]string{"name"}, [][]string{{""}})
-		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
-		if err := DecodeTable(tab, s, []csvRow{}); err == nil {
+		s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		if err := s.DecodeTable(tab, []csvRow{}); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})

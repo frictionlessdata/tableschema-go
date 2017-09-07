@@ -255,7 +255,7 @@ func processPlaceholder(ph interface{}, v *[]string) error {
 //
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
-func DecodeTable(tab table.Table, s Schema, out interface{}) error {
+func (s *Schema) DecodeTable(tab table.Table, out interface{}) error {
 	outv := reflect.ValueOf(out)
 	if outv.Kind() != reflect.Ptr || outv.Elem().Kind() != reflect.Slice {
 		return fmt.Errorf("out argument must be a slice address")
