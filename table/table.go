@@ -57,13 +57,10 @@ type sliceIterator struct {
 }
 
 func (i *sliceIterator) Next() bool {
-	// In that way we never access an invalid position.
-	if i.pos < len(i.content)-1 {
-		i.pos++
-	}
-	return i.pos < len(i.content)
+	i.pos++
+	return i.pos <= len(i.content)
 }
-func (i *sliceIterator) Row() []string { return i.content[i.pos] }
+func (i *sliceIterator) Row() []string { return i.content[i.pos-1] }
 func (i *sliceIterator) Err() error    { return nil }
 func (i *sliceIterator) Close() error  { return nil }
 

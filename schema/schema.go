@@ -7,6 +7,8 @@ import (
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/frictionlessdata/tableschema-go/table"
 )
 
 // InvalidPosition is returned by GetField call when
@@ -247,4 +249,38 @@ func processPlaceholder(ph interface{}, v *[]string) error {
 	// Only for signalling that an error happened. The caller knows the best
 	// error message.
 	return fmt.Errorf("")
+}
+
+// DecodeTable loads and decodes all table rows.
+//
+// The result argument must necessarily be the address for a slice. The slice
+// may be nil or previously allocated.
+func DecodeTable(tab table.Table, s Schema, out interface{}) error {
+	outv := reflect.ValueOf(out)
+	if outv.Kind() != reflect.Ptr || outv.Elem().Kind() != reflect.Slice {
+		return fmt.Errorf("out argument must be a slice address")
+	}
+	iter, err := tab.Iter()
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	slicev := outv.Elem()
+	slicev = slicev.Slice(0, 0) // Trucantes the passed-in slice.
+	elemt := slicev.Type().Elem()
+	i := 0
+	for iter.Next() {
+		elemp := reflect.New(elemt)
+		if err := s.Decode(iter.Row(), elemp.Interface()); err != nil {
+			return err
+		}
+		slicev = reflect.Append(slicev, elemp.Elem())
+		slicev = slicev.Slice(0, slicev.Len())
+		i++
+	}
+	if iter.Err() != nil {
+		return iter.Err()
+	}
+	outv.Elem().Set(slicev.Slice(0, i))
+	return nil
 }

@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/frictionlessdata/tableschema-go/table"
 )
 
 func TestRead_Sucess(t *testing.T) {
@@ -316,4 +318,72 @@ func TestMissingValues(t *testing.T) {
 	if row.Foo != "" {
 		t.Fatalf("want:\"\" got:%s", row.Foo)
 	}
+}
+
+type csvRow struct {
+	Name string
+}
+
+func TestDecodeTable(t *testing.T) {
+	data := []struct {
+		desc string
+		got  []csvRow
+	}{
+		{"OutEmpty", []csvRow{}},
+		{"OutNil", nil},
+		{"OutInitialized", []csvRow{{"fooooo"}}},
+	}
+	for _, d := range data {
+		t.Run(d.desc, func(t *testing.T) {
+			tab := table.FromSlices(
+				[]string{"name"},
+				[][]string{{"foo"}, {"bar"}})
+			s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+			if err := DecodeTable(tab, s, &d.got); err != nil {
+				t.Fatalf("err want:nil got:%q", err)
+			}
+			want := []csvRow{{"foo"}, {"bar"}}
+			if !reflect.DeepEqual(want, d.got) {
+				t.Fatalf("val want:%v got:%v", want, d.got)
+			}
+		})
+	}
+	t.Run("MoarData", func(t *testing.T) {
+		tab := table.FromSlices(
+			[]string{"id", "age", "name"},
+			[][]string{{"1", "39", "Paul"}, {"2", "23", "Jimmy"}, {"3", "36", "Jane"}, {"4", "28", "Judy"}, {"5", "37", "Iñtërnâtiônàlizætiøn"}})
+
+		type data struct {
+			ID   int
+			Age  int
+			Name string
+		}
+		s := Schema{Fields: []Field{{Name: "id", Type: IntegerType}, {Name: "age", Type: IntegerType}, {Name: "name", Type: StringType}}}
+		got := []data{}
+		if err := DecodeTable(tab, s, &got); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []data{{1, 39, "Paul"}, {2, 23, "Jimmy"}, {3, 36, "Jane"}, {4, 28, "Judy"}, {5, 37, "Iñtërnâtiônàlizætiøn"}}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%v got:%v", want, got)
+		}
+	})
+	t.Run("EmptyTable", func(t *testing.T) {
+		tab := table.FromSlices([]string{}, [][]string{})
+		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		var got []csvRow
+		if err := DecodeTable(tab, s, &got); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		if len(got) != 0 {
+			t.Fatalf("len(got) want:0 got:%v", len(got))
+		}
+	})
+	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
+		tab := table.FromSlices([]string{"name"}, [][]string{{""}})
+		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		if err := DecodeTable(tab, s, []csvRow{}); err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+	})
 }

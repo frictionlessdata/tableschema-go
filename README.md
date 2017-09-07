@@ -46,13 +46,9 @@ func main() {
     t, _ := csv.NewTable(csv.FromFile("data.csv"), csv.LoadHeaders())  // load table and headers from file.
     s, _ := schema.Infer(t) // infer the table schema
     s.SaveToFile("schema.json")  // save inferred schema to file
-    iter, _ := t.Iter()
-    for iter.Next() {
-        var p person
-        s.Decode(iter.Row(), &p) // unmarshals the table data into the struct.
-        // do some processing based on the data.
-    }
-    iter.Close()
+
+    var p []person
+    schema.DecodeTable(t, s, &p) // unmarshals the table data into the slice.
 }
 ```
 # Documentation
