@@ -5,16 +5,19 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/frictionlessdata/tableschema-go/table"
 )
 
-func ExampleInfer() {
-	headers := []string{"Person", "Height"}
-	table := [][]string{
-		[]string{"Foo", "5"},
-		[]string{"Bar", "4"},
-		[]string{"Bez", "5.5"},
-	}
-	s, _ := Infer(headers, table)
+func Exampleinfer() {
+	tab := table.FromSlices(
+		[]string{"Person", "Height"},
+		[][]string{
+			[]string{"Foo", "5"},
+			[]string{"Bar", "4"},
+			[]string{"Bez", "5.5"},
+		})
+	s, _ := Infer(tab)
 	fmt.Println("Fields:")
 	for _, f := range s.Fields {
 		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
@@ -25,13 +28,14 @@ func ExampleInfer() {
 }
 
 func ExampleInferImplicitCasting() {
-	headers := []string{"Person", "Height"}
-	table := [][]string{
-		[]string{"Foo", "5"},
-		[]string{"Bar", "4"},
-		[]string{"Bez", "5.5"},
-	}
-	s, _ := InferImplicitCasting(headers, table)
+	tab := table.FromSlices(
+		[]string{"Person", "Height"},
+		[][]string{
+			[]string{"Foo", "5"},
+			[]string{"Bar", "4"},
+			[]string{"Bez", "5.5"},
+		})
+	s, _ := InferImplicitCasting(tab)
 	fmt.Println("Fields:")
 	for _, f := range s.Fields {
 		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
@@ -80,7 +84,7 @@ func TestInfer_Success(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			s, err := Infer(d.headers, d.table)
+			s, err := infer(d.headers, d.table)
 			if err != nil {
 				t.Fatalf("want:nil, got:%q", err)
 			}
@@ -103,7 +107,7 @@ func TestInfer_Error(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			_, err := Infer(d.headers, d.table)
+			_, err := infer(d.headers, d.table)
 			if err == nil {
 				t.Fatalf("want:error, got:nil")
 			}
@@ -150,7 +154,7 @@ func TestInferImplicitCasting_Success(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			s, err := InferImplicitCasting(d.headers, d.table)
+			s, err := inferImplicitCasting(d.headers, d.table)
 			if err != nil {
 				t.Fatalf("want:nil, got:%q", err)
 			}
@@ -173,7 +177,7 @@ func TestInferImplicitCasting_Error(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			_, err := InferImplicitCasting(d.headers, d.table)
+			_, err := inferImplicitCasting(d.headers, d.table)
 			if err == nil {
 				t.Fatalf("want:error, got:nil")
 			}
@@ -190,15 +194,15 @@ var (
 	}
 )
 
-func benchmarkInfer(growthMultiplier int, b *testing.B) {
+func benchmarkinfer(growthMultiplier int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		Infer(benchmarkHeaders, generateBenchmarkTable(growthMultiplier))
+		infer(benchmarkHeaders, generateBenchmarkTable(growthMultiplier))
 	}
 }
 
 func benchmarkInferImplicitCasting(growthMultiplier int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		InferImplicitCasting(benchmarkHeaders, generateBenchmarkTable(growthMultiplier))
+		inferImplicitCasting(benchmarkHeaders, generateBenchmarkTable(growthMultiplier))
 	}
 }
 
@@ -210,9 +214,9 @@ func generateBenchmarkTable(growthMultiplier int) [][]string {
 	return t
 }
 
-func BenchmarkInferSmall(b *testing.B)                 { benchmarkInfer(1, b) }
-func BenchmarkInferMedium(b *testing.B)                { benchmarkInfer(100, b) }
-func BenchmarkInferBig(b *testing.B)                   { benchmarkInfer(1000, b) }
+func BenchmarkInferSmall(b *testing.B)                 { benchmarkinfer(1, b) }
+func BenchmarkInferMedium(b *testing.B)                { benchmarkinfer(100, b) }
+func BenchmarkInferBig(b *testing.B)                   { benchmarkinfer(1000, b) }
 func BenchmarkInferImplicitCastingSmall(b *testing.B)  { benchmarkInferImplicitCasting(1, b) }
 func BenchmarkInferImplicitCastingMedium(b *testing.B) { benchmarkInferImplicitCasting(100, b) }
 func BenchmarkInferImplicitCastingBig(b *testing.B)    { benchmarkInferImplicitCasting(1000, b) }

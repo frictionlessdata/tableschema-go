@@ -1,6 +1,10 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/frictionlessdata/tableschema-go/table"
+)
 
 var (
 	// https://specs.frictionlessdata.io/table-schema/#boolean
@@ -37,11 +41,37 @@ var (
 	orderedTypes = []string{BooleanType, YearType, IntegerType, NumberType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, GeoPointType, ArrayType, ObjectType}
 )
 
+// Maximum number of rows used to infer schema.
+const maxNumRowsInfer = 100
+
 // Infer infers a schema from a slice of the tabular data. For columns that contain
 // cells that can inferred as different types, the most popular type is set as the field
 // type. For instance, a column with values 10.1, 10, 10 will inferred as being of type
 // "integer".
-func Infer(headers []string, table [][]string) (*Schema, error) {
+func Infer(tab table.Table) (*Schema, error) {
+	s, err := sample(tab)
+	if err != nil {
+		return nil, err
+	}
+	return infer(tab.Headers(), s)
+}
+
+func sample(tab table.Table) ([][]string, error) {
+	iter, err := tab.Iter()
+	if err != nil {
+		return nil, err
+	}
+	var t [][]string
+	for count := 0; count < maxNumRowsInfer && iter.Next(); count++ {
+		t = append(t, iter.Row())
+	}
+	if iter.Err() != nil {
+		return nil, iter.Err()
+	}
+	return t, nil
+}
+
+func infer(headers []string, table [][]string) (*Schema, error) {
 	inferredTypes := make([]map[string]int, len(headers))
 	for rowID := range table {
 		row := table[rowID]
@@ -84,7 +114,15 @@ func Infer(headers []string, table [][]string) (*Schema, error) {
 // will inferred as being of type "number" ("integer" can be implicitly cast to "number").
 //
 // For medium to big tables, this method is faster than the Infer.
-func InferImplicitCasting(headers []string, table [][]string) (*Schema, error) {
+func InferImplicitCasting(tab table.Table) (*Schema, error) {
+	s, err := sample(tab)
+	if err != nil {
+		return nil, err
+	}
+	return inferImplicitCasting(tab.Headers(), s)
+}
+
+func inferImplicitCasting(headers []string, table [][]string) (*Schema, error) {
 	inferredTypes := make([]string, len(headers))
 	for rowID := range table {
 		row := table[rowID]

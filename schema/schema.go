@@ -147,14 +147,14 @@ func (s *Schema) SaveToFile(path string) error {
 	return s.Write(f)
 }
 
-// UnmarshalRow decodes the passed-in row to schema types and stores it in the value pointed
+// Decode decodes the passed-in row to schema types and stores it in the value pointed
 // by out. The out value must be pointer to a struct. Only exported fields will be unmarshalled.
 // The lowercased field name is used as the key for each exported field.
 //
 // If a value in the row cannot be marshalled to its respective schema field (Field.Unmarshal),
 // this call will return an error. Furthermore, this call is also going to return an error if
 // the schema field value can not be unmarshalled to the struct field type.
-func (s *Schema) UnmarshalRow(row []string, out interface{}) error {
+func (s *Schema) Decode(row []string, out interface{}) error {
 	if reflect.ValueOf(out).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(out)).Kind() != reflect.Struct {
 		return fmt.Errorf("UnmarshalRow only accepts a pointer to a struct.")
 	}

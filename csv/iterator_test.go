@@ -2,10 +2,7 @@ package csv
 
 import (
 	"reflect"
-	"strings"
 	"testing"
-
-	"github.com/frictionlessdata/tableschema-go/schema"
 )
 
 type iterTestValue struct {
@@ -17,23 +14,21 @@ const (
 	skipHeaders     = true
 )
 
-func TestNewIterator_EmptyString(t *testing.T) {
-	iter := newIterator(
-		strings.NewReader(""),
-		&schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}},
-		dontSkipHeaders,
-	)
-	if iter.Next() {
-		t.Fatalf("more iterations then it should.")
-	}
-	if iter.Err() != nil {
-		t.Fatalf("err want:nil got:%v", iter.Err())
-	}
+func TestNewIterator(t *testing.T) {
+	t.Run("EmptyString", func(t *testing.T) {
+		iter := newIterator(stringReadCloser(""), dontSkipHeaders)
+		if iter.Next() {
+			t.Fatalf("more iterations then it should.")
+		}
+		if iter.Err() != nil {
+			t.Fatalf("err want:nil got:%v", iter.Err())
+		}
+	})
 }
 
 func TestIterator_Next(t *testing.T) {
 	t.Run("TwoRows", func(t *testing.T) {
-		iter := newIterator(strings.NewReader("foo\nbar"), nil, dontSkipHeaders)
+		iter := newIterator(stringReadCloser("foo\nbar"), dontSkipHeaders)
 		if !iter.Next() {
 			t.Fatalf("want two more iterations.")
 		}
@@ -48,7 +43,7 @@ func TestIterator_Next(t *testing.T) {
 		}
 	})
 	t.Run("TwoRowsSkipHeaders", func(t *testing.T) {
-		iter := newIterator(strings.NewReader("name\nbar"), nil, skipHeaders)
+		iter := newIterator(stringReadCloser("name\nbar"), skipHeaders)
 		if !iter.Next() {
 			t.Fatalf("want one iteration")
 		}
@@ -61,53 +56,9 @@ func TestIterator_Next(t *testing.T) {
 	})
 }
 
-func TestIterator_UnmarshalRow(t *testing.T) {
-	t.Run("OneRow", func(t *testing.T) {
-		iter := newIterator(
-			strings.NewReader("name"),
-			&schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}},
-			dontSkipHeaders,
-		)
-		if !iter.Next() {
-			t.Fatalf("want:one iteration got:zero")
-		}
-		var got iterTestValue
-		if err := iter.UnmarshalRow(&got); err != nil {
-			t.Fatalf("err want:nil got:%v", iter.Err())
-		}
-		want := iterTestValue{"name"}
-		if !reflect.DeepEqual(want, got) {
-			t.Fatalf("val want:%v got:%v", want, got)
-		}
-	})
-	t.Run("Error_NilSchema", func(t *testing.T) {
-		iter := newIterator(strings.NewReader("name"), nil, dontSkipHeaders)
-		if !iter.Next() {
-			t.Fatalf("next want:true got:false")
-		}
-		var got iterTestValue
-		if err := iter.UnmarshalRow(&got); err == nil {
-			t.Fatalf("want:err got:nil")
-		}
-	})
-	t.Run("Error_NilOutput", func(t *testing.T) {
-		iter := newIterator(strings.NewReader("name"), nil, dontSkipHeaders)
-		if !iter.Next() {
-			t.Fatalf("next want:true got:false")
-		}
-		if err := iter.UnmarshalRow(nil); err == nil {
-			t.Fatalf("want:err got:nil")
-		}
-	})
-}
-
 func TestIterator_Row(t *testing.T) {
 	t.Run("OneRow", func(t *testing.T) {
-		iter := newIterator(
-			strings.NewReader("name"),
-			&schema.Schema{Fields: []schema.Field{{Name: "name", Type: schema.StringType}}},
-			dontSkipHeaders,
-		)
+		iter := newIterator(stringReadCloser("name"), dontSkipHeaders)
 		if !iter.Next() {
 			t.Fatalf("want:one iteration got:zero")
 		}

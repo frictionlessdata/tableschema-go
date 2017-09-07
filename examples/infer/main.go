@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
 
 	"github.com/frictionlessdata/tableschema-go/csv"
+	"github.com/frictionlessdata/tableschema-go/schema"
 )
 
 type user struct {
@@ -15,16 +14,33 @@ type user struct {
 }
 
 func main() {
-	reader, err := csv.NewReader(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"), csv.InferSchema())
+	table, err := csv.NewTable(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"))
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-	// Writing schema to stdout.
-	reader.Schema.Write(os.Stdout)
-	// Casting and writing data to stdout.
-	var data []user
-	if err := reader.UnmarshalAll(&data); err != nil {
-		log.Fatal(err)
+
+	userSchema, err := schema.Infer(table)
+	if err != nil {
+		panic(err)
 	}
-	fmt.Printf("\n\nData:%+v\n", data)
+	fmt.Println(userSchema)
+
+	iter, _ := table.Iter()
+	defer iter.Close()
+	for iter.Next() {
+		var data user
+		if err := userSchema.Decode(iter.Row(), &data); err != nil {
+			panic(err)
+		}
+		fmt.Println(data)
+	}
+
+	// decoder, err := schema.NewDecoder(table, userSchema)
+	// for decoder.More() {
+	// 	var data user
+	// 	if err := decoder.Decode(&data); err != nil {
+	// 		panic(err)
+	// 	}
+	// 	fmt.Println(data)
+	// }
 }

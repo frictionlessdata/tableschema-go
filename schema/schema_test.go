@@ -113,14 +113,14 @@ func TestHeaders(t *testing.T) {
 	}
 }
 
-func TestSchema_UnmarshalRow(t *testing.T) {
+func TestSchema_Decode(t *testing.T) {
 	t.Run("NoImplicitCast", func(t *testing.T) {
 		t1 := struct {
 			Name string
 			Age  int64
 		}{}
 		s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
-		if err := s.UnmarshalRow([]string{"Foo", "42"}, &t1); err != nil {
+		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
 			t.Fatalf("err want:nil, got:%q", err)
 		}
 		if t1.Name != "Foo" {
@@ -133,7 +133,7 @@ func TestSchema_UnmarshalRow(t *testing.T) {
 	t.Run("ImplicitCastToInt", func(t *testing.T) {
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
-		if err := s.UnmarshalRow([]string{"Foo", "42"}, &t1); err != nil {
+		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
 			t.Fatalf("err want:nil, got:%q", err)
 		}
 		if t1.Age != 42 {
@@ -144,14 +144,14 @@ func TestSchema_UnmarshalRow(t *testing.T) {
 		// Field is string and struct is int.
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "age", Type: StringType}}}
-		if err := s.UnmarshalRow([]string{"42"}, &t1); err == nil {
+		if err := s.Decode([]string{"42"}, &t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
 	})
 	t.Run("Error_NotAPointerToStruct", func(t *testing.T) {
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
-		if err := s.UnmarshalRow([]string{"Foo", "42"}, t1); err == nil {
+		if err := s.Decode([]string{"Foo", "42"}, t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
 	})
@@ -159,7 +159,7 @@ func TestSchema_UnmarshalRow(t *testing.T) {
 		// Field is string and struct is int.
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
-		if err := s.UnmarshalRow([]string{"foo"}, &t1); err == nil {
+		if err := s.Decode([]string{"foo"}, &t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
 	})
@@ -167,7 +167,7 @@ func TestSchema_UnmarshalRow(t *testing.T) {
 		t1 := &struct{ Age int }{}
 		t1 = nil
 		s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
-		if err := s.UnmarshalRow([]string{"foo"}, &t1); err == nil {
+		if err := s.Decode([]string{"foo"}, &t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
 	})
@@ -312,7 +312,7 @@ func TestMissingValues(t *testing.T) {
 	row := struct {
 		Foo string
 	}{}
-	s.UnmarshalRow([]string{"f"}, &row)
+	s.Decode([]string{"f"}, &row)
 	if row.Foo != "" {
 		t.Fatalf("want:\"\" got:%s", row.Foo)
 	}

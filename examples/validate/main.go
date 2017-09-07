@@ -40,18 +40,16 @@ func main() {
 	}
 
 	// Dealing with tabular data associated with the schema.
-	reader, err := csv.NewReader(
-		csv.FromFile("capital.csv"),
-		csv.WithSchema(capitalSchema),
-		csv.LoadHeaders())
+	table, err := csv.NewTable(csv.FromFile("capital.csv"), csv.LoadHeaders())
 	capitalRow := struct {
 		ID      int
 		Capital float64
 		URL     string
 	}{}
-	iter, _ := reader.Iter()
+
+	iter, _ := table.Iter()
 	for iter.Next() {
-		if err := iter.UnmarshalRow(&capitalRow); err != nil {
+		if err := capitalSchema.Decode(iter.Row(), &capitalRow); err != nil {
 			log.Fatalf("Couldn't unmarshal row:%v err:%q", iter.Row(), err)
 		}
 		log.Printf("Unmarshal Row: %+v\n", capitalRow)

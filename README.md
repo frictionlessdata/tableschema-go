@@ -67,25 +67,32 @@ rome,N/A
 To read its contents we use [csv.NewReader](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#NewReader) to create a table reader and use [csv.FromFile](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#FromFile) as [Source](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Source).
 
 ```go
-    reader, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders())
-    reader.Headers // ["city", "location"]
-    reader.All() // [[london 51.50,-0.11], [paris 48.85,2.30], [rome N/A]]
+locTable, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders())
+locTable.Headers() // ["city", "location"]
+iter, _ := locTable.Iter() {    
+for iter.Next() {
+    fmt.Println(iter.Row())
+}
+iter.Close()
+// [london 51.50,-0.11]
+// [paris 48.85,2.30]
+// [rome N/A]]
 ```
 
-As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. One way to deal with this data is to ask [csv.NewReader](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#NewReader) to infer the Table Schema:
+So far, locations are string, but it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. One way to deal with this data is to ask [schema.Infer](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Infer) to infer the Table Schema:
 
 ```go
-    reader, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders(), csv.InferSchema())
-    fmt.Println(reader.Schema)
-	// "fields": [
-	//     {"name": "city", "type": "string", "format": "default"},
-	//     {"name": "location", "type": "geopoint", "format": "default"},
-	// ],
-	// "missingValues": []
-    // ...
+locSchema, _ := schema.Infer(tab)
+fmt.Printf("%+v", locSchema)
+// "fields": [
+//     {"name": "city", "type": "string", "format": "default"},
+//     {"name": "location", "type": "geopoint", "format": "default"},
+// ],
+// "missingValues": []
+// ...
 ```
 
-Then we could create a struct and automatically unmarshal the table data into go structs. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. First thing we need is to create the struct which will represent each row.
+Then we could create a struct and automatically decode the table data into go structs. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. First thing we need is to create the struct which will represent each row.
 
 ```go
 type Location struct {
@@ -94,26 +101,34 @@ type Location struct {
 }
 ```
 
-Then we are ready to unmarshal the table and process it using Go's values/types.
+Then we are ready to decode the table and process it using Go's values/types.
 
 ```go
-var locations []Location
-reader.UnmarshalAll(&locations)
+iter, _ := locTable.Iter() { 
+for iter.Next() {
+    var loc Location
+    locSchema.Decode(iter.Row(), &loc)
+    fmt.Println(loc)
+}
+iter.Close()
 // Fails with: "Invalid geopoint:\"N/A\""
 ```
 
 The problem is that the library does not know that N/A is not an empty value. For those cases, there is a `missingValues` property in Table Schema specification. As a first try we set `missingValues` to N/A in table.Schema.
 
 ```go
-reader.Schema.MissingValues = []string{"N/A"}
-var locations []Location
-reader.UnmarshalAll(&locations)
-fmt.Println(rows)
+locSchema.MissingValues = []string{"N/A"}
+for iter.Next() {
+    var loc Location
+    locSchema.Decode(iter.Row(), &loc)
+    fmt.Println(loc)
+}
+iter.Close()
 // [{london {51.5 -0.11}} {paris {48.85 2.3}} {rome {0 0}}]
 ```
 
 And because there are no errors on data reading we could be sure that our data is valid againt our schema. Let's save it:
 
 ```go
-reader.Schema.SaveToFile("schema.json")
+locSchema.SaveToFile("schema.json")
 ```
