@@ -21,6 +21,13 @@ func ExampleTable_Iter() {
 	// [bar]
 }
 
+func ExampleTable_ReadAll() {
+	table, _ := NewTable(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
+	rows, _ := table.ReadAll()
+	fmt.Print(rows)
+	// Output:[[foo] [bar]]
+}
+
 func TestLoadHeaders(t *testing.T) {
 	t.Run("EmptyString", func(t *testing.T) {
 		table, err := NewTable(FromString(""), LoadHeaders())

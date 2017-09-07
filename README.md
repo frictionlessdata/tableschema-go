@@ -61,9 +61,7 @@ func main() {
 ```
 # Documentation
 
-## Table
-
-A table is a core concept in a tabular data world. It represents a data with a metadata (Table Schema). Let's see how we could use it in practice.
+A [Table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Table) is a core concept in the tabular data world. It represents the logic representation of the data. It's interface should be agnostic from the physical representation. Let's see how we could use it in practice.
 
 Consider we have some local CSV file, `data.csv`:
 
@@ -74,22 +72,16 @@ paris,"48.85,2.30"
 rome,N/A
 ```
 
-To read its contents we use [csv.NewReader](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#NewReader) to create a table reader and use [csv.FromFile](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#FromFile) as [Source](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Source).
+As the physical representation is a CSV, we read its contents we use [csv.NewReader](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#NewReader) to create a table object and use [csv.FromFile](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#FromFile) as [Source](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Source).
 
 ```go
 locTable, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders())
 locTable.Headers() // ["city", "location"]
-iter, _ := locTable.Iter() {    
-for iter.Next() {
-    fmt.Println(iter.Row())
-}
-iter.Close()
-// [london 51.50,-0.11]
-// [paris 48.85,2.30]
-// [rome N/A]]
+fmt.Println(locTable.ReadAll())
+// [[london 51.50,-0.11] [paris 48.85,2.30] [rome N/A]]
 ```
 
-So far, locations are string, but it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. One way to deal with this data is to ask [schema.Infer](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Infer) to infer the Table Schema:
+So far, locations are string, but it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. To start doing proper data processing we need to encode the data. In frictionless data, the schema represents that. An effortless way to quick start a schema is to use [schema.Infer](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Infer) and algorithmically infer the table [Schema](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Schema):
 
 ```go
 locSchema, _ := schema.Infer(tab)
@@ -102,25 +94,16 @@ fmt.Printf("%+v", locSchema)
 // ...
 ```
 
-Then we could create a struct and automatically decode the table data into go structs. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. First thing we need is to create the struct which will represent each row.
+Then we are ready create to decode the table data into go structs. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. 
 
 ```go
 type Location struct {
     City string
     Location schema.GeoPoint
 }
-```
 
-Then we are ready to decode the table and process it using Go's values/types.
-
-```go
-iter, _ := locTable.Iter() { 
-for iter.Next() {
-    var loc Location
-    locSchema.Decode(iter.Row(), &loc)
-    fmt.Println(loc)
-}
-iter.Close()
+var locations []Location
+err := locSchema.DecodeTable(locTable, &locations)
 // Fails with: "Invalid geopoint:\"N/A\""
 ```
 
@@ -128,13 +111,19 @@ The problem is that the library does not know that N/A is not an empty value. Fo
 
 ```go
 locSchema.MissingValues = []string{"N/A"}
+locSchema.DecodeTable(locTable, &locations)
+// [{london {51.5 -0.11}} {paris {48.85 2.3}} {rome {0 0}}]
+```
+
+If the data being processed is too big and you would like to iterate over table row by row, you could use table.Iter.
+```go
+locSchema.MissingValues = []string{"N/A"}
+iter, _ := locSchema.Iter()
 for iter.Next() {
     var loc Location
-    locSchema.Decode(iter.Row(), &loc)
-    fmt.Println(loc)
+    locSchema.Decode(iter.Row(), loc)
+    // process location
 }
-iter.Close()
-// [{london {51.5 -0.11}} {paris {48.85 2.3}} {rome {0 0}}]
 ```
 
 And because there are no errors on data reading we could be sure that our data is valid againt our schema. Let's save it:

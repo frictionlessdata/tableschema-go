@@ -42,6 +42,20 @@ func (table *Table) Iter() (table.Iterator, error) {
 	return newIterator(src, table.skipHeaders), nil
 }
 
+// ReadAll reads all rows from the table and return it as strings.
+func (table *Table) ReadAll() ([][]string, error) {
+	var r [][]string
+	iter, err := table.Iter()
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+	for iter.Next() {
+		r = append(r, iter.Row())
+	}
+	return r, nil
+}
+
 // Headers returns the headers of the tabular data.
 func (table *Table) Headers() []string {
 	return table.headers

@@ -26,6 +26,9 @@ type Table interface {
 	// The iteration process always start at the beginning of the table and
 	// is backed by a new reading.
 	Iter() (Iterator, error)
+
+	// ReadAll reads all rows from the table and return it as strings.
+	ReadAll() ([][]string, error)
 }
 
 // FromSlices creates a new SliceTable using passed-in arguments.
