@@ -42,11 +42,16 @@ type person struct {
     Age uint16
 }
 func main() {
-    t, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders())  // load table
-    t.Infer()  // infer the table schema
-    t.Schema.SaveToFile("schema.json")  // save inferred schema to file
-    data := []person{}
-    t.UnmarshalAll(&data)  // unmarshals the table data into the data slice.
+    t, _ := csv.NewTable(csv.FromFile("data.csv"), csv.LoadHeaders())  // load table and headers from file.
+    s, _ := schema.Infer(t) // infer the table schema
+    s.SaveToFile("schema.json")  // save inferred schema to file
+    iter, _ := t.Iter()
+    for iter.Next() {
+        var p person
+        s.Decode(iter.Row(), &p) // unmarshals the table data into the struct.
+        // do some processing based on the data.
+    }
+    iter.Close()
 }
 ```
 # Documentation
