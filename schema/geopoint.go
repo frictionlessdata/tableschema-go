@@ -3,6 +3,7 @@ package schema
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 )
@@ -39,8 +40,8 @@ func (p *GeoPoint) UnmarshalJSON(data []byte) error {
 }
 
 var (
-	geoPointDefaultRegexp = regexp.MustCompile(`([-+]?[0-9]*\.?[0-9]*), ?([-+]?[0-9]*\.?[0-9]*)`)
-	geoPointArrayRegexp   = regexp.MustCompile(`\[([-+]?[0-9]*\.?[0-9]+), ?([-+]?[0-9]*\.?[0-9]+)\]`)
+	geoPointDefaultRegexp = regexp.MustCompile(`^([-+]?[0-9]*\.?[0-9]*), ?([-+]?[0-9]*\.?[0-9]*)$`)
+	geoPointArrayRegexp   = regexp.MustCompile(`^\[([-+]?[0-9]*\.?[0-9]+), ?([-+]?[0-9]*\.?[0-9]+)\]$`)
 )
 
 func castGeoPoint(format, value string) (GeoPoint, error) {
@@ -67,4 +68,36 @@ func applyGeoPointRegexp(r *regexp.Regexp, value string) (GeoPoint, error) {
 	lon, _ := strconv.ParseFloat(matches[1], 64)
 	lat, _ := strconv.ParseFloat(matches[2], 64)
 	return GeoPoint{lon, lat}, nil
+}
+
+func encodeGeoPoint(format string, gp interface{}) (string, error) {
+	switch format {
+	case "", defaultFieldFormat:
+		value, ok := gp.(string)
+		if ok {
+			_, err := applyGeoPointRegexp(geoPointDefaultRegexp, value)
+			if err != nil {
+				return "", err
+			}
+			return value, nil
+		}
+		return "", fmt.Errorf("invalid object type to encode to geopoint dfault format. want:string got:%v", reflect.TypeOf(gp).String())
+	case GeoPointArrayFormat:
+		value, ok := gp.(string)
+		if ok {
+			_, err := applyGeoPointRegexp(geoPointArrayRegexp, value)
+			if err != nil {
+				return "", err
+			}
+			return value, nil
+		}
+		return "", fmt.Errorf("invalid object type to encode to geopoint %s format. want:string got:%v", GeoPointArrayFormat, reflect.TypeOf(gp).String())
+	case GeoPointObjectFormat:
+		value, ok := gp.(GeoPoint)
+		if ok {
+			return fmt.Sprintf("%+v", value), nil
+		}
+		return "", fmt.Errorf("invalid object type to encode to geopoint %s format. want:schema.Geopoint got:%v", GeoPointObjectFormat, reflect.TypeOf(gp).String())
+	}
+	return "", fmt.Errorf("invalid geopoint format:%s", format)
 }
