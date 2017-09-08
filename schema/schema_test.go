@@ -387,3 +387,47 @@ func TestDecodeTable(t *testing.T) {
 		}
 	})
 }
+
+func TestSchema_Encode(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		type rowType struct {
+			Name string
+			Age  int
+		}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+		got, err := s.Encode(rowType{Name: "Foo", Age: 42})
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []string{"Foo", "42"}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%v got:%v", want, got)
+		}
+	})
+	t.Run("Error_Encoding", func(t *testing.T) {
+		type rowType struct {
+			Age string
+		}
+		s := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
+		_, err := s.Encode(rowType{Age: "10"})
+		if err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+	})
+	t.Run("Error_NotStruct", func(t *testing.T) {
+		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		in := "string"
+		_, err := s.Encode(in)
+		if err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+	})
+	t.Run("Error_StructIsNil", func(t *testing.T) {
+		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		var in *csvRow
+		_, err := s.Encode(in)
+		if err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+	})
+}

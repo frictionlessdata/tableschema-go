@@ -158,7 +158,7 @@ func (s *Schema) SaveToFile(path string) error {
 // the schema field value can not be unmarshalled to the struct field type.
 func (s *Schema) Decode(row []string, out interface{}) error {
 	if reflect.ValueOf(out).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(out)).Kind() != reflect.Struct {
-		return fmt.Errorf("UnmarshalRow only accepts a pointer to a struct.")
+		return fmt.Errorf("can only decode pointer to structs")
 	}
 	outv := reflect.Indirect(reflect.ValueOf(out))
 	outt := outv.Type()
@@ -173,7 +173,7 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 				if s.isMissingValue(cell) {
 					continue
 				}
-				v, err := f.UnmarshalString(cell)
+				v, err := f.Decode(cell)
 				if err != nil {
 					return err
 				}
@@ -187,6 +187,29 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 		}
 	}
 	return nil
+}
+
+// Encode encodes struct into a row. This method can only encode structs (or pointer to structs) and
+// will error out if nil is passed.
+func (s *Schema) Encode(in interface{}) ([]string, error) {
+	inValue := reflect.Indirect(reflect.ValueOf(in))
+	if inValue.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("can only encode structs and does not support nil pointers")
+	}
+	inType := inValue.Type()
+	row := make([]string, inType.NumField())
+	for i := 0; i < inType.NumField(); i++ {
+		structFieldValue := inValue.Field(i)
+		f, fieldIndex := s.GetField(inType.Field(i).Name)
+		if fieldIndex != InvalidPosition {
+			r, err := f.Encode(structFieldValue.Interface())
+			if err != nil {
+				return nil, err
+			}
+			row[fieldIndex] = r
+		}
+	}
+	return row, nil
 }
 
 func (s *Schema) isMissingValue(value string) bool {
