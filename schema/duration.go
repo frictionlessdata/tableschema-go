@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -49,12 +50,16 @@ func parseSeconds(v string) time.Duration {
 	return time.Duration(d * 10e8)
 }
 
-func encodeDuration(v time.Duration) string {
+func encodeDuration(in interface{}) (string, error) {
+	v, ok := in.(time.Duration)
+	if !ok {
+		return "", fmt.Errorf("invalid duration - value:%v type:%v", in, reflect.ValueOf(in).Type())
+	}
 	y := v / hoursInYear
 	r := v % hoursInYear
 	m := r / hoursInMonth
 	r = r % hoursInMonth
 	d := r / hoursInDay
 	r = r % hoursInDay
-	return strings.ToUpper(fmt.Sprintf("P%dY%dM%dDT%s", y, m, d, r.String()))
+	return strings.ToUpper(fmt.Sprintf("P%dY%dM%dDT%s", y, m, d, r.String())), nil
 }

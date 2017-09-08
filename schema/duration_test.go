@@ -52,19 +52,40 @@ func TestCastDuration_Error(t *testing.T) {
 }
 
 func TestEncodeDuration(t *testing.T) {
-	data := []struct {
-		desc  string
-		value time.Duration
-		want  string
-	}{
-		{"1Year", 1*hoursInYear + 1*hoursInMonth + 1*hoursInDay + 1*time.Hour + 1*time.Minute + 500*time.Millisecond, "P1Y1M1DT1H1M0.5S"},
-	}
-	for _, d := range data {
-		t.Run(d.desc, func(t *testing.T) {
-			got := encodeDuration(d.value)
-			if d.want != got {
-				t.Errorf("want:%s got:%s", d.want, got)
-			}
-		})
-	}
+	t.Run("Success", func(t *testing.T) {
+		data := []struct {
+			desc  string
+			value time.Duration
+			want  string
+		}{
+			{"1Year", 1*hoursInYear + 1*hoursInMonth + 1*hoursInDay + 1*time.Hour + 1*time.Minute + 500*time.Millisecond, "P1Y1M1DT1H1M0.5S"},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				got, err := encodeDuration(d.value)
+				if err != nil {
+					t.Fatalf("err want:nil got:%q", err)
+				}
+				if d.want != got {
+					t.Errorf("val want:%s got:%s", d.want, got)
+				}
+			})
+		}
+	})
+	t.Run("Error", func(t *testing.T) {
+		data := []struct {
+			desc  string
+			value interface{}
+		}{
+			{"InvalidType", 10},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				_, err := encodeDuration(d.value)
+				if err == nil {
+					t.Fatalf("err want:err got:nil")
+				}
+			})
+		}
+	})
 }
