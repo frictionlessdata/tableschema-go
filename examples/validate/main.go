@@ -23,14 +23,14 @@ func main() {
 	log.Printf("Headers: %v\n", capitalSchema.Headers())
 
 	// Working with schema fields.
-	if capitalSchema.HasField("capital") {
+	if capitalSchema.HasField("Capital") {
 		log.Println("Field capital exists in schema")
 	} else {
 		log.Fatalf("Schema must have the field capital")
 	}
-	field, _ := capitalSchema.GetField("url")
+	field, _ := capitalSchema.GetField("URL")
 	if field.TestString("http://new.url.com") {
-		value, err := field.UnmarshalString("http://new.url.com")
+		value, err := field.Decode("http://new.url.com")
 		log.Printf("URL unmarshal to value: %v\n", value)
 		if err != nil {
 			log.Fatalf("Error casting value: %q", err)

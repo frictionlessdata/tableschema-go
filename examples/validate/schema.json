@@ -1,20 +1,20 @@
 {
     "fields": [
       {
-        "name": "id",
+        "name": "ID",
         "title": "",
         "description": "",
         "type": "integer",
         "format": "default"
       },
       {
-        "name": "capital",
+        "name": "Capital",
         "title": "",
         "description": "",
         "type": "number"
       },
       {
-        "name": "url",
+        "name": "URL",
         "title": "",
         "description": "",
         "type": "string"
