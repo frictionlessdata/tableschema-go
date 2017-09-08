@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -11,7 +12,7 @@ var durationRegexp = regexp.MustCompile(
 	`P(?P<years>\d+Y)?(?P<months>\d+M)?(?P<days>\d+D)?T?(?P<hours>\d+H)?(?P<minutes>\d+M)?(?P<seconds>\d+\.?\d*S)?`)
 
 const (
-	hoursInYear  = time.Duration(24*36) * time.Hour
+	hoursInYear  = time.Duration(24*360) * time.Hour
 	hoursInMonth = time.Duration(24*30) * time.Hour
 	hoursInDay   = time.Duration(24) * time.Hour
 )
@@ -46,4 +47,14 @@ func parseSeconds(v string) time.Duration {
 	// Ignoring error here because only valid arbitrary precision floats could come from the regular expression.
 	d, _ := strconv.ParseFloat(v[0:len(v)-1], 64)
 	return time.Duration(d * 10e8)
+}
+
+func encodeDuration(v time.Duration) string {
+	y := v / hoursInYear
+	r := v % hoursInYear
+	m := r / hoursInMonth
+	r = r % hoursInMonth
+	d := r / hoursInDay
+	r = r % hoursInDay
+	return strings.ToUpper(fmt.Sprintf("P%dY%dM%dDT%s", y, m, d, r.String()))
 }
