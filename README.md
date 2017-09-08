@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-    sch.SaveToFile("schema.json") // save inferred schema to file
+	sch.SaveToFile("schema.json") // save inferred schema to file
 	var users []user
 	sch.DecodeTable(tab, &users) // unmarshals the table data into the slice.
 }
