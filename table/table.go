@@ -47,6 +47,11 @@ func (t *SliceTable) Headers() []string {
 	return t.headers
 }
 
+// ReadAll reads all rows from the table and return it as strings.
+func (t *SliceTable) ReadAll() ([][]string, error) {
+	return t.content, nil
+}
+
 // Iter provides a convenient way to iterate over table's data.
 // The iteration process always start at the beginning of the table and
 // is backed by a new reading process.
