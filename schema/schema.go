@@ -166,8 +166,7 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 		fieldValue := outv.Field(i)
 		if fieldValue.CanSet() { // Only consider exported fields.
 			field := outt.Field(i)
-			fieldName := strings.ToLower(field.Name)
-			f, fieldIndex := s.GetField(fieldName)
+			f, fieldIndex := s.GetField(field.Name)
 			if fieldIndex != InvalidPosition {
 				cell := row[fieldIndex]
 				if s.isMissingValue(cell) {
@@ -180,7 +179,7 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 				toSetValue := reflect.ValueOf(v)
 				toSetType := toSetValue.Type()
 				if !toSetType.ConvertibleTo(field.Type) {
-					return fmt.Errorf("value:%s field:%s - can not convert from %v to %v", fieldName, cell, toSetType, field.Type)
+					return fmt.Errorf("value:%s field:%s - can not convert from %v to %v", field.Name, cell, toSetType, field.Type)
 				}
 				fieldValue.Set(toSetValue.Convert(field.Type))
 			}
@@ -306,4 +305,21 @@ func (s *Schema) DecodeTable(tab table.Table, out interface{}) error {
 	}
 	outv.Elem().Set(slicev.Slice(0, i))
 	return nil
+}
+
+// EncodeTable encodes each element (struct) of the passed-in slice and
+func (s *Schema) EncodeTable(in interface{}) ([][]string, error) {
+	inVal := reflect.Indirect(reflect.ValueOf(in))
+	if inVal.Kind() != reflect.Slice {
+		return nil, fmt.Errorf("tables must be slice of structs")
+	}
+	var t [][]string
+	for i := 0; i < inVal.Len(); i++ {
+		r, err := s.Encode(inVal.Index(i).Interface())
+		if err != nil {
+			return nil, err
+		}
+		t = append(t, r)
+	}
+	return t, nil
 }

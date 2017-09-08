@@ -169,3 +169,16 @@ func errorOpts(headers ...string) CreationOpts {
 		return fmt.Errorf("error opts")
 	}
 }
+
+// NewWriter creates a writer which appends records to a CSV encoded file.
+//
+// As returned by NewWriter, a csv.Writer writes records terminated by a
+// newline and uses ',' as the field delimiter. The exported fields can be
+// changed to customize the details before the first call to Write or WriteAll.
+//
+// Comma is the field delimiter.
+//
+// If UseCRLF is true, the csv.Writer ends each record with \r\n instead of \n.
+func NewWriter(w io.Writer) *csv.Writer {
+	return csv.NewWriter(w)
+}

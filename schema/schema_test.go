@@ -2,12 +2,113 @@ package schema
 
 import (
 	"bytes"
+	"fmt"
+
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/frictionlessdata/tableschema-go/table"
 )
+
+func ExampleSchema_Decode() {
+	// Lets assume we have a schema ...
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And a Table.
+	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+		{"Foo", "42"},
+		{"Bar", "43"}})
+
+	// And we would like to process them using Go types. First we need to create a struct to hold the
+	// content of each row.
+	type person struct {
+		Name string
+		Age  int
+	}
+
+	// Now it is a matter of iterate over the table and Decode each row.
+	iter, _ := t.Iter()
+	for iter.Next() {
+		var p person
+		s.Decode(iter.Row(), &p)
+		fmt.Printf("%+v\n", p)
+	}
+	// Output: {Name:Foo Age:42}
+	// {Name:Bar Age:43}
+}
+
+func ExampleSchema_DecodeTable() {
+	// Lets assume we have a schema ...
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And a Table.
+	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+		{"Foo", "42"},
+		{"Bar", "43"}})
+
+	// And we would like to process them using Go types. First we need to create a struct to hold the
+	// content of each row.
+	type person struct {
+		Name string
+		Age  int
+	}
+	var people []person
+	s.DecodeTable(t, &people)
+	fmt.Print(people)
+	// Output: [{Foo 42} {Bar 43}]
+}
+func ExampleSchema_Encode() {
+	// Lets assume we have a schema.
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And would like to create a CSV out of this list conforming to
+	// to the schema above.
+	people := []struct {
+		Name string
+		Age  int
+	}{{"Foo", 42}, {"Bar", 43}}
+
+	// First create the writer and write the header.
+	w := table.NewStringWriter()
+	w.Write([]string{"Name", "Age"})
+
+	// Then write the list
+	for _, person := range people {
+		row, _ := s.Encode(person)
+		w.Write(row)
+	}
+	w.Flush()
+	fmt.Print(w.String())
+	// Output: Name,Age
+	// Foo,42
+	// Bar,43
+}
+
+func ExampleSchema_EncodeTable() {
+	// Lets assume we have a schema.
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And would like to create a CSV out of this list conforming to
+	// to the schema above.
+	people := []struct {
+		Name string
+		Age  int
+	}{{"Foo", 42}, {"Bar", 43}}
+
+	// Then encode the people slice into a slice of rows.
+	rows, _ := s.EncodeTable(people)
+
+	// Now, simply write it down.
+	w := table.NewStringWriter()
+	w.Write([]string{"Name", "Age"})
+	w.WriteAll(rows)
+	w.Flush()
+	fmt.Print(w.String())
+	// Output: Name,Age
+	// Foo,42
+	// Bar,43
+}
 
 func TestRead_Sucess(t *testing.T) {
 	data := []struct {
@@ -121,7 +222,7 @@ func TestSchema_Decode(t *testing.T) {
 			Name string
 			Age  int64
 		}{}
-		s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
 		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
 			t.Fatalf("err want:nil, got:%q", err)
 		}
@@ -134,7 +235,7 @@ func TestSchema_Decode(t *testing.T) {
 	})
 	t.Run("ImplicitCastToInt", func(t *testing.T) {
 		t1 := struct{ Age int }{}
-		s := Schema{Fields: []Field{{Name: "name", Type: StringType}, {Name: "age", Type: IntegerType}}}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
 		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
 			t.Fatalf("err want:nil, got:%q", err)
 		}
@@ -145,14 +246,14 @@ func TestSchema_Decode(t *testing.T) {
 	t.Run("Error_SchemaFieldAndStructFieldDifferentTypes", func(t *testing.T) {
 		// Field is string and struct is int.
 		t1 := struct{ Age int }{}
-		s := Schema{Fields: []Field{{Name: "age", Type: StringType}}}
+		s := Schema{Fields: []Field{{Name: "Age", Type: StringType}}}
 		if err := s.Decode([]string{"42"}, &t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
 	})
 	t.Run("Error_NotAPointerToStruct", func(t *testing.T) {
 		t1 := struct{ Age int }{}
-		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
 		if err := s.Decode([]string{"Foo", "42"}, t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
@@ -160,7 +261,7 @@ func TestSchema_Decode(t *testing.T) {
 	t.Run("Error_CellCanNotBeCast", func(t *testing.T) {
 		// Field is string and struct is int.
 		t1 := struct{ Age int }{}
-		s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
+		s := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
 		if err := s.Decode([]string{"foo"}, &t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
@@ -168,7 +269,7 @@ func TestSchema_Decode(t *testing.T) {
 	t.Run("Error_CastToNil", func(t *testing.T) {
 		t1 := &struct{ Age int }{}
 		t1 = nil
-		s := Schema{Fields: []Field{{Name: "age", Type: IntegerType}}}
+		s := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
 		if err := s.Decode([]string{"foo"}, &t1); err == nil {
 			t.Fatalf("want:error, got:nil")
 		}
@@ -336,9 +437,9 @@ func TestDecodeTable(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
 			tab := table.FromSlices(
-				[]string{"name"},
+				[]string{"Name"},
 				[][]string{{"foo"}, {"bar"}})
-			s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
+			s := &Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
 			if err := s.DecodeTable(tab, &d.got); err != nil {
 				t.Fatalf("err want:nil got:%q", err)
 			}
@@ -350,7 +451,7 @@ func TestDecodeTable(t *testing.T) {
 	}
 	t.Run("MoarData", func(t *testing.T) {
 		tab := table.FromSlices(
-			[]string{"id", "age", "name"},
+			[]string{"ID", "Age", "Name"},
 			[][]string{{"1", "39", "Paul"}, {"2", "23", "Jimmy"}, {"3", "36", "Jane"}, {"4", "28", "Judy"}, {"5", "37", "Iñtërnâtiônàlizætiøn"}})
 
 		type data struct {
@@ -358,7 +459,7 @@ func TestDecodeTable(t *testing.T) {
 			Age  int
 			Name string
 		}
-		s := &Schema{Fields: []Field{{Name: "id", Type: IntegerType}, {Name: "age", Type: IntegerType}, {Name: "name", Type: StringType}}}
+		s := &Schema{Fields: []Field{{Name: "ID", Type: IntegerType}, {Name: "Age", Type: IntegerType}, {Name: "Name", Type: StringType}}}
 		got := []data{}
 		if err := s.DecodeTable(tab, &got); err != nil {
 			t.Fatalf("err want:nil got:%q", err)
@@ -426,6 +527,41 @@ func TestSchema_Encode(t *testing.T) {
 		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		var in *csvRow
 		_, err := s.Encode(in)
+		if err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+	})
+}
+
+func TestEncodeTable(t *testing.T) {
+	t.Run("Simple", func(t *testing.T) {
+		people := []struct {
+			Name string
+		}{{"Foo"}, {"Bar"}, {"Bez"}}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
+		got, err := s.EncodeTable(people)
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := [][]string{{"Foo"}, {"Bar"}, {"Bez"}}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%s got:%q", want, got)
+		}
+	})
+
+	t.Run("Error_InputIsNotASlice", func(t *testing.T) {
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
+		_, err := s.EncodeTable(10)
+		if err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+	})
+	t.Run("Error_ErrorEncoding", func(t *testing.T) {
+		people := []struct {
+			Name string
+		}{{"Foo"}}
+		s := Schema{Fields: []Field{{Name: "Name", Type: IntegerType}}}
+		_, err := s.EncodeTable(people)
 		if err == nil {
 			t.Fatalf("err want:err got:nil")
 		}

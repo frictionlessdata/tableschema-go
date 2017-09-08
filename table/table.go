@@ -16,6 +16,11 @@
 // is represented by interfaces in this package.
 package table
 
+import (
+	"bytes"
+	"encoding/csv"
+)
+
 // Table provides functionality to iterate and write tabular data. This is the logical
 // representation and is meant to be encoding/format agnostic.
 type Table interface {
@@ -29,6 +34,42 @@ type Table interface {
 
 	// ReadAll reads all rows from the table and return it as strings.
 	ReadAll() ([][]string, error)
+}
+
+// A Writer writes rows to a table file. The idea behind the writer is to
+// abstract out the physical representation of the table. Which can have
+// many formats, for instance, CSV, XML and JSON
+type Writer interface {
+	// Write writes a single row to w along with any necessary quoting.
+	// A record is a slice of strings with each string being one field.
+	Write(record []string) error
+	// Flush writes any buffered data to the underlying io.Writer.
+	// To check if an error occurred during the Flush, call Error.
+	Flush()
+	// Error reports any error that has occurred during a previous Write or Flush.
+	Error() error
+	// WriteAll writes multiple CSV records to w using Write and then calls Flush.
+	WriteAll(records [][]string) error
+}
+
+// StringWriter is a simple Writer implementation which is backed up by
+// an in memory bytes.Buffer.
+type StringWriter struct {
+	csv.Writer
+
+	content *bytes.Buffer
+}
+
+// String returns the content that has been written so far encoded as CSV.
+func (s *StringWriter) String() string {
+	return s.content.String()
+}
+
+// NewStringWriter returns a Writer that writes CSV to a string.
+// It exports a String() method, which returns its contents.
+func NewStringWriter() *StringWriter {
+	buf := &bytes.Buffer{}
+	return &StringWriter{*csv.NewWriter(buf), buf}
 }
 
 // FromSlices creates a new SliceTable using passed-in arguments.

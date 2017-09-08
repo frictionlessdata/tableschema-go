@@ -1,6 +1,7 @@
 package csv
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
@@ -26,6 +27,15 @@ func ExampleTable_ReadAll() {
 	rows, _ := table.ReadAll()
 	fmt.Print(rows)
 	// Output:[[foo] [bar]]
+}
+
+func ExampleNewWriter() {
+	var buf bytes.Buffer
+	w := NewWriter(&buf)
+	w.Write([]string{"foo", "bar"})
+	w.Flush()
+	fmt.Println(buf.String())
+	// Output:foo,bar
 }
 
 func TestLoadHeaders(t *testing.T) {
