@@ -99,5 +99,5 @@ func encodeGeoPoint(format string, gp interface{}) (string, error) {
 		}
 		return "", fmt.Errorf("invalid object type to encode to geopoint %s format. want:schema.Geopoint got:%v", GeoPointObjectFormat, reflect.TypeOf(gp).String())
 	}
-	return "", fmt.Errorf("invalid geopoint format:%s", format)
+	return "", fmt.Errorf("invalid geopoint - type:%v value:\"%v\" format:%s", gp, reflect.ValueOf(gp).Type(), format)
 }
