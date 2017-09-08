@@ -9,3 +9,8 @@ func castObject(value string) (interface{}, error) {
 	}
 	return obj, nil
 }
+
+func encodeObject(value interface{}) (string, error) {
+	b, err := json.Marshal(value)
+	return string(b), err
+}
