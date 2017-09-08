@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -73,7 +74,11 @@ func castDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, er
 	return t.In(time.UTC), nil
 }
 
-func encodeTime(value time.Time) (string, error) {
+func encodeTime(v interface{}) (string, error) {
+	value, ok := v.(time.Time)
+	if !ok {
+		return "", fmt.Errorf("invalid date - value:%v type:%v", v, reflect.ValueOf(v).Type())
+	}
 	utc := value.In(time.UTC)
 	return utc.Format(time.RFC3339), nil
 }
