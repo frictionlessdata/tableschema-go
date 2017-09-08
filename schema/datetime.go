@@ -72,3 +72,8 @@ func castDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, er
 	}
 	return t.In(time.UTC), nil
 }
+
+func encodeTime(value time.Time) (string, error) {
+	utc := value.In(time.UTC)
+	return utc.Format(time.RFC3339), nil
+}
