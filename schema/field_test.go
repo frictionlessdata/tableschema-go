@@ -35,7 +35,7 @@ func TestDefaultValues(t *testing.T) {
 	}
 }
 
-func TestField_UnmarshalString(t *testing.T) {
+func TestField_Decode(t *testing.T) {
 	data := []struct {
 		Desc     string
 		Value    string
@@ -62,7 +62,7 @@ func TestField_UnmarshalString(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
-			c, err := d.Field.UnmarshalString(d.Value)
+			c, err := d.Field.Decode(d.Value)
 			if err != nil {
 				t.Fatalf("err want:nil got:%s", err)
 			}
@@ -73,7 +73,7 @@ func TestField_UnmarshalString(t *testing.T) {
 	}
 	t.Run("Object_Success", func(t *testing.T) {
 		f := Field{Type: ObjectType}
-		obj, err := f.UnmarshalString(`{"name":"foo"}`)
+		obj, err := f.Decode(`{"name":"foo"}`)
 		if err != nil {
 			t.Fatalf("err want:nil got:%s", err)
 		}
@@ -90,14 +90,14 @@ func TestField_UnmarshalString(t *testing.T) {
 	})
 	t.Run("Object_Failure", func(t *testing.T) {
 		f := Field{Type: ObjectType}
-		_, err := f.UnmarshalString(`{"name"}`)
+		_, err := f.Decode(`{"name"}`)
 		if err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
 	t.Run("Array_Success", func(t *testing.T) {
 		f := Field{Type: ArrayType}
-		obj, err := f.UnmarshalString(`["foo"]`)
+		obj, err := f.Decode(`["foo"]`)
 		if err != nil {
 			t.Fatalf("err want:nil got:%s", err)
 		}
@@ -114,7 +114,7 @@ func TestField_UnmarshalString(t *testing.T) {
 	})
 	t.Run("Array_Failure", func(t *testing.T) {
 		f := Field{Type: ArrayType}
-		_, err := f.UnmarshalString(`{"name":"foo"}`)
+		_, err := f.Decode(`{"name":"foo"}`)
 		if err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
@@ -130,7 +130,7 @@ func TestField_UnmarshalString(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := d.field.UnmarshalString(d.value); err == nil {
+				if _, err := d.field.Decode(d.value); err == nil {
 					t.Errorf("want:err got:nil")
 				}
 			})
@@ -138,7 +138,7 @@ func TestField_UnmarshalString(t *testing.T) {
 	})
 	t.Run("InvalidFieldType", func(t *testing.T) {
 		f := Field{Type: "invalidType"}
-		if _, err := f.UnmarshalString("42"); err == nil {
+		if _, err := f.Decode("42"); err == nil {
 			t.Errorf("err want:err, got:nil")
 		}
 	})
@@ -159,4 +159,60 @@ func TestTestString(t *testing.T) {
 	if f.TestString("boo") {
 		t.Errorf("want:false, got:true")
 	}
+}
+
+func TestField_Encode(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		data := []struct {
+			desc  string
+			field Field
+			value interface{}
+			want  string
+		}{
+			{"Int", Field{Type: IntegerType}, 1, "1"},
+			{"Number", Field{Type: NumberType}, 1.0, "1"},
+			{"IntNumberImplicitCast", Field{Type: NumberType}, 100, "100"},
+			{"NumberToIntImplicitCast", Field{Type: IntegerType}, 100.5, "100"},
+			{"Boolean", Field{Type: BooleanType}, true, "true"},
+			{"Duration", Field{Type: DurationType}, 1 * time.Second, "P0Y0M0DT1S"},
+			{"GeoPoint", Field{Type: GeoPointType}, "10,10", "10,10"},
+			{"String", Field{Type: StringType}, "foo", "foo"},
+			{"Array", Field{Type: ArrayType}, []string{"foo"}, "[foo]"},
+			{"Date", Field{Type: DateType}, time.Unix(1, 0), "1970-01-01T00:00:01Z"},
+			{"Year", Field{Type: YearType}, time.Unix(1, 0), "1970-01-01T00:00:01Z"},
+			{"YearMonth", Field{Type: YearMonthType}, time.Unix(1, 0), "1970-01-01T00:00:01Z"},
+			{"DateTime", Field{Type: DateTimeType}, time.Unix(1, 0), "1970-01-01T00:00:01Z"},
+			{"Date", Field{Type: DateType}, time.Unix(1, 0), "1970-01-01T00:00:01Z"},
+			{"Object", Field{Type: ObjectType}, eoStruct{Name: "Foo"}, `{"name":"Foo"}`},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				got, err := d.field.Encode(d.value)
+				if err != nil {
+					t.Fatalf("err want:nil got:%q", err)
+				}
+				if d.want != got {
+					t.Fatalf("val want:%s got:%s", d.want, got)
+				}
+			})
+		}
+	})
+	t.Run("Error", func(t *testing.T) {
+		data := []struct {
+			desc  string
+			field Field
+			value interface{}
+		}{
+			{"StringToIntCast", Field{Type: IntegerType}, "1.5"},
+			{"StringToNumberCast", Field{Type: NumberType}, "1.5"},
+			{"InvalidType", Field{Type: "Boo"}, "1"},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				if _, err := d.field.Encode(d.value); err == nil {
+					t.Errorf("want:err got:nil")
+				}
+			})
+		}
+	})
 }

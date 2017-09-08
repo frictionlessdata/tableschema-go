@@ -3,6 +3,7 @@ package schema
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 // Default for schema fields.
@@ -75,9 +76,9 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// UnmarshalString unmarshal the passed-in string against field type. Returns an error
+// Decode decodes the passed-in string against field type. Returns an error
 // if the value can not be cast or any field constraint can not be satisfied.
-func (f *Field) UnmarshalString(value string) (interface{}, error) {
+func (f *Field) Decode(value string) (interface{}, error) {
 	switch f.Type {
 	case IntegerType:
 		return castInt(value)
@@ -109,9 +110,50 @@ func (f *Field) UnmarshalString(value string) (interface{}, error) {
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
 
+// Encode encodes the passed-in value into a string. It returns an error if the
+// the type of the passed-in value can not be converted to field type.
+func (f *Field) Encode(in interface{}) (string, error) {
+	// This indirect avoids the need to custom-case pointer types.
+	inValue := reflect.Indirect(reflect.ValueOf(in))
+	inInterface := inValue.Interface()
+	ok := false
+	switch f.Type {
+	case IntegerType:
+		var a int64
+		ok = reflect.TypeOf(inInterface).ConvertibleTo(reflect.ValueOf(a).Type())
+		if ok {
+			inInterface = inValue.Convert(reflect.ValueOf(a).Type()).Interface()
+		}
+	case NumberType:
+		var a float64
+		ok = reflect.TypeOf(inInterface).ConvertibleTo(reflect.ValueOf(a).Type())
+		if ok {
+			inInterface = inValue.Convert(reflect.ValueOf(a).Type()).Interface()
+		}
+	case BooleanType:
+		return encodeBoolean(in, f.TrueValues, f.FalseValues)
+	case DurationType:
+		return encodeDuration(inInterface)
+	case GeoPointType:
+		return encodeGeoPoint(f.Format, in)
+	case DateType, DateTimeType, TimeType, YearMonthType, YearType:
+		return encodeTime(inInterface)
+	case ObjectType:
+		return encodeObject(inInterface)
+	case StringType:
+		_, ok = inInterface.(string)
+	case ArrayType:
+		ok = reflect.TypeOf(inInterface).Kind() == reflect.Slice
+	}
+	if !ok {
+		return "", fmt.Errorf("can not convert \"%d\" which type is %s to type %s", in, reflect.TypeOf(in), f.Type)
+	}
+	return fmt.Sprintf("%v", inInterface), nil
+}
+
 // TestString checks whether the value can be unmarshalled to the field type.
 func (f *Field) TestString(value string) bool {
-	_, err := f.UnmarshalString(value)
+	_, err := f.Decode(value)
 	return err == nil
 }
 
