@@ -163,3 +163,7 @@ func CreateLocationTable(locations []Location, path string) error {
     return nil
 }
 ```
+
+# Documentation
+
+More detailed documentation about API methods is available at [https://godoc.org/github.com/frictionlessdata/tableschema-go](https://godoc.org/github.com/frictionlessdata/tableschema-go)
