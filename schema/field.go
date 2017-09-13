@@ -16,6 +16,9 @@ const (
 var (
 	defaultTrueValues  = []string{"yes", "y", "true", "t", "1"}
 	defaultFalseValues = []string{"no", "n", "false", "f", "0"}
+	defaultDecimalChar = "."
+	defaultGroupChar   = ""
+	defaultBareNumber  = true
 )
 
 // Field types.
@@ -56,6 +59,17 @@ type Field struct {
 	// https://specs.frictionlessdata.io/table-schema/#boolean
 	TrueValues  []string `json:"trueValues,omitempty"`
 	FalseValues []string `json:"falseValues,omitempty"`
+
+	// Number/Integer properties.
+
+	// A string whose value is used to represent a decimal point within the number. The default value is ".".
+	DecimalChar string
+	// A string whose value is used to group digits within the number. The default value is null. A common value is "," e.g. "100,000".
+	GroupChar string
+	// If true the physical contents of this field must follow the formatting constraints already set out.
+	// If false the contents of this field may contain leading and/or trailing non-numeric characters which
+	// are going to be stripped. Default value is true:
+	BareNumber bool
 }
 
 // UnmarshalJSON sets *f to a copy of data. It will respect the default values
@@ -68,6 +82,9 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 		Format:      defaultFieldFormat,
 		TrueValues:  defaultTrueValues,
 		FalseValues: defaultFalseValues,
+		DecimalChar: defaultDecimalChar,
+		GroupChar:   defaultGroupChar,
+		BareNumber:  defaultBareNumber,
 	}
 	if err := json.Unmarshal(data, u); err != nil {
 		return err
