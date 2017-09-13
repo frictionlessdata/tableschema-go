@@ -164,7 +164,7 @@ func findType(value string, checkOrder []string) string {
 				return IntegerType
 			}
 		case NumberType:
-			if _, err := castNumber(value); err == nil {
+			if _, err := castNumber(defaultFieldFormat, value); err == nil {
 				return NumberType
 			}
 		case DateType:

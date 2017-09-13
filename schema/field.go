@@ -87,7 +87,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	case BooleanType:
 		return castBoolean(value, f.TrueValues, f.FalseValues)
 	case NumberType:
-		return castNumber(value)
+		return castNumber(f.Format, value)
 	case DateType:
 		return castDate(f.Format, value)
 	case ObjectType:
