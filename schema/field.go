@@ -17,7 +17,7 @@ var (
 	defaultTrueValues  = []string{"yes", "y", "true", "t", "1"}
 	defaultFalseValues = []string{"no", "n", "false", "f", "0"}
 	defaultDecimalChar = "."
-	defaultGroupChar   = ""
+	defaultGroupChar   = ","
 	defaultBareNumber  = true
 )
 
@@ -63,13 +63,13 @@ type Field struct {
 	// Number/Integer properties.
 
 	// A string whose value is used to represent a decimal point within the number. The default value is ".".
-	DecimalChar string
+	DecimalChar string `json:"decimalChar,omitempty"`
 	// A string whose value is used to group digits within the number. The default value is null. A common value is "," e.g. "100,000".
-	GroupChar string
+	GroupChar string `json:"groupChar,omitempty"`
 	// If true the physical contents of this field must follow the formatting constraints already set out.
 	// If false the contents of this field may contain leading and/or trailing non-numeric characters which
 	// are going to be stripped. Default value is true:
-	BareNumber bool
+	BareNumber bool `json:"bareNumber,omitempty"`
 }
 
 // UnmarshalJSON sets *f to a copy of data. It will respect the default values
@@ -104,7 +104,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	case BooleanType:
 		return castBoolean(value, f.TrueValues, f.FalseValues)
 	case NumberType:
-		return castNumber(f.Format, value)
+		return castNumber(f.DecimalChar, f.GroupChar, f.BareNumber, value)
 	case DateType:
 		return castDate(f.Format, value)
 	case ObjectType:

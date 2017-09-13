@@ -2,18 +2,38 @@ package schema
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 )
 
-// Number formats.
-const (
-	NumberBareNumberFormat = "bareNumber"
-)
-
-func castNumber(format, value string) (float64, error) {
-	switch format {
-	case "", defaultFieldFormat:
-		return strconv.ParseFloat(value, 164)
+func castNumber(decimalChar, groupChar string, bareNumber bool, value string) (float64, error) {
+	dc := decimalChar
+	if groupChar != "" {
+		dc = decimalChar
 	}
-	return 0, fmt.Errorf("invalid number format:%s", format)
+	v := strings.Replace(value, dc, ".", 1)
+	gc := defaultGroupChar
+	if groupChar != "" {
+		gc = groupChar
+	}
+	v = strings.Replace(v, gc, "", -1)
+	if !bareNumber {
+		var err error
+		v, err = stripNumberFromString(v)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return strconv.ParseFloat(v, 64)
+}
+
+var bareNumberRegexp = regexp.MustCompile(`((^[0-9]+\.?[0-9]*)|([0-9]+\.?[0-9]*$))`)
+
+func stripNumberFromString(v string) (string, error) {
+	matches := bareNumberRegexp.FindStringSubmatch(v)
+	if matches == nil {
+		return "", fmt.Errorf("invalid number to strip:%s", v)
+	}
+	return matches[1], nil
 }

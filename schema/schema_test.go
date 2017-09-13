@@ -122,7 +122,8 @@ func TestRead_Sucess(t *testing.T) {
                 "fields":[{"name":"n","title":"ti","type":"integer","description":"desc","format":"f","trueValues":["ntrue"],"falseValues":["nfalse"]}]
             }`,
 			Schema{
-				Fields: []Field{{Name: "n", Title: "ti", Type: "integer", Description: "desc", Format: "f", TrueValues: []string{"ntrue"}, FalseValues: []string{"nfalse"}}},
+				Fields: []Field{{Name: "n", Title: "ti", Type: "integer", Description: "desc", Format: "f", TrueValues: []string{"ntrue"}, FalseValues: []string{"nfalse"},
+					DecimalChar: defaultDecimalChar, GroupChar: defaultGroupChar, BareNumber: defaultBareNumber}},
 			},
 		},
 		{
@@ -132,8 +133,8 @@ func TestRead_Sucess(t *testing.T) {
             }`,
 			Schema{
 				Fields: []Field{
-					{Name: "n1", Type: "t1", Format: "f1", TrueValues: defaultTrueValues, FalseValues: []string{}},
-					{Name: "n2", Type: "t2", Format: "f2", TrueValues: []string{}, FalseValues: defaultFalseValues},
+					{Name: "n1", Type: "t1", Format: "f1", TrueValues: defaultTrueValues, FalseValues: []string{}, DecimalChar: defaultDecimalChar, GroupChar: defaultGroupChar, BareNumber: defaultBareNumber},
+					{Name: "n2", Type: "t2", Format: "f2", TrueValues: []string{}, FalseValues: defaultFalseValues, DecimalChar: defaultDecimalChar, GroupChar: defaultGroupChar, BareNumber: defaultBareNumber},
 				},
 			},
 		},
@@ -175,7 +176,7 @@ func TestRead_Sucess(t *testing.T) {
 				t.Fatalf("want:nil, got:%q", err)
 			}
 			if !reflect.DeepEqual(s, &d.Schema) {
-				t.Errorf("want:%+v, got:%+v", d.Schema, s)
+				t.Errorf("want:%+v, got:%+v", &d.Schema, s)
 			}
 		})
 	}

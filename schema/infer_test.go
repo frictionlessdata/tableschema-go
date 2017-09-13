@@ -91,7 +91,7 @@ func TestInfer_Success(t *testing.T) {
 			sort.Sort(s.Fields)
 			sort.Sort(d.want.Fields)
 			if !reflect.DeepEqual(s, &d.want) {
-				t.Errorf("want:%+v, got:%+v", d.want, s)
+				t.Errorf("want:%+v, got:%+v", &d.want, s)
 			}
 		})
 	}
