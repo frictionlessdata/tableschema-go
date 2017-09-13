@@ -3,6 +3,8 @@ package schema
 import (
 	"bytes"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 
 	"reflect"
 	"strings"
@@ -108,6 +110,28 @@ func ExampleSchema_EncodeTable() {
 	// Output: Name,Age
 	// Foo,42
 	// Bar,43
+}
+
+func TestLoadRemote(t *testing.T) {
+	h := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `{"fields": [{"name": "ID", "type": "integer"}]}`)
+	}
+	ts := httptest.NewServer(http.HandlerFunc(h))
+	defer ts.Close()
+	got, err := LoadRemote(ts.URL)
+	if err != nil {
+		t.Fatalf("want:nil, got:%q", err)
+	}
+	want := &Schema{Fields: []Field{asJSONField(Field{Name: "ID", Type: "integer"})}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want:%+v, got:%+v", want, got)
+	}
+	t.Run("Error", func(t *testing.T) {
+		_, err := LoadRemote("invalidURL")
+		if err == nil {
+			t.Fatalf("want:err got:nil")
+		}
+	})
 }
 
 func TestRead_Sucess(t *testing.T) {

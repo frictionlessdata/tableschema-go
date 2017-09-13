@@ -10,7 +10,7 @@ import (
 // Example of how to read, validate and change a schema.
 func main() {
 	// Reading schem.
-	capitalSchema, err := schema.ReadFromFile("schema.json")
+	capitalSchema, err := schema.LoadFromFile("schema.json")
 	if err != nil {
 		log.Fatal(err)
 	}

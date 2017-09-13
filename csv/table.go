@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/frictionlessdata/tableschema-go/table"
 )
@@ -120,6 +123,31 @@ func FromFile(path string) Source {
 			return nil, err
 		}
 		return f, nil
+	}
+}
+
+var (
+	httpClient *http.Client
+	once       sync.Once
+)
+
+const remoteFetchTimeoutSecs = 15
+
+// Remote fetches the source schema from a remote URL.
+func Remote(url string) Source {
+	return func() (io.ReadCloser, error) {
+		once.Do(func() {
+			httpClient = &http.Client{
+				Timeout: remoteFetchTimeoutSecs * time.Second,
+			}
+		})
+		resp, err := httpClient.Get(url)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		return stringReadCloser(string(body)), nil
 	}
 }
 

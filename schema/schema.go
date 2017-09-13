@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"reflect"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/frictionlessdata/tableschema-go/table"
 )
@@ -37,13 +40,35 @@ func Read(r io.Reader) (*Schema, error) {
 	return &s, nil
 }
 
-// ReadFromFile reads and parses a schema descrptor from a local file.
-func ReadFromFile(path string) (*Schema, error) {
+// LoadFromFile loads and parses a schema descriptor from a local file.
+func LoadFromFile(path string) (*Schema, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	return Read(f)
+}
+
+var (
+	httpClient *http.Client
+	once       sync.Once
+)
+
+const remoteFetchTimeoutSecs = 15
+
+// LoadRemote downloads and parses a schema descriptor from the specified URL.
+func LoadRemote(url string) (*Schema, error) {
+	once.Do(func() {
+		httpClient = &http.Client{
+			Timeout: remoteFetchTimeoutSecs * time.Second,
+		}
+	})
+	resp, err := httpClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return Read(resp.Body)
 }
 
 // Fields represents a list of schema fields.

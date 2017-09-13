@@ -3,6 +3,8 @@ package csv
 import (
 	"bytes"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 )
@@ -36,6 +38,26 @@ func ExampleNewWriter() {
 	w.Flush()
 	fmt.Println(buf.String())
 	// Output:foo,bar
+}
+
+func TestRemote(t *testing.T) {
+	h := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "\"name\"\nfoo\nbar")
+	}
+	ts := httptest.NewServer(http.HandlerFunc(h))
+	defer ts.Close()
+	table, _ := NewTable(Remote(ts.URL), LoadHeaders())
+	got, _ := table.ReadAll()
+	want := [][]string{{"foo"}, {"bar"}}
+	if !reflect.DeepEqual(want, got) {
+		t.Fatalf("val want:%v got:%v", want, got)
+	}
+	t.Run("Error", func(t *testing.T) {
+		_, err := NewTable(Remote("invalidURL"), LoadHeaders())
+		if err == nil {
+			t.Fatalf("want:err got:nil")
+		}
+	})
 }
 
 func TestLoadHeaders(t *testing.T) {
