@@ -17,9 +17,9 @@ func TestCastNumber(t *testing.T) {
 			gc     string
 			bn     bool
 		}{
-			{"Positive_WithPlus", "+10.10", 10.10, defaultDecimalChar, defaultGroupChar, defaultBareNumber},
-			{"Positive_WithoutPlus", "10.10", 10.10, defaultDecimalChar, defaultGroupChar, defaultBareNumber},
-			{"Negative_WithPlus", "-10.10", -10.10, defaultDecimalChar, defaultGroupChar, defaultBareNumber},
+			{"Positive_WithSignal", "+10.10", 10.10, defaultDecimalChar, defaultGroupChar, defaultBareNumber},
+			{"Positive_WithoutSignal", "10.10", 10.10, defaultDecimalChar, defaultGroupChar, defaultBareNumber},
+			{"Negative", "-10.10", -10.10, defaultDecimalChar, defaultGroupChar, defaultBareNumber},
 			{"BareNumber", "€95", 95, defaultDecimalChar, defaultGroupChar, notBareNumber},
 			{"BareNumber_TrailingAtBeginning", "€95", 95, defaultDecimalChar, defaultGroupChar, notBareNumber},
 			{"BareNumber_TrailingAtBeginningSpace", "EUR 95", 95, defaultDecimalChar, defaultGroupChar, notBareNumber},

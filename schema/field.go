@@ -98,7 +98,7 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 func (f *Field) Decode(value string) (interface{}, error) {
 	switch f.Type {
 	case IntegerType:
-		return castInt(value)
+		return castInt(f.BareNumber, value)
 	case StringType:
 		return castString(f.Format, value)
 	case BooleanType:

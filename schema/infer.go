@@ -160,7 +160,7 @@ func findType(value string, checkOrder []string) string {
 				return BooleanType
 			}
 		case IntegerType:
-			if _, err := castInt(value); err == nil {
+			if _, err := castInt(defaultBareNumber, value); err == nil {
 				return IntegerType
 			}
 		case NumberType:
