@@ -101,16 +101,6 @@ type Schema struct {
 	MissingValues         []string    `json:"missingValues,omitempty"`
 }
 
-// Headers returns the headers of the tabular data described
-// by the schema.
-func (s *Schema) Headers() []string {
-	var h []string
-	for i := range s.Fields {
-		h = append(h, s.Fields[i].Name)
-	}
-	return h
-}
-
 // GetField fetches the index and field referenced by the name argument.
 func (s *Schema) GetField(name string) (*Field, int) {
 	for i := range s.Fields {
