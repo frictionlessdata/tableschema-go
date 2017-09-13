@@ -36,6 +36,7 @@ const (
 	YearType      = "year"
 	DurationType  = "duration"
 	GeoPointType  = "geopoint"
+	AnyType       = "any"
 )
 
 // Formats.
@@ -123,6 +124,8 @@ func (f *Field) Decode(value string) (interface{}, error) {
 		return castDuration(value)
 	case GeoPointType:
 		return castGeoPoint(f.Format, value)
+	case AnyType:
+		return castAny(value)
 	}
 	return nil, fmt.Errorf("invalid field type: %s", f.Type)
 }
@@ -161,6 +164,8 @@ func (f *Field) Encode(in interface{}) (string, error) {
 		_, ok = inInterface.(string)
 	case ArrayType:
 		ok = reflect.TypeOf(inInterface).Kind() == reflect.Slice
+	case AnyType:
+		return encodeAny(in)
 	}
 	if !ok {
 		return "", fmt.Errorf("can not convert \"%d\" which type is %s to type %s", in, reflect.TypeOf(in), f.Type)

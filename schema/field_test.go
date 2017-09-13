@@ -61,6 +61,7 @@ func TestField_Decode(t *testing.T) {
 		{"DateTime_DefaultFormat", "2008-09-15T15:53:00+05:00", Field{Type: DateTimeType, Format: defaultFieldFormat}, time.Date(2008, time.September, 15, 10, 53, 00, 00, time.UTC)},
 		{"Duration", "P2H", Field{Type: DurationType}, 2 * time.Hour},
 		{"GeoPoint", "90,45", Field{Type: GeoPointType}, GeoPoint{90, 45}},
+		{"Any", "10", Field{Type: AnyType}, "10"},
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
@@ -186,6 +187,7 @@ func TestField_Encode(t *testing.T) {
 			{"DateTime", Field{Type: DateTimeType}, time.Unix(1, 0), "1970-01-01T00:00:01Z"},
 			{"Date", Field{Type: DateType}, time.Unix(1, 0), "1970-01-01T00:00:01Z"},
 			{"Object", Field{Type: ObjectType}, eoStruct{Name: "Foo"}, `{"name":"Foo"}`},
+			{"Any", Field{Type: AnyType}, "10", "10"},
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
