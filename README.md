@@ -1,18 +1,8 @@
 [![Build Status](https://travis-ci.org/frictionlessdata/tableschema-go.svg?branch=master)](https://travis-ci.org/frictionlessdata/tableschema-go) [![Coverage Status](https://coveralls.io/repos/github/frictionlessdata/tableschema-go/badge.svg?branch=master)](https://coveralls.io/github/frictionlessdata/tableschema-go?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/frictionlessdata/tableschema-go)](https://goreportcard.com/report/github.com/frictionlessdata/tableschema-go) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/frictionlessdata/chat) [![GoDoc](https://godoc.org/github.com/frictionlessdata/tableschema-go?status.svg)](https://godoc.org/github.com/frictionlessdata/tableschema-go)
 
 # tableschema-go
-A Go library for working with [Table Schema](http://specs.frictionlessdata.io/table-schema/).
 
-
-# Main Features
-
-* [table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table) package defines [Table](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Table) and `Iterator` interfaces, which are used to manipulate and/or explore tabular data;
-* [csv](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv) package contains implementation of Table and Iterator interfaces to deal with CSV format;
-* [schema](https://github.com/frictionlessdata/tableschema-go/tree/master/schema) package contains classes and funcions for working with table schemas:
-     * [Schema](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Schema): main entry point, used to validate and deal with schemas
-     * [Field](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Field): for working with schema fields
-     * [Infer](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Schema) and [InferImplicitCasting](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#InferImplicitCasting): for inferring a schema of tabular data
-     
+[Table schema](http://specs.frictionlessdata.io/table-schema/) tooling in Go.
 
 # Getting started
 
@@ -27,143 +17,187 @@ $ dep init
 $ dep ensure -add github.com/frictionlessdata/tableschema-go/csv@>=0.1
 ```
 
-# Examples
 
-Code examples in this readme requires Go 1.8+. You can find more examples in the [examples](https://github.com/frictionlessdata/tableschema-go/tree/master/examples) directory.
+# Main Features
+
+## Tabular Data Load
+
+Have tabular data stored in local files? Remote files? Packages like the [csv](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv) are going to help on loading the data you need and making it ready for processing. 
+
+```go
+package main
+
+import "github.com/frictionlessdata/tableschema-go/csv"
+
+func main() {
+	tab, err := csv.NewTable(csv.Remote("myremotetable"), csv.LoadHeaders())
+    // Error handling.
+}
+```
+
+Supported physical representations:
+
+* [CSV](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv)
+
+You would like to use tableschema-go but the physical representation you use is not listed here? No problem! Please create an issue before start contributing. We will be happy to help you along the way.
+
+## Schema Inference and Configuration
+
+Got that new dataset and wants to start getting your hands dirty ASAP? No problems, let the [schema package](https://github.com/frictionlessdata/tableschema-go/tree/master/schema) try to infer
+the data types based on the table data.
 
 ```go
 package main
 
 import (
-	"github.com/frictionlessdata/tableschema-go/csv"
-	"github.com/frictionlessdata/tableschema-go/schema"
+   "github.com/frictionlessdata/tableschema-go/csv"
+   "github.com/frictionlessdata/tableschema-go/schema"
+)
+
+func main() {
+   tab, err := csv.NewTable(csv.Remote("myremotetable"), csv.LoadHeaders())
+   sch, _ := schema.Infer(tab)
+   fmt.Printf("%+v", sch)
+}
+```
+
+> Want to go faster? Please give [InferImplicitCasting](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#InferImplicitCasting) a try and let us know how it goes.
+
+There might be cases in which the inferred schema is not correct. One of those cases is when your data use strings like "N/A" to represent missing cells. That would usually make our inferential algorithm think the field is a string.
+
+When that happens, you can manually perform those last minutes tweaks [Schema](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Schema).
+
+```go
+   sch.MissingValues = []string{"N/A"}
+   sch.GetField("ID").Type = schema.IntegerType
+```
+
+After all that, you could persist your schema to disk:
+
+```go
+sch.SaveToFile("users_schema.json")
+```
+
+And use the local schema later:
+
+```go
+sch, _ := sch.LoadFromFile("users_schema.json")
+```
+
+Finally, if your schema is saved remotely, you can also use it:
+
+```go
+sch, _ := schema.LoadRemote("http://myfoobar/users/schema.json")
+```
+
+## Tabular Data Processing
+
+Once you have the data, you would like to process using language data types. [schema.Encode](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-Encode) and [schema.EncodeTable](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-EncodeTable) are your friends on this journey.
+
+```go
+package main
+
+import (
+   "github.com/frictionlessdata/tableschema-go/csv"
+   "github.com/frictionlessdata/tableschema-go/schema"
 )
 
 type user struct {
-	ID   int
-	Age  int
-	Name string
+   ID   int
+   Age  int
+   Name string
 }
 
 func main() {
-	tab, err := csv.NewTable(csv.FromFile("data_infer_utf8.csv"), csv.SetHeaders("id", "age", "name"))
-	if err != nil {
-		panic(err)
-	}
-	sch, err := schema.Infer(tab) // infer the table schema
-	if err != nil {
-		panic(err)
-	}
-	sch.SaveToFile("schema.json") // save inferred schema to file
-	var users []user
-	sch.DecodeTable(tab, &users) // unmarshals the table data into the slice.
-}
-```
-# Documentation
-
-## Reading and processing data
-
-A [Table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Table) is a core concept in the tabular data world. It is the [logic representation](https://specs.frictionlessdata.io/table-schema/#physical-and-logical-representation) of the data, thus it's interface should be agnostic from the physical representation. Let's see how we could use it in practice.
-
-Consider we have some local CSV file, `data.csv`:
-
-```csv
-city,location
-london,"51.50,-0.11"
-paris,"48.85,2.30"
-rome,N/A
-```
-
-As the physical representation is a CSV, we read its contents we use [csv.NewReader](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#NewReader) to create a table object and use [csv.FromFile](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#FromFile) as [Source](https://godoc.org/github.com/frictionlessdata/tableschema-go/csv#Source).
-
-```go
-locTable, _ := csv.NewReader(csv.FromFile("data.csv"), csv.LoadHeaders())
-locTable.Headers() // ["city", "location"]
-fmt.Println(locTable.ReadAll())
-// [[london 51.50,-0.11] [paris 48.85,2.30] [rome N/A]]
-```
-
-So far, locations are string, but it should be geopoints. Also Rome's location is not available but it's also just a N/A string instead of go's zero value. To start doing proper data processing we need to encode the data. In frictionless data, the schema represents that. An effortless way to quick start a schema is to use [schema.Infer](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Infer) and algorithmically infer the table [Schema](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#Schema):
-
-```go
-locSchema, _ := schema.Infer(tab)
-fmt.Printf("%+v", locSchema)
-// "fields": [
-//     {"name": "city", "type": "string", "format": "default"},
-//     {"name": "location", "type": "geopoint", "format": "default"},
-// ],
-// "missingValues": []
-// ...
-```
-
-Then we are ready create to decode the table data into go structs. It is like [json.Unmarshal](https://golang.org/pkg/encoding/json/#Unmarshal), but for table rows. 
-
-```go
-type Location struct {
-    City string
-    Location schema.GeoPoint
-}
-
-var locations []Location
-err := locSchema.DecodeTable(locTable, &locations)
-// Fails with: "Invalid geopoint:\"N/A\""
-```
-
-The problem is that the library does not know that N/A is not an empty value. For those cases, there is a `missingValues` property in Table Schema specification. As a first try we set `missingValues` to N/A in table.Schema.
-
-```go
-locSchema.MissingValues = []string{"N/A"}
-locSchema.DecodeTable(locTable, &locations)
-// [{london {51.5 -0.11}} {paris {48.85 2.3}} {rome {0 0}}]
-```
-
-If the data being processed is too big and you would like to iterate over table row by row, you could use table.Iter.
-```go
-locSchema.MissingValues = []string{"N/A"}
-iter, _ := locSchema.Iter()
-for iter.Next() {
-    var loc Location
-    locSchema.Decode(iter.Row(), loc)
-    // process location
+   tab, _ := csv.NewTable(csv.FromFile("users.csv"), csv.LoadHeaders())
+   sch, _ := schema.Infer(tab)
+   var users []user
+   sch.DecodeTable(tab, &users)
+   // Users slice contains the table contents properly encoded into
+   // language types. Each row will be a new user appended to the slice.
 }
 ```
 
-And because there are no errors on data reading we could be sure that our data is valid againt our schema. Let's save it:
+If you have a lot of data and don't want to load everything in memory, you can easily iterate trough it:
 
 ```go
-locSchema.SaveToFile("schema.json")
+...
+   iter, _ := sch.Iter()
+   for iter.Next() {
+      var u user
+      sch.Decode(iter.Row(), &u)
+      // Variable u is now filled with row contents properly encoded
+      // to language types.
+   }
+...
 ```
 
-## Writing data
+> Better if you could do it regardless the physical representation. The [table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table) package declares some interfaces that will help you to achieve this goal:
 
-The writing path is equally simple. Lets assume we have the `locSchema` created above and want to open source a CSV table (it could also append to an existing table) based on a slice of `Location`objects, which where generated by some internal pipeline. This new pipeline step would be:
+* [Table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Table)
+* [Iterator](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Iterator)
+
+## Saving Tabular Data
+
+Once you're done processing the data, it is time to persist results. As an example, let us assume we have a remote table schema called `summary`, which contains two fields:
+
+* `Date`: of type [date](https://specs.frictionlessdata.io/table-schema/#date)
+* `AverageAge`: of type [number](https://specs.frictionlessdata.io/table-schema/#number) 
+
 
 ```go
-package main
-
 import (
-	"os"
-	"github.com/frictionlessdata/tableschema-go/csv"
+   "github.com/frictionlessdata/tableschema-go/csv"
+   "github.com/frictionlessdata/tableschema-go/schema"
 )
 
-func CreateLocationTable(locations []Location, path string) error {
-    f, err := os.Open(path)
-    if err != nil {
-    	return err
-    }
-    defer f.Close()
-    rows, err := locSchema.EncodeTable(locations)
-    if err != nil {
-    	return err
-    }
-    w := csv.NewWriter(f)
-    w.Write([]string{"City", "Location"})
-    w.WriteAll(rows)
-    w.Flush()
-    return nil
+
+type summaryEntry struct {
+    Date time.Time
+    AverageAge float64
+}
+
+func WriteSummary(summary []summaryEntry, path string) {
+   sch, _ := schema.LoadRemote("http://myfoobar/users/summary/schema.json")
+
+   f, _ := os.Open(path)
+   defer f.Close()
+
+   w := csv.NewWriter(f)
+   defer w.Flush()
+
+   w.Write([]string{"Date", "AverageAge"})
+   for _, summ := range summary{
+       row, _ := summSch.Encode(summ)
+       w.Write(row)
+   }
 }
 ```
 
-# Documentation
+# API Reference and More Examples
 
-More detailed documentation about API methods is available at [https://godoc.org/github.com/frictionlessdata/tableschema-go](https://godoc.org/github.com/frictionlessdata/tableschema-go)
+More detailed documentation about API methods and plenty of examples is available at [https://godoc.org/github.com/frictionlessdata/tableschema-go](https://godoc.org/github.com/frictionlessdata/tableschema-go)
+
+# Contributing
+
+Found a problem and would like to fix it? Have that great idea and would love to see it in the repository?
+
+> Please open an issue before start working
+
+That could save a lot of time from everyone and we are super happy to answer questions and help you alonge the way. Furthermore, feel free to join [frictionlessdata Gitter chat room](https://gitter.im/frictionlessdata/chat) and ask questions.
+
+This project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards)
+
+* Before start coding:
+     * Fork and pull the latest version of the master branch
+     * Make sure you're have go 1.8+ installed and you're using it
+
+
+* Before sending the PR:
+
+```sh
+$ cd $GOPATH/src/github.com/frictionlessdata/tableschema-go
+$ go test ./..
+```
+
+And make sure your all tests pass.
