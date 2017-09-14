@@ -30,8 +30,8 @@ package main
 import "github.com/frictionlessdata/tableschema-go/csv"
 
 func main() {
-	tab, err := csv.NewTable(csv.Remote("myremotetable"), csv.LoadHeaders())
-    // Error handling.
+   tab, err := csv.NewTable(csv.Remote("myremotetable"), csv.LoadHeaders())
+   // Error handling.
 }
 ```
 
@@ -55,7 +55,7 @@ import (
 )
 
 func main() {
-   tab, err := csv.NewTable(csv.Remote("myremotetable"), csv.LoadHeaders())
+   tab, _ := csv.NewTable(csv.Remote("myremotetable"), csv.LoadHeaders())
    sch, _ := schema.Infer(tab)
    fmt.Printf("%+v", sch)
 }
@@ -118,7 +118,7 @@ func main() {
 }
 ```
 
-If you have a lot of data and don't want to load everything in memory, you can easily iterate trough it:
+If you have a lot of data and can no load everything in memory, you can easily iterate trough it:
 
 ```go
 ...
@@ -132,7 +132,7 @@ If you have a lot of data and don't want to load everything in memory, you can e
 ...
 ```
 
-> Better if you could do it regardless the physical representation. The [table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table) package declares some interfaces that will help you to achieve this goal:
+> Even better if you could do it regardless the physical representation! The [table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table) package declares some interfaces that will help you to achieve this goal:
 
 * [Table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Table)
 * [Iterator](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Iterator)
