@@ -168,7 +168,7 @@ func WriteSummary(summary []summaryEntry, path string) {
 
    w.Write([]string{"Date", "AverageAge"})
    for _, summ := range summary{
-       row, _ := summSch.Encode(summ)
+       row, _ := sch.Encode(summ)
        w.Write(row)
    }
 }
