@@ -90,7 +90,7 @@ Finally, if your schema is saved remotely, you can also use it:
 sch, _ := schema.LoadRemote("http://myfoobar/users/schema.json")
 ```
 
-## Tabular Data Processing
+## Processing Tabular Data
 
 Once you have the data, you would like to process using language data types. [schema.Encode](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-Encode) and [schema.EncodeTable](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-EncodeTable) are your friends on this journey.
 
@@ -190,13 +190,14 @@ This project follows the [Open Knowledge International coding standards](https:/
 
 * Before start coding:
      * Fork and pull the latest version of the master branch
-     * Make sure you're have go 1.8+ installed and you're using it
-
+     * Make sure you have go 1.8+ installed and you're using it
+     * Make sure you [dep](https://github.com/golang/dep) installed
 
 * Before sending the PR:
 
 ```sh
 $ cd $GOPATH/src/github.com/frictionlessdata/tableschema-go
+$ dep ensure
 $ go test ./..
 ```
 
