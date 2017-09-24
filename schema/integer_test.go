@@ -23,7 +23,7 @@ func TestCastInt(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				got, err := castInt(d.bn, d.number)
+				got, err := castInt(d.bn, d.number, Constraints{})
 				if err != nil {
 					t.Fatalf("err want:nil got:%q", err)
 				}
@@ -33,17 +33,31 @@ func TestCastInt(t *testing.T) {
 			})
 		}
 	})
+	t.Run("ValidMaximum", func(t *testing.T) {
+		if _, err := castInt(defaultBareNumber, "2", Constraints{Maximum: "2"}); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+	})
+	t.Run("ValidMinimum", func(t *testing.T) {
+		if _, err := castInt(defaultBareNumber, "2", Constraints{Minimum: "1"}); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+	})
 	t.Run("Error", func(t *testing.T) {
 		data := []struct {
-			desc   string
-			number string
-			bn     bool
+			desc        string
+			number      string
+			constraints Constraints
 		}{
-			{"InvalidIntToStrip_TooManyNumbers", "+10++10", notBareInt},
+			{"InvalidIntToStrip_TooManyNumbers", "+10++10", Constraints{}},
+			{"NumBiggerThanMaximum", "3", Constraints{Maximum: "2"}},
+			{"InvalidMaximum", "1", Constraints{Maximum: "boo"}},
+			{"NumSmallerThanMinimum", "1", Constraints{Minimum: "2"}},
+			{"InvalidMinimum", "1", Constraints{Minimum: "boo"}},
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := castInt(defaultBareNumber, d.number); err == nil {
+				if _, err := castInt(defaultBareNumber, d.number, d.constraints); err == nil {
 					t.Fatalf("err want:err got:nil")
 				}
 			})

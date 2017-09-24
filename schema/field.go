@@ -51,6 +51,9 @@ type Constraints struct {
 	// Schema.MissingValues define how the string representation can
 	// represent null values.
 	Required bool `json:"required,omitempty"`
+
+	Maximum string `json:"maximum,omitempty"`
+	Minimum string `json:"minimum,omitempty"`
 }
 
 // Field describes a single field in the table schema.
@@ -122,7 +125,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	}
 	switch f.Type {
 	case IntegerType:
-		return castInt(f.BareNumber, value)
+		return castInt(f.BareNumber, value, f.Constraints)
 	case StringType:
 		return castString(f.Format, value)
 	case BooleanType:
