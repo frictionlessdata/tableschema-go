@@ -44,6 +44,15 @@ const (
 	AnyDateFormat = "any"
 )
 
+// Constraints can be used by consumers to list constraints for validating
+// field values.
+type Constraints struct {
+	// Required indicates whether this field is allowed to be null.
+	// Schema.MissingValues define how the string representation can
+	// represent null values.
+	Required bool `json:"required,omitempty"`
+}
+
 // Field describes a single field in the table schema.
 // More: https://specs.frictionlessdata.io/table-schema/#field-descriptors
 type Field struct {
@@ -71,6 +80,14 @@ type Field struct {
 	// If false the contents of this field may contain leading and/or trailing non-numeric characters which
 	// are going to be stripped. Default value is true:
 	BareNumber bool `json:"bareNumber,omitempty"`
+
+	// MissingValues is a map which dictates which string values should be treated as null
+	// values.
+	MissingValues map[string]struct{} `json:"-"`
+
+	// Constraints can be used by consumers to list constraints for validating
+	// field values.
+	Constraints Constraints
 }
 
 // UnmarshalJSON sets *f to a copy of data. It will respect the default values
@@ -97,6 +114,12 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 // Decode decodes the passed-in string against field type. Returns an error
 // if the value can not be cast or any field constraint can not be satisfied.
 func (f *Field) Decode(value string) (interface{}, error) {
+	if f.Constraints.Required {
+		_, ok := f.MissingValues[value]
+		if ok {
+			return nil, fmt.Errorf("%s is required", f.Name)
+		}
+	}
 	switch f.Type {
 	case IntegerType:
 		return castInt(f.BareNumber, value)

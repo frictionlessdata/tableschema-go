@@ -142,8 +142,16 @@ func TestField_Decode(t *testing.T) {
 	t.Run("InvalidFieldType", func(t *testing.T) {
 		f := Field{Type: "invalidType"}
 		if _, err := f.Decode("42"); err == nil {
-			t.Errorf("err want:err, got:nil")
+			t.Errorf("err want:err got:nil")
 		}
+	})
+	t.Run("Constraints", func(t *testing.T) {
+		t.Run("Required", func(t *testing.T) {
+			f := Field{Type: StringType, Constraints: Constraints{Required: true}, MissingValues: map[string]struct{}{"NA": struct{}{}}}
+			if _, err := f.Decode("NA"); err == nil {
+				t.Fatalf("err want:err got:nil")
+			}
+		})
 	})
 }
 

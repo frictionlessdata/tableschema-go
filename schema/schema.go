@@ -37,6 +37,21 @@ func Read(r io.Reader) (*Schema, error) {
 	if err := dec.Decode(&s); err != nil {
 		return nil, err
 	}
+	if len(s.MissingValues) == 0 {
+		return &s, nil
+	}
+	// Transforming the list in a set.
+	valueSet := make(map[string]struct{}, len(s.MissingValues))
+	for _, v := range s.MissingValues {
+		valueSet[v] = struct{}{}
+	}
+	// Updating fields.
+	for i := range s.Fields {
+		s.Fields[i].MissingValues = make(map[string]struct{}, len(valueSet))
+		for k, v := range valueSet {
+			s.Fields[i].MissingValues[k] = v
+		}
+	}
 	return &s, nil
 }
 

@@ -204,6 +204,17 @@ func TestRead_Sucess(t *testing.T) {
 			}
 		})
 	}
+	t.Run("MissingValues", func(t *testing.T) {
+		reader := strings.NewReader(`{"fields":[{"name":"n","type":"integer"}],"missingValues":["na"]}`)
+		s, err := Read(reader)
+		if err != nil {
+			t.Fatalf("want:nil, got:%q", err)
+		}
+		f := s.Fields[0]
+		if _, ok := f.MissingValues["na"]; !ok {
+			t.Fatalf("want:ok got:!ok")
+		}
+	})
 }
 
 func TestRead_Error(t *testing.T) {
