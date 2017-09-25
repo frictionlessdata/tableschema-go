@@ -36,7 +36,7 @@ func castInt(bareNumber bool, value string, c Constraints) (int64, error) {
 			return 0, fmt.Errorf("invalid minimum integer: %v", c.Minimum)
 		}
 		if returned < min {
-			return 0, fmt.Errorf("constraint check error: integer:%d > minimum:%d", returned, min)
+			return 0, fmt.Errorf("constraint check error: integer:%d < minimum:%d", returned, min)
 		}
 	}
 	return returned, nil
