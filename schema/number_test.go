@@ -31,7 +31,7 @@ func TestCastNumber(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				got, err := castNumber(d.dc, d.gc, d.bn, d.number)
+				got, err := castNumber(d.dc, d.gc, d.bn, d.number, Constraints{})
 				if err != nil {
 					t.Fatalf("err want:nil got:%q", err)
 				}
@@ -42,7 +42,7 @@ func TestCastNumber(t *testing.T) {
 		}
 	})
 	t.Run("NaN", func(t *testing.T) {
-		got, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "NaN")
+		got, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "NaN", Constraints{})
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -51,7 +51,7 @@ func TestCastNumber(t *testing.T) {
 		}
 	})
 	t.Run("INF", func(t *testing.T) {
-		got, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "INF")
+		got, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "INF", Constraints{})
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -60,7 +60,7 @@ func TestCastNumber(t *testing.T) {
 		}
 	})
 	t.Run("NegativeINF", func(t *testing.T) {
-		got, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "-INF")
+		got, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "-INF", Constraints{})
 		if err != nil {
 			t.Fatalf("err want:nil got:%q", err)
 		}
@@ -68,19 +68,34 @@ func TestCastNumber(t *testing.T) {
 			t.Fatalf("val want:-Inf got:%f", got)
 		}
 	})
+	t.Run("ValidMaximum", func(t *testing.T) {
+		if _, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "2", Constraints{Maximum: "2"}); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+	})
+	t.Run("ValidMinimum", func(t *testing.T) {
+		if _, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, "2", Constraints{Minimum: "2"}); err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+	})
 	t.Run("Error", func(t *testing.T) {
 		data := []struct {
-			desc   string
-			number string
-			dc     string
-			gc     string
-			bn     bool
+			desc        string
+			number      string
+			dc          string
+			gc          string
+			bn          bool
+			constraints Constraints
 		}{
-			{"InvalidNumberToStrip_TooManyNumbers", "+10.10++10", defaultDecimalChar, defaultGroupChar, notBareNumber},
+			{"InvalidNumberToStrip_TooManyNumbers", "+10.10++10", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{}},
+			{"NumBiggerThanMaximum", "3", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{Maximum: "2"}},
+			{"InvalidMaximum", "1", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{Maximum: "boo"}},
+			{"NumSmallerThanMinimum", "1", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{Minimum: "2"}},
+			{"InvalidMinimum", "1", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{Minimum: "boo"}},
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, d.number); err == nil {
+				if _, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, d.number, d.constraints); err == nil {
 					t.Fatalf("err want:err got:nil")
 				}
 			})

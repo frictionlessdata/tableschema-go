@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func castNumber(decimalChar, groupChar string, bareNumber bool, value string) (float64, error) {
+func castNumber(decimalChar, groupChar string, bareNumber bool, value string, c Constraints) (float64, error) {
 	dc := decimalChar
 	if groupChar != "" {
 		dc = decimalChar
@@ -25,7 +25,29 @@ func castNumber(decimalChar, groupChar string, bareNumber bool, value string) (f
 			return 0, err
 		}
 	}
-	return strconv.ParseFloat(v, 64)
+	returned, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return 0, err
+	}
+	if c.Maximum != "" {
+		max, err := strconv.ParseFloat(c.Maximum, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid maximum number: %v", c.Maximum)
+		}
+		if returned > max {
+			return 0, fmt.Errorf("constraint check error: integer:%f > maximum:%f", returned, max)
+		}
+	}
+	if c.Minimum != "" {
+		min, err := strconv.ParseFloat(c.Minimum, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid minimum integer: %v", c.Minimum)
+		}
+		if returned < min {
+			return 0, fmt.Errorf("constraint check error: integer:%f > minimum:%f", returned, min)
+		}
+	}
+	return returned, nil
 }
 
 var bareNumberRegexp = regexp.MustCompile(`((^[0-9]+\.?[0-9]*)|([0-9]+\.?[0-9]*$))`)
