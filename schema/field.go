@@ -143,7 +143,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	case YearMonthType:
 		return castYearMonth(value)
 	case YearType:
-		return castYear(value)
+		return decodeYear(value, f.Constraints)
 	case DateTimeType:
 		return castDateTime(f.Format, value)
 	case DurationType:

@@ -188,7 +188,7 @@ func findType(value string, checkOrder []string) string {
 				return YearMonthType
 			}
 		case YearType:
-			if _, err := castYear(value); err == nil {
+			if _, err := decodeYear(value, Constraints{}); err == nil {
 				return YearType
 			}
 		case DateTimeType:

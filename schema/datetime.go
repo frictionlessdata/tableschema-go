@@ -44,8 +44,39 @@ func castYearMonth(value string) (time.Time, error) {
 	return time.Parse("2006-01", value)
 }
 
-func castYear(value string) (time.Time, error) {
+func decodeYearWithoutChecks(value string) (time.Time, error) {
 	return time.Parse("2006", value)
+}
+
+func decodeYear(value string, c Constraints) (time.Time, error) {
+	y, err := decodeYearWithoutChecks(value)
+	if err != nil {
+		return time.Now(), err
+	}
+	var max, min time.Time
+	if c.Maximum != "" {
+		max, err = decodeYearWithoutChecks(c.Maximum)
+		if err != nil {
+			return time.Now(), err
+		}
+	}
+	if c.Minimum != "" {
+		min, err = decodeYearWithoutChecks(c.Minimum)
+		if err != nil {
+			return time.Now(), err
+		}
+	}
+	return checkConstraints(y, max, min, YearType)
+}
+
+func checkConstraints(v, max, min time.Time, t string) (time.Time, error) {
+	if !max.IsZero() && v.After(max) {
+		return time.Now(), fmt.Errorf("constraint check error: %s:%v > maximum:%v", t, v, max)
+	}
+	if !min.IsZero() && v.Before(min) {
+		return time.Now(), fmt.Errorf("constraint check error: %s:%v < minimum:%v", t, v, max)
+	}
+	return v, nil
 }
 
 func castDateTime(format, value string) (time.Time, error) {
