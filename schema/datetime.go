@@ -40,7 +40,28 @@ func castTime(format, value string) (time.Time, error) {
 	return castDefaultOrCustomTime("03:04:05", format, value)
 }
 
-func castYearMonth(value string) (time.Time, error) {
+func decodeYearMonth(value string, c Constraints) (time.Time, error) {
+	y, err := decodeYearMonthWithoutChecks(value)
+	if err != nil {
+		return time.Now(), err
+	}
+	var max, min time.Time
+	if c.Maximum != "" {
+		max, err = decodeYearMonthWithoutChecks(c.Maximum)
+		if err != nil {
+			return time.Now(), err
+		}
+	}
+	if c.Minimum != "" {
+		min, err = decodeYearMonthWithoutChecks(c.Minimum)
+		if err != nil {
+			return time.Now(), err
+		}
+	}
+	return checkConstraints(y, max, min, YearMonthType)
+}
+
+func decodeYearMonthWithoutChecks(value string) (time.Time, error) {
 	return time.Parse("2006-01", value)
 }
 

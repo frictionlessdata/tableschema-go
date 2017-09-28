@@ -39,6 +39,8 @@ var (
 
 	// Types ordered from narrower to wider.
 	orderedTypes = []string{BooleanType, YearType, IntegerType, GeoPointType, NumberType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, ArrayType, ObjectType}
+
+	noConstraints = Constraints{}
 )
 
 // Maximum number of rows used to infer schema.
@@ -160,11 +162,11 @@ func findType(value string, checkOrder []string) string {
 				return BooleanType
 			}
 		case IntegerType:
-			if _, err := castInt(defaultBareNumber, value, Constraints{}); err == nil {
+			if _, err := castInt(defaultBareNumber, value, noConstraints); err == nil {
 				return IntegerType
 			}
 		case NumberType:
-			if _, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, value, Constraints{}); err == nil {
+			if _, err := castNumber(defaultDecimalChar, defaultGroupChar, defaultBareNumber, value, noConstraints); err == nil {
 				return NumberType
 			}
 		case DateType:
@@ -184,11 +186,11 @@ func findType(value string, checkOrder []string) string {
 				return TimeType
 			}
 		case YearMonthType:
-			if _, err := castYearMonth(value); err == nil {
+			if _, err := decodeYearMonth(value, noConstraints); err == nil {
 				return YearMonthType
 			}
 		case YearType:
-			if _, err := decodeYear(value, Constraints{}); err == nil {
+			if _, err := decodeYear(value, noConstraints); err == nil {
 				return YearType
 			}
 		case DateTimeType:
