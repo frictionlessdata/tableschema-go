@@ -139,7 +139,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	case ArrayType:
 		return castArray(value)
 	case TimeType:
-		return castTime(f.Format, value)
+		return decodeTime(f.Format, value, f.Constraints)
 	case YearMonthType:
 		return decodeYearMonth(value, f.Constraints)
 	case YearType:

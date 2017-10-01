@@ -182,7 +182,7 @@ func findType(value string, checkOrder []string) string {
 				return ObjectType
 			}
 		case TimeType:
-			if _, err := castTime(defaultFieldFormat, value); err == nil {
+			if _, err := decodeTime(defaultFieldFormat, value, noConstraints); err == nil {
 				return TimeType
 			}
 		case YearMonthType:

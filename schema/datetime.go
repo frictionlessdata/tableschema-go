@@ -2,7 +2,6 @@ package schema
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -33,11 +32,7 @@ var strftimeToGoConversionTable = map[string]string{
 }
 
 func castDate(format, value string) (time.Time, error) {
-	return castDefaultOrCustomTime("2006-01-02", format, value)
-}
-
-func castTime(format, value string) (time.Time, error) {
-	return castDefaultOrCustomTime("03:04:05", format, value)
+	return decodeDefaultOrCustomTime("2006-01-02", format, value)
 }
 
 func decodeYearMonth(value string, c Constraints) (time.Time, error) {
@@ -101,10 +96,10 @@ func checkConstraints(v, max, min time.Time, t string) (time.Time, error) {
 }
 
 func castDateTime(format, value string) (time.Time, error) {
-	return castDefaultOrCustomTime(time.RFC3339, format, value)
+	return decodeDefaultOrCustomTime(time.RFC3339, format, value)
 }
 
-func castDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, error) {
+func decodeDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, error) {
 	switch format {
 	case "", defaultFieldFormat:
 		t, err := time.Parse(defaultFormat, value)
@@ -124,13 +119,4 @@ func castDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, er
 		return time.Now(), err
 	}
 	return t.In(time.UTC), nil
-}
-
-func encodeTime(v interface{}) (string, error) {
-	value, ok := v.(time.Time)
-	if !ok {
-		return "", fmt.Errorf("invalid date - value:%v type:%v", v, reflect.ValueOf(v).Type())
-	}
-	utc := value.In(time.UTC)
-	return utc.Format(time.RFC3339), nil
 }
