@@ -17,7 +17,19 @@ const (
 	stringUUIDVersion = 4
 )
 
-func decodeString(format, value string) (string, error) {
+func checkStringConstraints(v string, minLength int, t string) error {
+	if minLength != 0 && len(v) < minLength {
+		return fmt.Errorf("constraint check error: %s:%v %v < minimum:%v", t, v, minLength)
+	}
+	return nil
+}
+
+func decodeString(format, value string, c Constraints) (string, error) {
+	err := checkStringConstraints(value, c.MinLength, StringType)
+	if err != nil {
+		return value, err
+	}
+
 	switch format {
 	case stringURI:
 		_, err := url.ParseRequestURI(value)
