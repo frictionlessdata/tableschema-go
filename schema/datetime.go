@@ -90,7 +90,7 @@ func checkConstraints(v, max, min time.Time, t string) (time.Time, error) {
 		return time.Now(), fmt.Errorf("constraint check error: %s:%v > maximum:%v", t, v, max)
 	}
 	if !min.IsZero() && v.Before(min) {
-		return time.Now(), fmt.Errorf("constraint check error: %s:%v < minimum:%v", t, v, max)
+		return time.Now(), fmt.Errorf("constraint check error: %s:%v < minimum:%v", t, v, min)
 	}
 	return v, nil
 }
