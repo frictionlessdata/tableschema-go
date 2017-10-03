@@ -17,15 +17,18 @@ const (
 	stringUUIDVersion = 4
 )
 
-func checkStringConstraints(v string, minLength int, t string) error {
+func checkStringConstraints(v string, minLength, maxLength int, t string) error {
 	if minLength != 0 && len(v) < minLength {
 		return fmt.Errorf("constraint check error: %s:%v %v < minimum:%v", t, v, minLength)
+	}
+	if maxLength != 0 && len(v) > maxLength {
+		return fmt.Errorf("constraint check error: %s:%v %v > maximum:%v", t, v, maxLength)
 	}
 	return nil
 }
 
 func decodeString(format, value string, c Constraints) (string, error) {
-	err := checkStringConstraints(value, c.MinLength, StringType)
+	err := checkStringConstraints(value, c.MinLength, c.MaxLength, StringType)
 	if err != nil {
 		return value, err
 	}

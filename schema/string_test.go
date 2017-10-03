@@ -26,6 +26,9 @@ func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
 		{"InvalidMinLength_UUID", "6fa459ea-ee8a-3ca4-894e-db77e160355e", stringUUID, Constraints{MinLength: 100}},
 		{"InvalidMinLength_Email", "foo@bar.com", stringEmail, Constraints{MinLength: 100}},
 		{"InvalidMinLength_URI", "http://google.com", stringURI, Constraints{MinLength: 100}},
+		{"InvalidMaxLength_UUID", "6fa459ea-ee8a-3ca4-894e-db77e160355e", stringUUID, Constraints{MaxLength: 1}},
+		{"InvalidMaxLength_Email", "foo@bar.com", stringEmail, Constraints{MaxLength: 1}},
+		{"InvalidMaxLength_URI", "http://google.com", stringURI, Constraints{MaxLength: 1}},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
@@ -45,7 +48,7 @@ func TestDecodeString_Success(t *testing.T) {
 	}{
 		{"URI", "http://google.com", stringURI, Constraints{MinLength: 1}},
 		{"Email", "foo@bar.com", stringEmail, Constraints{MinLength: 1}},
-		{"UUID", "C56A4180-65AA-42EC-A945-5FD21DEC0538", stringUUID, Constraints{MinLength: 1}},
+		{"UUID", "C56A4180-65AA-42EC-A945-5FD21DEC0538", stringUUID, Constraints{MinLength: 36, MaxLength: 36}},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
