@@ -17,23 +17,43 @@ func TestDecodeString_InvalidUUIDVersion(t *testing.T) {
 }
 
 func TestDecodeString_Success(t *testing.T) {
-	var data = []struct {
-		Desc        string
-		Value       string
-		Format      string
-		constraints Constraints
-	}{
-		{"URI", "http://google.com", stringURI, Constraints{}},
-		{"Email", "foo@bar.com", stringEmail, Constraints{}},
-		{"UUID", "C56A4180-65AA-42EC-A945-5FD21DEC0538", stringUUID, Constraints{MinLength: 36}},
-	}
-	for _, d := range data {
-		v, err := decodeString(d.Format, d.Value, d.constraints)
-		if err != nil {
-			t.Errorf("want:nil got:%q", err)
+	t.Run("ValidMinLength", func(t *testing.T) {
+		var data = []struct {
+			Desc        string
+			Value       string
+			Format      string
+			constraints Constraints
+		}{
+			{"URI", "http://google.com", stringURI, Constraints{MinLength: 5}},
+			{"Email", "foo@bar.com", stringEmail, Constraints{MinLength: 3}},
+			{"UUID", "C56A4180-65AA-42EC-A945-5FD21DEC0538", stringUUID, Constraints{MinLength: 36}},
 		}
-		if v != d.Value {
-			t.Errorf("want:%s got:%s", d.Value, v)
+		for _, d := range data {
+			v, err := decodeString(d.Format, d.Value, d.constraints)
+			if err != nil {
+				t.Errorf("want:nil got:%q", err)
+			}
+			if v != d.Value {
+				t.Errorf("want:%s got:%s", d.Value, v)
+			}
 		}
-	}
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		var data = []struct {
+			Desc        string
+			Value       string
+			Format      string
+			constraints Constraints
+		}{
+			{"InvalidMinLengthUUID", "C56A4180-65AA-42EC-A945-5FD21DEC0538", stringUUID, Constraints{MinLength: 40}},
+		}
+		for _, d := range data {
+			_, err := decodeString(d.Format, d.Value, d.constraints)
+			if err == nil {
+				t.Fatalf("err want:nil got:%q", err)
+			}
+		}
+	})
+
 }
