@@ -2,10 +2,10 @@ package schema
 
 import (
 	"fmt"
+	"github.com/satori/go.uuid"
 	"net/mail"
 	"net/url"
-
-	"github.com/satori/go.uuid"
+	"regexp"
 )
 
 // Valid string formats and configuration.
@@ -17,18 +17,30 @@ const (
 	stringUUIDVersion = 4
 )
 
-func checkStringConstraints(v string, minLength, maxLength int, t string) error {
+func checkStringConstraints(v string, minLength, maxLength int, pattern, t string) error {
 	if minLength != 0 && len(v) < minLength {
-		return fmt.Errorf("constraint check error: %s:%v %v < minimum:%v", t, v, minLength)
+		return fmt.Errorf("constraint check error: %s:%v %v < minimum:%v", t, v, len(v), minLength)
 	}
 	if maxLength != 0 && len(v) > maxLength {
-		return fmt.Errorf("constraint check error: %s:%v %v > maximum:%v", t, v, maxLength)
+		return fmt.Errorf("constraint check error: %s:%v %v > maximum:%v", t, v, len(v), maxLength)
+	}
+
+	if pattern != "" {
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return fmt.Errorf("constraint check error: invalid pattern %v for %v : %v ", pattern, v)
+		}
+
+		match := re.MatchString(v)
+		if false == match {
+			return fmt.Errorf("constraint check error: %s:%v don't fit pattern : %v ", t, v, pattern)
+		}
 	}
 	return nil
 }
 
 func decodeString(format, value string, c Constraints) (string, error) {
-	err := checkStringConstraints(value, c.MinLength, c.MaxLength, StringType)
+	err := checkStringConstraints(value, c.MinLength, c.MaxLength, c.Pattern, StringType)
 	if err != nil {
 		return value, err
 	}
