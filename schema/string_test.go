@@ -32,6 +32,7 @@ func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
 		{"InvalidPattern_UUID", "6fa459ea-ee8a-3ca4-894e-db77e160355e", stringUUID, Constraints{Pattern: "^[0-9a-f]{1}-.*"}},
 		{"InvalidPattern_Email", "foo@bar.com", stringEmail, Constraints{Pattern: "[0-9].*"}},
 		{"InvalidPattern_URI", "http://google.com", stringURI, Constraints{Pattern: "^//.*"}},
+		{"InvalidPattern", "http://google.com", stringURI, Constraints{Pattern: "\\"}},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
