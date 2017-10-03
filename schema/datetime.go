@@ -85,10 +85,6 @@ func decodeYear(value string, c Constraints) (time.Time, error) {
 	return checkConstraints(y, max, min, YearType)
 }
 
-func scastDateTime(format, value string) (time.Time, error) {
-	return decodeDefaultOrCustomTime(time.RFC3339, format, value)
-}
-
 func decodeDateTime(value string, c Constraints) (time.Time, error) {
 	dt, err := decodeDateTimeWithoutChecks(value)
 	if err != nil {
