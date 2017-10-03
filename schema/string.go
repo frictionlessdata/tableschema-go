@@ -28,7 +28,7 @@ func checkStringConstraints(v string, minLength, maxLength int, pattern, t strin
 	if pattern != "" {
 		re, err := regexp.Compile(pattern)
 		if err != nil {
-			return fmt.Errorf("constraint check error: invalid pattern %v for %v : %v ", pattern, v)
+			return fmt.Errorf("constraint check error: invalid pattern %v for %v ", pattern, v)
 		}
 
 		match := re.MatchString(v)
