@@ -56,6 +56,7 @@ type Constraints struct {
 	Minimum   string `json:"minimum,omitempty"`
 	MinLength int    `json:"minLength,omitempty"`
 	MaxLength int    `json:"maxLength,omitempty"`
+	Pattern   string `json:"pattern,omitempty"`
 }
 
 // Field describes a single field in the table schema.
