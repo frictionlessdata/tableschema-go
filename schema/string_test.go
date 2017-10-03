@@ -23,9 +23,9 @@ func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
 		format      string
 		constraints Constraints
 	}{
-		{"InvalidMinLength", "6fa459ea-ee8a-3ca4-894e-db77e160355e", stringUUID, Constraints{MinLength: 100}},
-		{"InvalidMinLength", "foo@bar.com", stringEmail, Constraints{MinLength: 100}},
-		{"InvalidMinLength", "http://google.com", stringURI, Constraints{MinLength: 100}},
+		{"InvalidMinLength_UUID", "6fa459ea-ee8a-3ca4-894e-db77e160355e", stringUUID, Constraints{MinLength: 100}},
+		{"InvalidMinLength_Email", "foo@bar.com", stringEmail, Constraints{MinLength: 100}},
+		{"InvalidMinLength_URI", "http://google.com", stringURI, Constraints{MinLength: 100}},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
@@ -38,22 +38,24 @@ func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
 
 func TestDecodeString_Success(t *testing.T) {
 	var data = []struct {
-		Desc        string
-		Value       string
-		Format      string
+		desc        string
+		value       string
+		format      string
 		constraints Constraints
 	}{
-		{"URI", "http://google.com", stringURI, Constraints{}},
-		{"Email", "foo@bar.com", stringEmail, Constraints{}},
-		{"UUID", "C56A4180-65AA-42EC-A945-5FD21DEC0538", stringUUID, Constraints{}},
+		{"URI", "http://google.com", stringURI, Constraints{MinLength: 1}},
+		{"Email", "foo@bar.com", stringEmail, Constraints{MinLength: 1}},
+		{"UUID", "C56A4180-65AA-42EC-A945-5FD21DEC0538", stringUUID, Constraints{MinLength: 1}},
 	}
 	for _, d := range data {
-		v, err := decodeString(d.Format, d.Value, d.constraints)
-		if err != nil {
-			t.Errorf("want:nil got:%q", err)
-		}
-		if v != d.Value {
-			t.Errorf("want:%s got:%s", d.Value, v)
-		}
+		t.Run(d.desc, func(t *testing.T) {
+			v, err := decodeString(d.format, d.value, d.constraints)
+			if err != nil {
+				t.Errorf("want:nil got:%q", err)
+			}
+			if v != d.value {
+				t.Errorf("want:%s got:%s", d.value, v)
+			}
+		})
 	}
 }
