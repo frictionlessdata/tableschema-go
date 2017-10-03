@@ -52,8 +52,9 @@ type Constraints struct {
 	// represent null values.
 	Required bool `json:"required,omitempty"`
 
-	Maximum string `json:"maximum,omitempty"`
-	Minimum string `json:"minimum,omitempty"`
+	Maximum   string `json:"maximum,omitempty"`
+	Minimum   string `json:"minimum,omitempty"`
+	MinLength int    `json:"minLength,omitempty"`
 }
 
 // Field describes a single field in the table schema.
@@ -127,7 +128,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	case IntegerType:
 		return castInt(f.BareNumber, value, f.Constraints)
 	case StringType:
-		return castString(f.Format, value)
+		return decodeString(f.Format, value, f.Constraints)
 	case BooleanType:
 		return castBoolean(value, f.TrueValues, f.FalseValues)
 	case NumberType:
