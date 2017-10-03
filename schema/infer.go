@@ -194,7 +194,7 @@ func findType(value string, checkOrder []string) string {
 				return YearType
 			}
 		case DateTimeType:
-			if _, err := castDateTime(defaultFieldFormat, value); err == nil {
+			if _, err := decodeDateTime(value, noConstraints); err == nil {
 				return DateTimeType
 			}
 		case DurationType:
