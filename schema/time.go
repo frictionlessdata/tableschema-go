@@ -9,19 +9,19 @@ import (
 func decodeTime(format, value string, c Constraints) (time.Time, error) {
 	y, err := decodeTimeWithoutCheckConstraints(format, value)
 	if err != nil {
-		return time.Now(), err
+		return y, err
 	}
 	var max, min time.Time
 	if c.Maximum != "" {
 		max, err = decodeTimeWithoutCheckConstraints(format, c.Maximum)
 		if err != nil {
-			return time.Now(), err
+			return y, err
 		}
 	}
 	if c.Minimum != "" {
 		min, err = decodeTimeWithoutCheckConstraints(format, c.Minimum)
 		if err != nil {
-			return time.Now(), err
+			return y, err
 		}
 	}
 	return checkConstraints(y, max, min, TimeType)
