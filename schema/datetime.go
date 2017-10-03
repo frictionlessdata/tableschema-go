@@ -38,19 +38,19 @@ func castDate(format, value string) (time.Time, error) {
 func decodeYearMonth(value string, c Constraints) (time.Time, error) {
 	y, err := decodeYearMonthWithoutChecks(value)
 	if err != nil {
-		return time.Now(), err
+		return y, err
 	}
 	var max, min time.Time
 	if c.Maximum != "" {
 		max, err = decodeYearMonthWithoutChecks(c.Maximum)
 		if err != nil {
-			return time.Now(), err
+			return y, err
 		}
 	}
 	if c.Minimum != "" {
 		min, err = decodeYearMonthWithoutChecks(c.Minimum)
 		if err != nil {
-			return time.Now(), err
+			return y, err
 		}
 	}
 	return checkConstraints(y, max, min, YearMonthType)
@@ -67,19 +67,19 @@ func decodeYearWithoutChecks(value string) (time.Time, error) {
 func decodeYear(value string, c Constraints) (time.Time, error) {
 	y, err := decodeYearWithoutChecks(value)
 	if err != nil {
-		return time.Now(), err
+		return y, err
 	}
 	var max, min time.Time
 	if c.Maximum != "" {
 		max, err = decodeYearWithoutChecks(c.Maximum)
 		if err != nil {
-			return time.Now(), err
+			return y, err
 		}
 	}
 	if c.Minimum != "" {
 		min, err = decodeYearWithoutChecks(c.Minimum)
 		if err != nil {
-			return time.Now(), err
+			return y, err
 		}
 	}
 	return checkConstraints(y, max, min, YearType)
@@ -88,19 +88,19 @@ func decodeYear(value string, c Constraints) (time.Time, error) {
 func decodeDateTime(value string, c Constraints) (time.Time, error) {
 	dt, err := decodeDateTimeWithoutChecks(value)
 	if err != nil {
-		return time.Time{}, err
+		return dt, err
 	}
 	var max, min time.Time
 	if c.Maximum != "" {
 		max, err = decodeDateTimeWithoutChecks(c.Maximum)
 		if err != nil {
-			return time.Time{}, err
+			return dt, err
 		}
 	}
 	if c.Minimum != "" {
 		min, err = decodeDateTimeWithoutChecks(c.Minimum)
 		if err != nil {
-			return time.Time{}, err
+			return dt, err
 		}
 	}
 	return checkConstraints(dt, max, min, DateTimeType)
@@ -112,10 +112,10 @@ func decodeDateTimeWithoutChecks(value string) (time.Time, error) {
 
 func checkConstraints(v, max, min time.Time, t string) (time.Time, error) {
 	if !max.IsZero() && v.After(max) {
-		return time.Now(), fmt.Errorf("constraint check error: %s:%v > maximum:%v", t, v, max)
+		return v, fmt.Errorf("constraint check error: %s:%v > maximum:%v", t, v, max)
 	}
 	if !min.IsZero() && v.Before(min) {
-		return time.Now(), fmt.Errorf("constraint check error: %s:%v < minimum:%v", t, v, min)
+		return v, fmt.Errorf("constraint check error: %s:%v < minimum:%v", t, v, min)
 	}
 	return v, nil
 }
@@ -125,7 +125,7 @@ func decodeDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, 
 	case "", defaultFieldFormat:
 		t, err := time.Parse(defaultFormat, value)
 		if err != nil {
-			return time.Now(), err
+			return t, err
 		}
 		return t.In(time.UTC), nil
 	case AnyDateFormat:
@@ -137,7 +137,7 @@ func decodeDefaultOrCustomTime(defaultFormat, format, value string) (time.Time, 
 	}
 	t, err := time.Parse(goFormat, value)
 	if err != nil {
-		return time.Now(), err
+		return t, err
 	}
 	return t.In(time.UTC), nil
 }
