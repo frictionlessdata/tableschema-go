@@ -53,12 +53,12 @@ type Constraints struct {
 	// represent null values.
 	Required bool `json:"required,omitempty"`
 
-	Maximum        string `json:"maximum,omitempty"`
-	Minimum        string `json:"minimum,omitempty"`
-	MinLength      int    `json:"minLength,omitempty"`
-	MaxLength      int    `json:"maxLength,omitempty"`
-	Pattern        string `json:"pattern,omitempty"`
-	compiledRegexp *regexp.Regexp
+	Maximum         string `json:"maximum,omitempty"`
+	Minimum         string `json:"minimum,omitempty"`
+	MinLength       int    `json:"minLength,omitempty"`
+	MaxLength       int    `json:"maxLength,omitempty"`
+	Pattern         string `json:"pattern,omitempty"`
+	compiledPattern *regexp.Regexp
 }
 
 // Field describes a single field in the table schema.
@@ -117,12 +117,12 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 	}
 	*f = Field(*u)
 
-	if (*f).Constraints.Pattern != "" {
-		var err error
-		(*f).Constraints.compiledRegexp, err = regexp.Compile((*f).Constraints.Pattern)
+	if f.Constraints.Pattern != "" {
+		p, err := regexp.Compile(f.Constraints.Pattern)
 		if err != nil {
 			return err
 		}
+		f.Constraints.compiledPattern = p
 	}
 	return nil
 }
