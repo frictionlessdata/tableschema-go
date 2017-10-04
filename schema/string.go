@@ -5,7 +5,6 @@ import (
 	"github.com/satori/go.uuid"
 	"net/mail"
 	"net/url"
-	"regexp"
 )
 
 // Valid string formats and configuration.
@@ -17,24 +16,26 @@ const (
 	stringUUIDVersion = 4
 )
 
-func checkStringConstraints(v string, minLength, maxLength int, pattern *regexp.Regexp) error {
+func checkStringConstraints(v string, c Constraints) error {
+	minLength := c.MinLength
+	maxLength := c.MaxLength
+	re := c.compiledPattern
+
 	if minLength != 0 && len(v) < minLength {
 		return fmt.Errorf("constraint check error: %v %v < minimum:%v", v, len(v), minLength)
 	}
 	if maxLength != 0 && len(v) > maxLength {
 		return fmt.Errorf("constraint check error: %v %v > maximum:%v", v, len(v), maxLength)
 	}
-	if pattern != nil {
-		match := pattern.MatchString(v)
-		if false == match {
-			return fmt.Errorf("constraint check error: %v don't fit pattern : %v ", v, pattern)
-		}
+
+	if re != nil && !re.MatchString(v) {
+		return fmt.Errorf("constraint check error: %v don't fit pattern : %v ", v, re)
 	}
 	return nil
 }
 
 func decodeString(format, value string, c Constraints) (string, error) {
-	err := checkStringConstraints(value, c.MinLength, c.MaxLength, c.compiledRegexp)
+	err := checkStringConstraints(value, c)
 	if err != nil {
 		return value, err
 	}
