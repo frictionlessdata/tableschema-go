@@ -146,7 +146,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	case NumberType:
 		return castNumber(f.DecimalChar, f.GroupChar, f.BareNumber, value, f.Constraints)
 	case DateType:
-		return castDate(f.Format, value)
+		return decodeDate(f.Format, value, f.Constraints)
 	case ObjectType:
 		return castObject(value)
 	case ArrayType:

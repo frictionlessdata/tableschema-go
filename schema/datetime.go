@@ -31,8 +31,29 @@ var strftimeToGoConversionTable = map[string]string{
 	"%p":  "PM",
 }
 
-func castDate(format, value string) (time.Time, error) {
+func decodeDateWithoutChecks(format, value string) (time.Time, error) {
 	return decodeDefaultOrCustomTime("2006-01-02", format, value)
+}
+
+func decodeDate(format, value string, c Constraints) (time.Time, error) {
+	y, err := decodeDateWithoutChecks(format, value)
+	if err != nil {
+		return time.Now(), err
+	}
+	var max, min time.Time
+	if c.Maximum != "" {
+		max, err = decodeDateWithoutChecks(format, c.Maximum)
+		if err != nil {
+			return time.Now(), err
+		}
+	}
+	if c.Minimum != "" {
+		min, err = decodeDateWithoutChecks(format, c.Minimum)
+		if err != nil {
+			return time.Now(), err
+		}
+	}
+	return checkConstraints(y, max, min, DateType)
 }
 
 func decodeYearMonth(value string, c Constraints) (time.Time, error) {
