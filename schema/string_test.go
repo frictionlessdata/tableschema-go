@@ -1,6 +1,9 @@
 package schema
 
-import "testing"
+import (
+	"regexp"
+	"testing"
+)
 
 // To be in par with the python library.
 func TestDecodeString_URIMustRequireScheme(t *testing.T) {
@@ -32,10 +35,17 @@ func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
 		{"InvalidPattern_UUID", "6fa459ea-ee8a-3ca4-894e-db77e160355e", stringUUID, Constraints{Pattern: "^[0-9a-f]{1}-.*"}},
 		{"InvalidPattern_Email", "foo@bar.com", stringEmail, Constraints{Pattern: "[0-9].*"}},
 		{"InvalidPattern_URI", "http://google.com", stringURI, Constraints{Pattern: "^//.*"}},
-		{"InvalidPattern", "http://google.com", stringURI, Constraints{Pattern: "\\"}},
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			if d.constraints.Pattern != "" {
+				var err error
+				d.constraints.compiledRegexp, err = regexp.Compile(d.constraints.Pattern)
+				if err != nil {
+					t.Fatalf("compile Pattern to Regexp fail")
+				}
+			}
+
 			if _, err := decodeString(d.format, d.value, d.constraints); err == nil {
 				t.Fatalf("err want:err got:nil")
 			}
