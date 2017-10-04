@@ -17,30 +17,24 @@ const (
 	stringUUIDVersion = 4
 )
 
-func checkStringConstraints(v string, minLength, maxLength int, pattern, t string) error {
+func checkStringConstraints(v string, minLength, maxLength int, pattern *regexp.Regexp) error {
 	if minLength != 0 && len(v) < minLength {
-		return fmt.Errorf("constraint check error: %s:%v %v < minimum:%v", t, v, len(v), minLength)
+		return fmt.Errorf("constraint check error: %v %v < minimum:%v", v, len(v), minLength)
 	}
 	if maxLength != 0 && len(v) > maxLength {
-		return fmt.Errorf("constraint check error: %s:%v %v > maximum:%v", t, v, len(v), maxLength)
+		return fmt.Errorf("constraint check error: %v %v > maximum:%v", v, len(v), maxLength)
 	}
-
-	if pattern != "" {
-		re, err := regexp.Compile(pattern)
-		if err != nil {
-			return fmt.Errorf("constraint check error: invalid pattern %v for %v ", pattern, v)
-		}
-
-		match := re.MatchString(v)
+	if pattern != nil {
+		match := pattern.MatchString(v)
 		if false == match {
-			return fmt.Errorf("constraint check error: %s:%v don't fit pattern : %v ", t, v, pattern)
+			return fmt.Errorf("constraint check error: %v don't fit pattern : %v ", v, pattern)
 		}
 	}
 	return nil
 }
 
 func decodeString(format, value string, c Constraints) (string, error) {
-	err := checkStringConstraints(value, c.MinLength, c.MaxLength, c.Pattern, StringType)
+	err := checkStringConstraints(value, c.MinLength, c.MaxLength, c.compiledRegexp)
 	if err != nil {
 		return value, err
 	}
