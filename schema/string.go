@@ -29,7 +29,7 @@ func checkStringConstraints(v string, c Constraints) error {
 	}
 
 	if re != nil && !re.MatchString(v) {
-		return fmt.Errorf("constraint check error: %v don't fit pattern : %v ", v, re)
+		return fmt.Errorf("constraint check error: %v don't fit pattern : %v ", v, c.Pattern)
 	}
 	return nil
 }
