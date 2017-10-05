@@ -5,19 +5,19 @@ import "time"
 func decodeDate(format, value string, c Constraints) (time.Time, error) {
 	y, err := decodeDateWithoutChecks(format, value)
 	if err != nil {
-		return time.Now(), err
+		return y, err
 	}
 	var max, min time.Time
 	if c.Maximum != "" {
 		max, err = decodeDateWithoutChecks(format, c.Maximum)
 		if err != nil {
-			return time.Now(), err
+			return max, err
 		}
 	}
 	if c.Minimum != "" {
 		min, err = decodeDateWithoutChecks(format, c.Minimum)
 		if err != nil {
-			return time.Now(), err
+			return min, err
 		}
 	}
 	return checkConstraints(y, max, min, DateType)
