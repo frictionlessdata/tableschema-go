@@ -31,10 +31,6 @@ var strftimeToGoConversionTable = map[string]string{
 	"%p":  "PM",
 }
 
-func castDate(format, value string) (time.Time, error) {
-	return decodeDefaultOrCustomTime("2006-01-02", format, value)
-}
-
 func decodeYearMonth(value string, c Constraints) (time.Time, error) {
 	y, err := decodeYearMonthWithoutChecks(value)
 	if err != nil {
