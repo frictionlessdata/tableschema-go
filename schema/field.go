@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"regexp"
 )
 
 // Default for schema fields.
@@ -52,10 +53,12 @@ type Constraints struct {
 	// represent null values.
 	Required bool `json:"required,omitempty"`
 
-	Maximum   string `json:"maximum,omitempty"`
-	Minimum   string `json:"minimum,omitempty"`
-	MinLength int    `json:"minLength,omitempty"`
-	MaxLength int    `json:"maxLength,omitempty"`
+	Maximum         string `json:"maximum,omitempty"`
+	Minimum         string `json:"minimum,omitempty"`
+	MinLength       int    `json:"minLength,omitempty"`
+	MaxLength       int    `json:"maxLength,omitempty"`
+	Pattern         string `json:"pattern,omitempty"`
+	compiledPattern *regexp.Regexp
 }
 
 // Field describes a single field in the table schema.
@@ -113,6 +116,14 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*f = Field(*u)
+
+	if f.Constraints.Pattern != "" {
+		p, err := regexp.Compile(f.Constraints.Pattern)
+		if err != nil {
+			return err
+		}
+		f.Constraints.compiledPattern = p
+	}
 	return nil
 }
 
@@ -135,7 +146,7 @@ func (f *Field) Decode(value string) (interface{}, error) {
 	case NumberType:
 		return castNumber(f.DecimalChar, f.GroupChar, f.BareNumber, value, f.Constraints)
 	case DateType:
-		return castDate(f.Format, value)
+		return decodeDate(f.Format, value, f.Constraints)
 	case ObjectType:
 		return castObject(value)
 	case ArrayType:

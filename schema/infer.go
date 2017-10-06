@@ -170,7 +170,7 @@ func findType(value string, checkOrder []string) string {
 				return NumberType
 			}
 		case DateType:
-			if _, err := castDate(defaultFieldFormat, value); err == nil {
+			if _, err := decodeDate(defaultFieldFormat, value, noConstraints); err == nil {
 				return DateType
 			}
 		case ArrayType:

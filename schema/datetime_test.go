@@ -1,6 +1,8 @@
 package schema
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestDecodeDatetime(t *testing.T) {
 	t.Run("ValidMaximum", func(t *testing.T) {
