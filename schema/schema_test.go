@@ -22,38 +22,13 @@ func ExampleSchema_Decode() {
 		{"Foo", "42"},
 		{"Bar", "43"}})
 
-	// And we would like to process them using Go types. First we need to create a struct to hold the
-	// content of each row.
-	type person struct {
-		Name string
-		Age  int
-	}
-
-	// Now it is a matter of iterate over the table and Decode each row.
-	iter, _ := t.Iter()
-	for iter.Next() {
-		var p person
-		s.Decode(iter.Row(), &p)
-		fmt.Printf("%+v\n", p)
-	}
-	// Output: {Name:Foo Age:42}
-	// {Name:Bar Age:43}
-}
-
-func ExampleSchema_Decode_withTags() {
-	// Lets assume we have a schema ...
-	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-
-	// And a Table.
-	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
-		{"Foo", "42"},
-		{"Bar", "43"}})
-
-	// And we would like to process them using Go types. First we need to create a struct to hold the
-	// content of each row.
+	// And we would like to process them using Go types. First we need to create a struct to
+	// hold the content of each row.
+	// The tag tableheader maps the field to the schema. If no tag is set the name of the field
+	// has to be the same like inside the schema.
 	type person struct {
 		MyName string `tableheader:"Name"`
-		MyAge  int    `tableheader:"Age"`
+		Age    int
 	}
 
 	// Now it is a matter of iterate over the table and Decode each row.
@@ -63,8 +38,8 @@ func ExampleSchema_Decode_withTags() {
 		s.Decode(iter.Row(), &p)
 		fmt.Printf("%+v\n", p)
 	}
-	// Output: {MyName:Foo MyAge:42}
-	// {MyName:Bar MyAge:43}
+	// Output: {MyName:Foo Age:42}
+	// {MyName:Bar Age:43}
 }
 
 func ExampleSchema_DecodeTable() {
@@ -76,74 +51,30 @@ func ExampleSchema_DecodeTable() {
 		{"Foo", "42"},
 		{"Bar", "43"}})
 
-	// And we would like to process them using Go types. First we need to create a struct to hold the
-	// content of each row.
-	type person struct {
-		Name string
-		Age  int
-	}
-	var people []person
-	s.DecodeTable(t, &people)
-	fmt.Print(people)
-	// Output: [{Foo 42} {Bar 43}]
-}
-
-func ExampleSchema_DecodeTable_withTags() {
-	// Lets assume we have a schema ...
-	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-
-	// And a Table.
-	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
-		{"Foo", "42"},
-		{"Bar", "43"}})
-
-	// And we would like to process them using Go types. First we need to create a struct to hold the
-	// content of each row.
+	// And we would like to process them using Go types. First we need to create a struct to
+	// hold the content of each row.
+	// The tag tableheader maps the field to the schema. If no tag is set the name of the field
+	// has to be the same like inside the schema.
 	type person struct {
 		MyName string `tableheader:"Name"`
-		MyAge  int    `tableheader:"Age"`
+		Age    int
 	}
 	var people []person
 	s.DecodeTable(t, &people)
 	fmt.Print(people)
 	// Output: [{Foo 42} {Bar 43}]
 }
+
 func ExampleSchema_Encode() {
 	// Lets assume we have a schema.
 	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
 
-	// And would like to create a CSV out of this list conforming to
-	// to the schema above.
-	people := []struct {
-		Name string
-		Age  int
-	}{{"Foo", 42}, {"Bar", 43}}
-
-	// First create the writer and write the header.
-	w := table.NewStringWriter()
-	w.Write([]string{"Name", "Age"})
-
-	// Then write the list
-	for _, person := range people {
-		row, _ := s.Encode(person)
-		w.Write(row)
-	}
-	w.Flush()
-	fmt.Print(w.String())
-	// Output: Name,Age
-	// Foo,42
-	// Bar,43
-}
-
-func ExampleSchema_Encode_withTags() {
-	// Lets assume we have a schema.
-	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-
-	// And would like to create a CSV out of this list conforming to
-	// to the schema above.
+	// And would like to create a CSV out of this list. The tag tableheader maps
+	// the field to the schema name. If no tag is set the name of the field
+	// has to be the same like inside the schema.
 	people := []struct {
 		MyName string `tableheader:"Name"`
-		MyAge  int    `tableheader:"Age"`
+		Age    int
 	}{{"Foo", 42}, {"Bar", 43}}
 
 	// First create the writer and write the header.
@@ -166,36 +97,12 @@ func ExampleSchema_EncodeTable() {
 	// Lets assume we have a schema.
 	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
 
-	// And would like to create a CSV out of this list conforming to
-	// to the schema above.
-	people := []struct {
-		Name string
-		Age  int
-	}{{"Foo", 42}, {"Bar", 43}}
-
-	// Then encode the people slice into a slice of rows.
-	rows, _ := s.EncodeTable(people)
-
-	// Now, simply write it down.
-	w := table.NewStringWriter()
-	w.Write([]string{"Name", "Age"})
-	w.WriteAll(rows)
-	w.Flush()
-	fmt.Print(w.String())
-	// Output: Name,Age
-	// Foo,42
-	// Bar,43
-}
-
-func ExampleSchema_EncodeTable_withTags() {
-	// Lets assume we have a schema.
-	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-
-	// And would like to create a CSV out of this list conforming to
-	// to the schema above.
+	// And would like to create a CSV out of this list. The tag tableheader maps
+	// the field to the schema name. If no tag is set the name of the field
+	// has to be the same like inside the schema.
 	people := []struct {
 		MyName string `tableheader:"Name"`
-		MyAge  int    `tableheader:"Age"`
+		Age    int
 	}{{"Foo", 42}, {"Bar", 43}}
 
 	// Then encode the people slice into a slice of rows.
@@ -353,6 +260,22 @@ func TestSchema_Decode(t *testing.T) {
 		}
 		if t1.Age != 42 {
 			t.Errorf("value:Age want:42 got:%d", t1.Age)
+		}
+	})
+	t.Run("StructWithTags", func(t *testing.T) {
+		t1 := struct {
+			MyName string `tableheader:"Name"`
+			MyAge  int64  `tableheader:"Age"`
+		}{}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
+			t.Fatalf("err want:nil, got:%q", err)
+		}
+		if t1.MyName != "Foo" {
+			t.Errorf("value:Name want:Foo got:%s", t1.MyName)
+		}
+		if t1.MyAge != 42 {
+			t.Errorf("value:Age want:42 got:%d", t1.MyAge)
 		}
 	})
 	t.Run("ImplicitCastToInt", func(t *testing.T) {

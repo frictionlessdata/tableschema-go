@@ -18,6 +18,9 @@ import (
 // it refers to a field that does not exist in the schema.
 const InvalidPosition = -1
 
+// Unexportet tagname for the tableheader
+const tableheaderTag = "tableheader"
+
 // Read reads and parses a descriptor to create a schema.
 //
 // Example - Reading a schema from a file:
@@ -196,7 +199,7 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 		fieldValue := outv.Field(i)
 		if fieldValue.CanSet() { // Only consider exported fields.
 			field := outt.Field(i)
-			fieldName, ok := field.Tag.Lookup("tableheader")
+			fieldName, ok := field.Tag.Lookup(tableheaderTag)
 			if !ok { // if no tag is set use own name
 				fieldName = field.Name
 			}
@@ -233,7 +236,7 @@ func (s *Schema) Encode(in interface{}) ([]string, error) {
 	row := make([]string, inType.NumField())
 	for i := 0; i < inType.NumField(); i++ {
 		structFieldValue := inValue.Field(i)
-		fieldName, ok := inType.Field(i).Tag.Lookup("tableheader")
+		fieldName, ok := inType.Field(i).Tag.Lookup(tableheaderTag)
 		if !ok {
 			fieldName = inType.Field(i).Name
 		}
