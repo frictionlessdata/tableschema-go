@@ -550,6 +550,21 @@ func TestSchema_Encode(t *testing.T) {
 			t.Fatalf("val want:%v got:%v", want, got)
 		}
 	})
+	t.Run("SuccessWithTags", func(t *testing.T) {
+		type rowType struct {
+			MyName string `tableheader:"Name"`
+			MyAge  int    `tableheader:"Age"`
+		}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+		got, err := s.Encode(rowType{MyName: "Foo", MyAge: 42})
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []string{"Foo", "42"}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%v got:%v", want, got)
+		}
+	})
 	t.Run("Error_Encoding", func(t *testing.T) {
 		type rowType struct {
 			Age string
