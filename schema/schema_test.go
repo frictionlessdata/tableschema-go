@@ -40,6 +40,33 @@ func ExampleSchema_Decode() {
 	// {Name:Bar Age:43}
 }
 
+func ExampleSchema_Decode_withTags() {
+	// Lets assume we have a schema ...
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And a Table.
+	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+		{"Foo", "42"},
+		{"Bar", "43"}})
+
+	// And we would like to process them using Go types. First we need to create a struct to hold the
+	// content of each row.
+	type person struct {
+		MyName string `tableheader:"Name"`
+		MyAge  int    `tableheader:"Age"`
+	}
+
+	// Now it is a matter of iterate over the table and Decode each row.
+	iter, _ := t.Iter()
+	for iter.Next() {
+		var p person
+		s.Decode(iter.Row(), &p)
+		fmt.Printf("%+v\n", p)
+	}
+	// Output: {MyName:Foo MyAge:42}
+	// {MyName:Bar MyAge:43}
+}
+
 func ExampleSchema_DecodeTable() {
 	// Lets assume we have a schema ...
 	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
@@ -54,6 +81,27 @@ func ExampleSchema_DecodeTable() {
 	type person struct {
 		Name string
 		Age  int
+	}
+	var people []person
+	s.DecodeTable(t, &people)
+	fmt.Print(people)
+	// Output: [{Foo 42} {Bar 43}]
+}
+
+func ExampleSchema_DecodeTable_withTags() {
+	// Lets assume we have a schema ...
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And a Table.
+	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+		{"Foo", "42"},
+		{"Bar", "43"}})
+
+	// And we would like to process them using Go types. First we need to create a struct to hold the
+	// content of each row.
+	type person struct {
+		MyName string `tableheader:"Name"`
+		MyAge  int    `tableheader:"Age"`
 	}
 	var people []person
 	s.DecodeTable(t, &people)
@@ -87,6 +135,33 @@ func ExampleSchema_Encode() {
 	// Bar,43
 }
 
+func ExampleSchema_Encode_withTags() {
+	// Lets assume we have a schema.
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And would like to create a CSV out of this list conforming to
+	// to the schema above.
+	people := []struct {
+		MyName string `tableheader:"Name"`
+		MyAge  int    `tableheader:"Age"`
+	}{{"Foo", 42}, {"Bar", 43}}
+
+	// First create the writer and write the header.
+	w := table.NewStringWriter()
+	w.Write([]string{"Name", "Age"})
+
+	// Then write the list
+	for _, person := range people {
+		row, _ := s.Encode(person)
+		w.Write(row)
+	}
+	w.Flush()
+	fmt.Print(w.String())
+	// Output: Name,Age
+	// Foo,42
+	// Bar,43
+}
+
 func ExampleSchema_EncodeTable() {
 	// Lets assume we have a schema.
 	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
@@ -96,6 +171,31 @@ func ExampleSchema_EncodeTable() {
 	people := []struct {
 		Name string
 		Age  int
+	}{{"Foo", 42}, {"Bar", 43}}
+
+	// Then encode the people slice into a slice of rows.
+	rows, _ := s.EncodeTable(people)
+
+	// Now, simply write it down.
+	w := table.NewStringWriter()
+	w.Write([]string{"Name", "Age"})
+	w.WriteAll(rows)
+	w.Flush()
+	fmt.Print(w.String())
+	// Output: Name,Age
+	// Foo,42
+	// Bar,43
+}
+
+func ExampleSchema_EncodeTable_withTags() {
+	// Lets assume we have a schema.
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+
+	// And would like to create a CSV out of this list conforming to
+	// to the schema above.
+	people := []struct {
+		MyName string `tableheader:"Name"`
+		MyAge  int    `tableheader:"Age"`
 	}{{"Foo", 42}, {"Bar", 43}}
 
 	// Then encode the people slice into a slice of rows.

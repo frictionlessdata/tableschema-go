@@ -196,7 +196,11 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 		fieldValue := outv.Field(i)
 		if fieldValue.CanSet() { // Only consider exported fields.
 			field := outt.Field(i)
-			f, fieldIndex := s.GetField(field.Name)
+			fieldName, ok := field.Tag.Lookup("tableheader")
+			if !ok { // if no tag is set use own name
+				fieldName = field.Name
+			}
+			f, fieldIndex := s.GetField(fieldName)
 			if fieldIndex != InvalidPosition {
 				cell := row[fieldIndex]
 				if s.isMissingValue(cell) {
@@ -229,7 +233,11 @@ func (s *Schema) Encode(in interface{}) ([]string, error) {
 	row := make([]string, inType.NumField())
 	for i := 0; i < inType.NumField(); i++ {
 		structFieldValue := inValue.Field(i)
-		f, fieldIndex := s.GetField(inType.Field(i).Name)
+		fieldName, ok := inType.Field(i).Tag.Lookup("tableheader")
+		if !ok {
+			fieldName = inType.Field(i).Name
+		}
+		f, fieldIndex := s.GetField(fieldName)
 		if fieldIndex != InvalidPosition {
 			r, err := f.Encode(structFieldValue.Interface())
 			if err != nil {
