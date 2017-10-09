@@ -565,6 +565,36 @@ func TestSchema_Encode(t *testing.T) {
 			t.Fatalf("val want:%v got:%v", want, got)
 		}
 	})
+	t.Run("SuccessSchemaMoreFieldsThanStruct", func(t *testing.T) {
+		s := Schema{Fields: Fields{{Name: "Age", Type: IntegerType}, {Name: "Name", Type: StringType}}}
+		in := csvRow{Name: "Foo"}
+		got, err := s.Encode(&in)
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []string{"Foo"}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%v got:%v", want, got)
+		}
+	})
+	t.Run("SuccessStructHasMoreFieldsThanSchema", func(t *testing.T) {
+		// Note: deliberately changed the order to make stuff more interesting.
+		type rowType struct {
+			Age  int
+			Name string
+			Bar  float64
+			Bez  string
+		}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Bez", Type: StringType}}}
+		got, err := s.Encode(rowType{Age: 42, Bez: "Bez", Name: "Foo"})
+		if err != nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		want := []string{"Foo", "Bez"}
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("val want:%v got:%v", want, got)
+		}
+	})
 	t.Run("Error_Encoding", func(t *testing.T) {
 		type rowType struct {
 			Age string

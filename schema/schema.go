@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ import (
 // it refers to a field that does not exist in the schema.
 const InvalidPosition = -1
 
-// Unexportet tagname for the tableheader
+// Unexported tagname for the tableheader
 const tableheaderTag = "tableheader"
 
 // Read reads and parses a descriptor to create a schema.
@@ -225,15 +226,27 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 	return nil
 }
 
+type encodedCell struct {
+	pos int
+	val string
+}
+
+type encodedRow []encodedCell
+
+func (r encodedRow) Len() int           { return len(r) }
+func (r encodedRow) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
+func (r encodedRow) Less(i, j int) bool { return r[i].pos < r[j].pos }
+
 // Encode encodes struct into a row. This method can only encode structs (or pointer to structs) and
 // will error out if nil is passed.
+// The order of the cells in the returned row is the schema declaration order.
 func (s *Schema) Encode(in interface{}) ([]string, error) {
 	inValue := reflect.Indirect(reflect.ValueOf(in))
 	if inValue.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("can only encode structs and does not support nil pointers")
 	}
 	inType := inValue.Type()
-	row := make([]string, inType.NumField())
+	var row encodedRow
 	for i := 0; i < inType.NumField(); i++ {
 		structFieldValue := inValue.Field(i)
 		fieldName, ok := inType.Field(i).Tag.Lookup(tableheaderTag)
@@ -242,14 +255,19 @@ func (s *Schema) Encode(in interface{}) ([]string, error) {
 		}
 		f, fieldIndex := s.GetField(fieldName)
 		if fieldIndex != InvalidPosition {
-			r, err := f.Encode(structFieldValue.Interface())
+			cell, err := f.Encode(structFieldValue.Interface())
 			if err != nil {
 				return nil, err
 			}
-			row[fieldIndex] = r
+			row = append(row, encodedCell{fieldIndex, cell})
 		}
 	}
-	return row, nil
+	sort.Sort(row)
+	ret := make([]string, len(row))
+	for i := range row {
+		ret[i] = row[i].val
+	}
+	return ret, nil
 }
 
 func (s *Schema) isMissingValue(value string) bool {
