@@ -160,7 +160,7 @@ type summaryEntry struct {
 func WriteSummary(summary []summaryEntry, path string) {
    sch, _ := schema.LoadRemote("http://myfoobar/users/summary/schema.json")
 
-   f, _ := os.Open(path)
+   f, _ := os.Create(path)
    defer f.Close()
 
    w := csv.NewWriter(f)
