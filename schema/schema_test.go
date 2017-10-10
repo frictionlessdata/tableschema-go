@@ -532,6 +532,43 @@ func TestDecodeTable(t *testing.T) {
 			t.Fatalf("err want:err got:nil")
 		}
 	})
+	t.Run("UniqueConstrain", func(t *testing.T) {
+		tab := table.FromSlices(
+			[]string{"ID", "Point"},
+			[][]string{{"1", "10,11"}, {"2", "11,10"}, {"3", "10,10"}, {"4", "10,11"}})
+		s := &Schema{Fields: []Field{{Name: "ID", Type: IntegerType}, {Name: "Point", Type: GeoPointType, Constraints: Constraints{Unique:true}}}}
+
+		type data struct {
+			ID   	int
+			Point 	GeoPoint
+		}
+		got := []data{}
+		if err := s.DecodeTable(tab, &got); err == nil {
+			t.Fatalf("err want:err got:nil")
+		}
+		if len(got) != 0 {
+			t.Fatalf("len(got) want:0 got:%v", len(got))
+		}
+	})
+	t.Run("PrimaryKeyAndUniqueConstrain", func(t *testing.T) {
+		tab := table.FromSlices(
+			[]string{"ID", "Age", "Name"},
+			[][]string{{"1", "39", "Paul"}, {"2", "23", "Jimmy"}, {"3", "36", "Jane"}, {"4", "28", "Judy"}, {"4", "37", "John"}})
+
+		type data struct {
+			ID   int
+			Age  int
+			Name string
+		}
+		s := &Schema{Fields: []Field{{Name: "ID", Type: IntegerType}, {Name: "Age", Type: IntegerType}, {Name: "Name", Type: StringType, Constraints:Constraints{Unique:true}}}, PrimaryKeys: []string{"ID"}}
+		got := []data{}
+		if err := s.DecodeTable(tab, &got); err == nil {
+			t.Fatalf("err want:nil got:%q", err)
+		}
+		if len(got) != 0 {
+			t.Fatalf("len(got) want:0 got:%v", len(got))
+		}
+	})
 }
 
 func TestSchema_Encode(t *testing.T) {

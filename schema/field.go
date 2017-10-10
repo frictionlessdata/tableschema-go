@@ -53,6 +53,10 @@ type Constraints struct {
 	// represent null values.
 	Required bool `json:"required,omitempty"`
 
+	// Unique indicates whether this field is allowed to have duplicates.
+	// This constrain is only relevant for Schema.DecodeTable
+	Unique 			bool	`json:"unique,omitempty"`
+
 	Maximum         string `json:"maximum,omitempty"`
 	Minimum         string `json:"minimum,omitempty"`
 	MinLength       int    `json:"minLength,omitempty"`
