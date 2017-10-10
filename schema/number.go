@@ -44,7 +44,7 @@ func castNumber(decimalChar, groupChar string, bareNumber bool, value string, c 
 			return 0, fmt.Errorf("invalid minimum integer: %v", c.Minimum)
 		}
 		if returned < min {
-			return 0, fmt.Errorf("constraint check error: integer:%f > minimum:%f", returned, min)
+			return 0, fmt.Errorf("constraint check error: integer:%f < minimum:%f", returned, min)
 		}
 	}
 	return returned, nil
