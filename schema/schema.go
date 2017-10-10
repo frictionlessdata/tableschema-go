@@ -332,9 +332,10 @@ func processPlaceholder(ph interface{}, v *[]string) error {
 	return fmt.Errorf("")
 }
 
+// uniqueKey represents field ID and field value which then can be used for equality tests (e.g. in a map key)
 type uniqueKey struct {
-	KeyIndex	int
-	KeyValue	interface{}
+	KeyIndex int
+	KeyValue interface{}
 }
 
 // DecodeTable loads and decodes all table rows.
@@ -366,10 +367,11 @@ func (s *Schema) DecodeTable(tab table.Table, out interface{}) error {
 			return err
 		}
 		for _, k := range uniqueFieldIndexes {
-			if _, ok := uniqueCache[uniqueKey{k, elemp.Elem().Field(k).Interface()}]; ok {
+			field := elemp.Elem().Field(k)
+			if _, ok := uniqueCache[uniqueKey{k, field.Interface()}]; ok {
 				return fmt.Errorf("field(s) '%s' duplicates in row %v", elemp.Elem().Type().Field(k).Name, i)
 			} else {
-				uniqueCache[uniqueKey{k, elemp.Elem().Field(k).Interface()}] = struct{}{}
+				uniqueCache[uniqueKey{k, field.Interface()}] = struct{}{}
 			}
 
 		}
