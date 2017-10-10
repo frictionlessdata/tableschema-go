@@ -332,6 +332,12 @@ func processPlaceholder(ph interface{}, v *[]string) error {
 	return fmt.Errorf("")
 }
 
+// uniqueKey represents field ID and field value which then can be used for equality tests (e.g. in a map key)
+type uniqueKey struct {
+	KeyIndex int
+	KeyValue interface{}
+}
+
 // DecodeTable loads and decodes all table rows.
 //
 // The result argument must necessarily be the address for a slice. The slice
@@ -346,24 +352,55 @@ func (s *Schema) DecodeTable(tab table.Table, out interface{}) error {
 		return err
 	}
 	defer iter.Close()
+
+	uniqueFieldIndexes := extractUniqueFieldIndexes(s)
+	uniqueCache := make(map[uniqueKey]struct{})
+
 	slicev := outv.Elem()
 	slicev = slicev.Slice(0, 0) // Trucantes the passed-in slice.
 	elemt := slicev.Type().Elem()
 	i := 0
 	for iter.Next() {
+		i++
 		elemp := reflect.New(elemt)
 		if err := s.Decode(iter.Row(), elemp.Interface()); err != nil {
 			return err
 		}
+		for _, k := range uniqueFieldIndexes {
+			field := elemp.Elem().Field(k)
+			if _, ok := uniqueCache[uniqueKey{k, field.Interface()}]; ok {
+				return fmt.Errorf("field(s) '%s' duplicates in row %v", elemp.Elem().Type().Field(k).Name, i)
+			} else {
+				uniqueCache[uniqueKey{k, field.Interface()}] = struct{}{}
+			}
+
+		}
 		slicev = reflect.Append(slicev, elemp.Elem())
 		slicev = slicev.Slice(0, slicev.Len())
-		i++
 	}
 	if iter.Err() != nil {
 		return iter.Err()
 	}
 	outv.Elem().Set(slicev.Slice(0, i))
 	return nil
+}
+
+func extractUniqueFieldIndexes(s *Schema) []int {
+	uniqueIndexes := make(map[int]struct{})
+	for _, pk := range s.PrimaryKeys {
+		_, index := s.GetField(pk)
+		uniqueIndexes[index] = struct{}{}
+	}
+	for i := range s.Fields {
+		if _, ok := uniqueIndexes[i]; !ok && s.Fields[i].Constraints.Unique {
+			uniqueIndexes[i] = struct{}{}
+		}
+	}
+	keys := make([]int, 0, len(uniqueIndexes))
+	for k := range uniqueIndexes {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 // EncodeTable encodes each element (struct) of the passed-in slice and
