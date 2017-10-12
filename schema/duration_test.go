@@ -3,6 +3,8 @@ package schema
 import (
 	"testing"
 	"time"
+
+	"github.com/matryer/is"
 )
 
 func TestCastDuration_Success(t *testing.T) {
@@ -23,13 +25,10 @@ func TestCastDuration_Success(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			got, err := castDuration(d.value)
-			if err != nil {
-				t.Errorf("want:nil got:%q", err)
-			}
-			if got != d.want {
-				t.Errorf("want:%s got:%s", d.want, got)
-			}
+			is.NoErr(err)
+			is.Equal(got, d.want)
 		})
 	}
 }
@@ -43,10 +42,9 @@ func TestCastDuration_Error(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			_, err := castDuration(d.value)
-			if err == nil {
-				t.Errorf("want:err got:nil")
-			}
+			is.True(err != nil)
 		})
 	}
 }
@@ -62,13 +60,10 @@ func TestEncodeDuration(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				got, err := encodeDuration(d.value)
-				if err != nil {
-					t.Fatalf("err want:nil got:%q", err)
-				}
-				if d.want != got {
-					t.Errorf("val want:%s got:%s", d.want, got)
-				}
+				is.NoErr(err)
+				is.Equal(d.want, got)
 			})
 		}
 	})
@@ -81,10 +76,9 @@ func TestEncodeDuration(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				_, err := encodeDuration(d.value)
-				if err == nil {
-					t.Fatalf("err want:err got:nil")
-				}
+				is.True(err != nil)
 			})
 		}
 	})

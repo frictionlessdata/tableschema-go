@@ -1,6 +1,10 @@
 package schema
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/matryer/is"
+)
 
 func TestCastGeoPoint(t *testing.T) {
 	data := []struct {
@@ -24,13 +28,10 @@ func TestCastGeoPoint(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			got, err := castGeoPoint(d.format, d.value)
-			if err != nil {
-				t.Errorf("want:nil got:%q", err)
-			}
-			if got != d.want {
-				t.Errorf("want:%+v got:%+v", d.want, got)
-			}
+			is.NoErr(err)
+			is.Equal(got, d.want)
 		})
 	}
 	t.Run("Error", func(t *testing.T) {
@@ -47,10 +48,9 @@ func TestCastGeoPoint(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				_, err := castGeoPoint(d.format, d.value)
-				if err == nil {
-					t.Errorf("want:err got:nil")
-				}
+				is.True(err != nil)
 			})
 		}
 	})
@@ -70,13 +70,10 @@ func TestEncodeGeoPoint(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				got, err := encodeGeoPoint(d.format, d.value)
-				if err != nil {
-					t.Errorf("err want:nil got:%q", err)
-				}
-				if d.want != got {
-					t.Errorf("val want:%s got:%s", d.want, got)
-				}
+				is.NoErr(err)
+				is.Equal(d.want, got)
 			})
 		}
 	})
@@ -96,10 +93,9 @@ func TestEncodeGeoPoint(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				_, err := encodeGeoPoint(d.format, d.value)
-				if err == nil {
-					t.Errorf("want:err got:nil")
-				}
+				is.True(err != nil)
 			})
 		}
 	})

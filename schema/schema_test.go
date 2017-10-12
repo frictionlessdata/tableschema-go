@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"reflect"
+	"github.com/matryer/is"
+
 	"strings"
 	"testing"
 
@@ -120,24 +121,22 @@ func ExampleSchema_EncodeTable() {
 }
 
 func TestLoadRemote(t *testing.T) {
+	is := is.New(t)
 	h := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"fields": [{"name": "ID", "type": "integer"}]}`)
 	}
 	ts := httptest.NewServer(http.HandlerFunc(h))
 	defer ts.Close()
 	got, err := LoadRemote(ts.URL)
-	if err != nil {
-		t.Fatalf("want:nil, got:%q", err)
-	}
+	is.NoErr(err)
+
 	want := &Schema{Fields: []Field{asJSONField(Field{Name: "ID", Type: "integer"})}}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want:%+v, got:%+v", want, got)
-	}
+	is.Equal(got, want)
+
 	t.Run("Error", func(t *testing.T) {
+		is := is.New(t)
 		_, err := LoadRemote("invalidURL")
-		if err == nil {
-			t.Fatalf("want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 }
 
@@ -202,25 +201,21 @@ func TestRead_Sucess(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
+			is := is.New(t)
 			s, err := Read(strings.NewReader(d.JSON))
-			if err != nil {
-				t.Fatalf("want:nil, got:%q", err)
-			}
-			if !reflect.DeepEqual(s, &d.Schema) {
-				t.Errorf("want:%+v, got:%+v", &d.Schema, s)
-			}
+			is.NoErr(err)
+			is.Equal(s, &d.Schema)
 		})
 	}
 	t.Run("MissingValues", func(t *testing.T) {
+		is := is.New(t)
 		reader := strings.NewReader(`{"fields":[{"name":"n","type":"integer"}],"missingValues":["na"]}`)
 		s, err := Read(reader)
-		if err != nil {
-			t.Fatalf("want:nil, got:%q", err)
-		}
+		is.NoErr(err)
+
 		f := s.Fields[0]
-		if _, ok := f.MissingValues["na"]; !ok {
-			t.Fatalf("want:ok got:!ok")
-		}
+		_, ok := f.MissingValues["na"]
+		is.True(ok)
 	})
 }
 
@@ -237,87 +232,69 @@ func TestRead_Error(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
+			is := is.New(t)
 			_, err := Read(strings.NewReader(d.JSON))
-			if err == nil {
-				t.Fatalf("want:error, got:nil")
-			}
+			is.True(err != nil)
 		})
 	}
 }
 
 func TestSchema_Decode(t *testing.T) {
 	t.Run("NoImplicitCast", func(t *testing.T) {
+		is := is.New(t)
 		t1 := struct {
 			Name string
 			Age  int64
 		}{}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
-			t.Fatalf("err want:nil, got:%q", err)
-		}
-		if t1.Name != "Foo" {
-			t.Errorf("value:Name want:Foo got:%s", t1.Name)
-		}
-		if t1.Age != 42 {
-			t.Errorf("value:Age want:42 got:%d", t1.Age)
-		}
+		is.NoErr(s.Decode([]string{"Foo", "42"}, &t1))
+		is.Equal(t1.Name, "Foo")
+		is.Equal(t1.Age, int64(42))
 	})
 	t.Run("StructWithTags", func(t *testing.T) {
+		is := is.New(t)
 		t1 := struct {
 			MyName string `tableheader:"Name"`
 			MyAge  int64  `tableheader:"Age"`
 		}{}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
-			t.Fatalf("err want:nil, got:%q", err)
-		}
-		if t1.MyName != "Foo" {
-			t.Errorf("value:Name want:Foo got:%s", t1.MyName)
-		}
-		if t1.MyAge != 42 {
-			t.Errorf("value:Age want:42 got:%d", t1.MyAge)
-		}
+		is.NoErr(s.Decode([]string{"Foo", "42"}, &t1))
+		is.Equal(t1.MyName, "Foo")
+		is.Equal(t1.MyAge, int64(42))
 	})
 	t.Run("ImplicitCastToInt", func(t *testing.T) {
+		is := is.New(t)
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-		if err := s.Decode([]string{"Foo", "42"}, &t1); err != nil {
-			t.Fatalf("err want:nil, got:%q", err)
-		}
-		if t1.Age != 42 {
-			t.Errorf("value:Name want:42, got:%d", t1.Age)
-		}
+		is.NoErr(s.Decode([]string{"Foo", "42"}, &t1))
+		is.Equal(t1.Age, 42)
 	})
 	t.Run("Error_SchemaFieldAndStructFieldDifferentTypes", func(t *testing.T) {
+		is := is.New(t)
 		// Field is string and struct is int.
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "Age", Type: StringType}}}
-		if err := s.Decode([]string{"42"}, &t1); err == nil {
-			t.Fatalf("want:error, got:nil")
-		}
+		is.True(s.Decode([]string{"42"}, &t1) != nil)
 	})
 	t.Run("Error_NotAPointerToStruct", func(t *testing.T) {
+		is := is.New(t)
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
-		if err := s.Decode([]string{"Foo", "42"}, t1); err == nil {
-			t.Fatalf("want:error, got:nil")
-		}
+		is.True(s.Decode([]string{"Foo", "42"}, t1) != nil)
 	})
 	t.Run("Error_CellCanNotBeCast", func(t *testing.T) {
+		is := is.New(t)
 		// Field is string and struct is int.
 		t1 := struct{ Age int }{}
 		s := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
-		if err := s.Decode([]string{"foo"}, &t1); err == nil {
-			t.Fatalf("want:error, got:nil")
-		}
+		is.True(s.Decode([]string{"foo"}, &t1) != nil)
 	})
 	t.Run("Error_CastToNil", func(t *testing.T) {
+		is := is.New(t)
 		t1 := &struct{ Age int }{}
 		t1 = nil
 		s := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
-		if err := s.Decode([]string{"foo"}, &t1); err == nil {
-			t.Fatalf("want:error, got:nil")
-		}
+		is.True(s.Decode([]string{"foo"}, &t1) != nil)
 	})
 }
 
@@ -336,9 +313,8 @@ func TestValidate_SimpleValid(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
-			if err := d.Schema.Validate(); err != nil {
-				t.Errorf("want:nil got:%q", err)
-			}
+			is := is.New(t)
+			is.NoErr(d.Schema.Validate())
 		})
 	}
 }
@@ -362,31 +338,32 @@ func TestValidate_Invalid(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
-			if err := d.Schema.Validate(); err == nil {
-				t.Errorf("want:err got:nil")
-			}
+			is := is.New(t)
+			is.True(d.Schema.Validate() != nil)
 		})
 	}
 }
 
 func TestWrite(t *testing.T) {
+	is := is.New(t)
 	s := Schema{
 		Fields:      []Field{{Name: "Foo"}, {Name: "Bar"}},
 		PrimaryKeys: []string{"Foo"},
 		ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"Foo"}}},
 	}
 	buf := bytes.NewBufferString("")
-	if err := s.Write(buf); err != nil {
-		t.Errorf("want:nil got:err")
-	}
+	is.NoErr(s.Write(buf))
+
 	want := `{
     "fields": [
-    {
-        "name": "Foo"
-    },
-    {
-        "name": "Bar"
-    }
+        {
+            "name": "Foo",
+            "Constraints": {}
+        },
+        {
+            "name": "Bar",
+            "Constraints": {}
+        }
     ],
     "primaryKey": [
         "Foo"
@@ -399,60 +376,47 @@ func TestWrite(t *testing.T) {
         }
     }
 }`
-	if reflect.DeepEqual(buf.String(), want) {
-		t.Errorf("val want:%s got:%s", want, buf.String())
-	}
+
+	is.Equal(buf.String(), want)
 }
 
 func TestGetField(t *testing.T) {
 	t.Run("HasField", func(t *testing.T) {
+		is := is.New(t)
 		s := Schema{Fields: []Field{{Name: "Foo"}, {Name: "Bar"}}}
 		field, pos := s.GetField("Foo")
-		if pos != 0 {
-			t.Fatalf("pos want:0 got:%d", pos)
-		}
-		if field == nil {
-			t.Fatalf("field want:field got nil")
-		}
+		is.Equal(pos, 0)
+		is.True(field != nil)
+
 		field, pos = s.GetField("Bar")
-		if pos != 1 {
-			t.Fatalf("pos want:1 got:%d", pos)
-		}
-		if field == nil {
-			t.Fatalf("field value want:field got nil")
-		}
+		is.Equal(pos, 1)
+		is.True(field != nil)
 	})
 	t.Run("DoesNotHaveField", func(t *testing.T) {
+		is := is.New(t)
 		s := Schema{Fields: []Field{{Name: "Bez"}}}
 		field, pos := s.GetField("Foo")
-		if pos != InvalidPosition {
-			t.Fatalf("pos want:InvalidPosition got:%d", pos)
-		}
-		if field != nil {
-			t.Fatalf("field value want:nil got:%v", field)
-		}
+		is.Equal(pos, InvalidPosition)
+		is.True(field == nil)
 	})
 }
 
 func TestHasField(t *testing.T) {
 	t.Run("HasField", func(t *testing.T) {
+		is := is.New(t)
 		s := Schema{Fields: []Field{{Name: "Foo"}, {Name: "Bar"}}}
-		if !s.HasField("Foo") {
-			t.Fatalf("field exist want:true got:false")
-		}
-		if !s.HasField("Bar") {
-			t.Fatalf("field existence want:true got:false")
-		}
+		is.True(s.HasField("Foo"))
+		is.True(s.HasField("Bar"))
 	})
 	t.Run("DoesNotHaveField", func(t *testing.T) {
+		is := is.New(t)
 		s := Schema{Fields: []Field{{Name: "Bez"}}}
-		if s.HasField("Bar") {
-			t.Fatalf("field existence want:false got:true")
-		}
+		is.True(!s.HasField("Bar"))
 	})
 }
 
 func TestMissingValues(t *testing.T) {
+	is := is.New(t)
 	s := Schema{
 		Fields:        []Field{{Name: "Foo"}},
 		MissingValues: []string{"f"},
@@ -461,9 +425,7 @@ func TestMissingValues(t *testing.T) {
 		Foo string
 	}{}
 	s.Decode([]string{"f"}, &row)
-	if row.Foo != "" {
-		t.Fatalf("want:\"\" got:%s", row.Foo)
-	}
+	is.Equal(row.Foo, "")
 }
 
 type csvRow struct {
@@ -481,20 +443,19 @@ func TestDecodeTable(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			tab := table.FromSlices(
 				[]string{"Name"},
 				[][]string{{"foo"}, {"bar"}})
 			s := &Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
-			if err := s.DecodeTable(tab, &d.got); err != nil {
-				t.Fatalf("err want:nil got:%q", err)
-			}
+			is.NoErr(s.DecodeTable(tab, &d.got))
+
 			want := []csvRow{{"foo"}, {"bar"}}
-			if !reflect.DeepEqual(want, d.got) {
-				t.Fatalf("val want:%v got:%v", want, d.got)
-			}
+			is.Equal(want, d.got)
 		})
 	}
 	t.Run("MoarData", func(t *testing.T) {
+		is := is.New(t)
 		tab := table.FromSlices(
 			[]string{"ID", "Age", "Name"},
 			[][]string{{"1", "39", "Paul"}, {"2", "23", "Jimmy"}, {"3", "36", "Jane"}, {"4", "28", "Judy"}, {"5", "37", "Iñtërnâtiônàlizætiøn"}})
@@ -506,124 +467,106 @@ func TestDecodeTable(t *testing.T) {
 		}
 		s := &Schema{Fields: []Field{{Name: "ID", Type: IntegerType}, {Name: "Age", Type: IntegerType}, {Name: "Name", Type: StringType}}}
 		got := []data{}
-		if err := s.DecodeTable(tab, &got); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is.NoErr(s.DecodeTable(tab, &got))
+
 		want := []data{{1, 39, "Paul"}, {2, 23, "Jimmy"}, {3, 36, "Jane"}, {4, 28, "Judy"}, {5, 37, "Iñtërnâtiônàlizætiøn"}}
-		if !reflect.DeepEqual(want, got) {
-			t.Fatalf("val want:%v got:%v", want, got)
-		}
+		is.Equal(want, got)
 	})
 	t.Run("EmptyTable", func(t *testing.T) {
+		is := is.New(t)
 		tab := table.FromSlices([]string{}, [][]string{})
 		s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		var got []csvRow
-		if err := s.DecodeTable(tab, &got); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
-		if len(got) != 0 {
-			t.Fatalf("len(got) want:0 got:%v", len(got))
-		}
+		is.NoErr(s.DecodeTable(tab, &got))
+		is.Equal(len(got), 0)
 	})
 	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
+		is := is.New(t)
 		tab := table.FromSlices([]string{"name"}, [][]string{{""}})
 		s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
-		if err := s.DecodeTable(tab, []csvRow{}); err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(s.DecodeTable(tab, []csvRow{}) != nil)
 	})
 }
 
 func TestSchema_Encode(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
+		is := is.New(t)
 		type rowType struct {
 			Name string
 			Age  int
 		}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
 		got, err := s.Encode(rowType{Name: "Foo", Age: 42})
-		if err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is.NoErr(err)
+
 		want := []string{"Foo", "42"}
-		if !reflect.DeepEqual(want, got) {
-			t.Fatalf("val want:%v got:%v", want, got)
-		}
+		is.Equal(want, got)
 	})
 	t.Run("SuccessWithTags", func(t *testing.T) {
+		is := is.New(t)
 		type rowType struct {
 			MyName string `tableheader:"Name"`
 			MyAge  int    `tableheader:"Age"`
 		}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
 		got, err := s.Encode(rowType{MyName: "Foo", MyAge: 42})
-		if err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is.NoErr(err)
+
 		want := []string{"Foo", "42"}
-		if !reflect.DeepEqual(want, got) {
-			t.Fatalf("val want:%v got:%v", want, got)
-		}
+		is.Equal(want, got)
 	})
 	t.Run("Error_Encoding", func(t *testing.T) {
+		is := is.New(t)
 		type rowType struct {
 			Age string
 		}
 		s := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
 		_, err := s.Encode(rowType{Age: "10"})
-		if err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 	t.Run("Error_NotStruct", func(t *testing.T) {
+		is := is.New(t)
 		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		in := "string"
 		_, err := s.Encode(in)
-		if err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 	t.Run("Error_StructIsNil", func(t *testing.T) {
+		is := is.New(t)
 		s := Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		var in *csvRow
 		_, err := s.Encode(in)
-		if err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 }
 
 func TestEncodeTable(t *testing.T) {
 	t.Run("Simple", func(t *testing.T) {
+		is := is.New(t)
 		people := []struct {
 			Name string
 		}{{"Foo"}, {"Bar"}, {"Bez"}}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
 		got, err := s.EncodeTable(people)
-		if err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is.NoErr(err)
+
 		want := [][]string{{"Foo"}, {"Bar"}, {"Bez"}}
-		if !reflect.DeepEqual(want, got) {
-			t.Fatalf("val want:%s got:%q", want, got)
-		}
+		is.Equal(want, got)
 	})
 
 	t.Run("Error_InputIsNotASlice", func(t *testing.T) {
+		is := is.New(t)
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
 		_, err := s.EncodeTable(10)
-		if err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 	t.Run("Error_ErrorEncoding", func(t *testing.T) {
+		is := is.New(t)
 		people := []struct {
 			Name string
 		}{{"Foo"}}
 		s := Schema{Fields: []Field{{Name: "Name", Type: IntegerType}}}
 		_, err := s.EncodeTable(people)
-		if err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 }

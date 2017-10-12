@@ -3,18 +3,20 @@ package schema
 import (
 	"testing"
 	"time"
+
+	"github.com/matryer/is"
 )
 
 func TestDecodeTime(t *testing.T) {
 	t.Run("ValidMaximum", func(t *testing.T) {
-		if _, err := decodeTime(defaultFieldFormat, "11:45:00", Constraints{Maximum: "11:45:01"}); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is := is.New(t)
+		_, err := decodeTime(defaultFieldFormat, "11:45:00", Constraints{Maximum: "11:45:01"})
+		is.NoErr(err)
 	})
 	t.Run("ValidMinimum", func(t *testing.T) {
-		if _, err := decodeTime(defaultFieldFormat, "11:45:00", Constraints{Minimum: "11:44:59"}); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is := is.New(t)
+		_, err := decodeTime(defaultFieldFormat, "11:45:00", Constraints{Minimum: "11:44:59"})
+		is.NoErr(err)
 	})
 	t.Run("Error", func(t *testing.T) {
 		data := []struct {
@@ -30,9 +32,9 @@ func TestDecodeTime(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := decodeTime(defaultFieldFormat, d.time, d.constraints); err == nil {
-					t.Fatalf("err want:err got:nil")
-				}
+				is := is.New(t)
+				_, err := decodeTime(defaultFieldFormat, d.time, d.constraints)
+				is.True(err != nil)
 			})
 		}
 	})
@@ -49,13 +51,10 @@ func TestEncodeTime(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				got, err := encodeTime(d.value)
-				if err != nil {
-					t.Fatalf("err want:nil got:%q", err)
-				}
-				if d.want != got {
-					t.Fatalf("val want:%s got:%s", d.want, got)
-				}
+				is.NoErr(err)
+				is.Equal(d.want, got)
 			})
 		}
 	})
@@ -68,10 +67,9 @@ func TestEncodeTime(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				_, err := encodeTime(d.value)
-				if err == nil {
-					t.Fatalf("err want:err got:nil")
-				}
+				is.True(err != nil)
 			})
 		}
 	})

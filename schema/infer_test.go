@@ -2,9 +2,10 @@ package schema
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/matryer/is"
 
 	"github.com/frictionlessdata/tableschema-go/table"
 )
@@ -84,15 +85,13 @@ func TestInfer(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			s, err := infer(d.headers, d.table)
-			if err != nil {
-				t.Fatalf("want:nil, got:%q", err)
-			}
+			is.NoErr(err)
+
 			sort.Sort(s.Fields)
 			sort.Sort(d.want.Fields)
-			if !reflect.DeepEqual(s, &d.want) {
-				t.Errorf("want:%+v, got:%+v", &d.want, s)
-			}
+			is.Equal(s, &d.want)
 		})
 	}
 	t.Run("Error", func(t *testing.T) {
@@ -105,10 +104,9 @@ func TestInfer(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				_, err := infer(d.headers, d.table)
-				if err == nil {
-					t.Fatalf("want:error, got:nil")
-				}
+				is.True(err != nil)
 			})
 		}
 	})
@@ -153,15 +151,13 @@ func TestInferImplicitCasting(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			s, err := inferImplicitCasting(d.headers, d.table)
-			if err != nil {
-				t.Fatalf("want:nil, got:%q", err)
-			}
+			is.NoErr(err)
+
 			sort.Sort(s.Fields)
 			sort.Sort(d.want.Fields)
-			if !reflect.DeepEqual(s, &d.want) {
-				t.Errorf("want:%+v, got:%+v", d.want, s)
-			}
+			is.Equal(s, &d.want)
 		})
 	}
 	t.Run("Error", func(t *testing.T) {
@@ -174,10 +170,9 @@ func TestInferImplicitCasting(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				_, err := inferImplicitCasting(d.headers, d.table)
-				if err == nil {
-					t.Fatalf("want:error, got:nil")
-				}
+				is.True(err != nil)
 			})
 		}
 	})

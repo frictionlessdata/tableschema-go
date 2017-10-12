@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+
+	"github.com/matryer/is"
 )
 
 type csvRow struct {
@@ -41,6 +42,7 @@ func ExampleNewWriter() {
 }
 
 func TestRemote(t *testing.T) {
+	is := is.New(t)
 	h := func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "\"name\"\nfoo\nbar")
 	}
@@ -49,86 +51,65 @@ func TestRemote(t *testing.T) {
 	table, _ := NewTable(Remote(ts.URL), LoadHeaders())
 	got, _ := table.ReadAll()
 	want := [][]string{{"foo"}, {"bar"}}
-	if !reflect.DeepEqual(want, got) {
-		t.Fatalf("val want:%v got:%v", want, got)
-	}
+	is.Equal(want, got)
+
 	t.Run("Error", func(t *testing.T) {
+		is := is.New(t)
 		_, err := NewTable(Remote("invalidURL"), LoadHeaders())
-		if err == nil {
-			t.Fatalf("want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 }
 
 func TestLoadHeaders(t *testing.T) {
 	t.Run("EmptyString", func(t *testing.T) {
+		is := is.New(t)
 		table, err := NewTable(FromString(""), LoadHeaders())
-		if err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
-		if len(table.Headers()) != 0 {
-			t.Fatalf("len(headers) want:0 got:%v", len(table.Headers()))
-		}
+		is.NoErr(err)
+		is.Equal(len(table.Headers()), 0)
 	})
 	t.Run("SimpleCase", func(t *testing.T) {
+		is := is.New(t)
 		in := `"name"
 "bar"`
 		table, err := NewTable(FromString(in), LoadHeaders())
-		if err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is.NoErr(err)
+
 		want := []string{"name"}
-		if !reflect.DeepEqual(want, table.Headers()) {
-			t.Fatalf("headers want:%v got:%v", want, table.Headers())
-		}
+		is.Equal(want, table.Headers())
 
 		iter, _ := table.Iter()
 		iter.Next()
 		want = []string{"bar"}
-		if !reflect.DeepEqual(want, iter.Row()) {
-			t.Fatalf("headers want:%v got:%v", want, iter.Row())
-		}
-		if iter.Next() {
-			t.Fatalf("want:no more iterations")
-		}
+		is.Equal(want, iter.Row())
+		is.True(!iter.Next())
 	})
 }
 
 func TestNewTable(t *testing.T) {
 	t.Run("ErrorOpts", func(t *testing.T) {
+		is := is.New(t)
 		table, err := NewTable(FromString(""), errorOpts())
-		if table != nil {
-			t.Fatalf("reader want:nil got:%v", table)
-		}
-		if err == nil {
-			t.Fatalf("err want:error got:nil")
-		}
+		is.True(table == nil)
+		is.True(err != nil)
 	})
 	t.Run("ErrorSource", func(t *testing.T) {
+		is := is.New(t)
 		_, err := NewTable(errorSource(), LoadHeaders())
-		if err == nil {
-			t.Fatalf("want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 }
 
 func TestSetHeaders(t *testing.T) {
+	is := is.New(t)
 	in := "Foo"
 	table, err := NewTable(FromString(in), SetHeaders("name"))
-	if err != nil {
-		t.Fatalf("err want:nil got:%q", err)
-	}
+	is.NoErr(err)
 	want := []string{"name"}
-	if !reflect.DeepEqual(want, table.Headers()) {
-		t.Fatalf("val want:%v got:%v", want, table.Headers())
-	}
+	is.Equal(want, table.Headers())
+
 	iter, _ := table.Iter()
 	iter.Next()
 	want = []string{"Foo"}
-	if !reflect.DeepEqual(want, iter.Row()) {
-		t.Fatalf("headers want:%v got:%v", want, iter.Row())
-	}
-	if iter.Next() {
-		t.Fatalf("want:no more iterations")
-	}
+	is.Equal(want, iter.Row())
+	is.True(!iter.Next())
 }

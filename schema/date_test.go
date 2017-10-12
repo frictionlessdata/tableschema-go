@@ -1,17 +1,21 @@
 package schema
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/matryer/is"
+)
 
 func TestDecodeDate(t *testing.T) {
 	t.Run("ValidMaximum", func(t *testing.T) {
-		if _, err := decodeDate("2006-01-02", "2006-01-02", Constraints{Maximum: "2007-01-02"}); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is := is.New(t)
+		_, err := decodeDate("2006-01-02", "2006-01-02", Constraints{Maximum: "2007-01-02"})
+		is.NoErr(err)
 	})
 	t.Run("ValidMinimum", func(t *testing.T) {
-		if _, err := decodeDate("2006-01-02", "2007-01-02", Constraints{Minimum: "2006-01-02"}); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is := is.New(t)
+		_, err := decodeDate("2006-01-02", "2007-01-02", Constraints{Minimum: "2006-01-02"})
+		is.NoErr(err)
 	})
 	t.Run("Error", func(t *testing.T) {
 		data := []struct {
@@ -27,9 +31,9 @@ func TestDecodeDate(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := decodeDate("2006-01-02", d.date, d.constraints); err == nil {
-					t.Fatalf("err want:err got:nil")
-				}
+				is := is.New(t)
+				_, err := decodeDate("2006-01-02", d.date, d.constraints)
+				is.True(err != nil)
 			})
 		}
 	})
