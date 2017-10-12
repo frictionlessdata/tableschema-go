@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/matryer/is"
+  packages = ["."]
+  revision = "c0323ceb4e996e4a8795670d1fb6f60e65b82fd2"
+
+[[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
@@ -10,6 +16,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ba7c1d9fe07de9d2a19113a6f056f20755b323782f5030d46d14f59c9da75b6a"
+  inputs-digest = "1ad488c5d7626ee23a29a6f0e4de915d8668ad0eff6659419ef4cf5f02d1a692"
   solver-name = "gps-cdcl"
   solver-version = 1
