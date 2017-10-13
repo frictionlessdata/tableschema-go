@@ -2,9 +2,10 @@ package schema
 
 import (
 	"encoding/json"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/matryer/is"
 )
 
 func TestDefaultValues(t *testing.T) {
@@ -27,13 +28,12 @@ func TestDefaultValues(t *testing.T) {
 		},
 	}
 	for _, d := range data {
-		var f Field
-		if err := json.Unmarshal([]byte(d.JSON), &f); err != nil {
-			t.Errorf("err want:nil got:%q", err)
-		}
-		if !reflect.DeepEqual(f, d.Field) {
-			t.Errorf("[%s] want:%+v got:%+v", d.Desc, d.Field, f)
-		}
+		t.Run(d.Desc, func(t *testing.T) {
+			is := is.New(t)
+			var f Field
+			is.NoErr(json.Unmarshal([]byte(d.JSON), &f))
+			is.Equal(f, d.Field)
+		})
 	}
 }
 
@@ -65,62 +65,45 @@ func TestField_Decode(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
+			is := is.New(t)
 			c, err := d.Field.Decode(d.Value)
-			if err != nil {
-				t.Fatalf("err want:nil got:%s", err)
-			}
-			if c != d.Expected {
-				t.Errorf("val want:%v, got:%v", d.Expected, c)
-			}
+			is.NoErr(err)
+			is.Equal(c, d.Expected)
 		})
 	}
 	t.Run("Object_Success", func(t *testing.T) {
+		is := is.New(t)
 		f := Field{Type: ObjectType}
 		obj, err := f.Decode(`{"name":"foo"}`)
-		if err != nil {
-			t.Fatalf("err want:nil got:%s", err)
-		}
+		is.NoErr(err)
+
 		objMap, ok := obj.(map[string]interface{})
-		if !ok {
-			t.Errorf("want:true got:false")
-		}
-		if len(objMap) != 1 {
-			t.Errorf("want:1 got:%d", len(objMap))
-		}
-		if objMap["name"] != "foo" {
-			t.Errorf("val want:map[name:foo], got:%v", objMap)
-		}
+		is.True(ok)
+		is.Equal(len(objMap), 1)
+		is.Equal(objMap["name"], "foo")
 	})
 	t.Run("Object_Failure", func(t *testing.T) {
+		is := is.New(t)
 		f := Field{Type: ObjectType}
 		_, err := f.Decode(`{"name"}`)
-		if err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 	t.Run("Array_Success", func(t *testing.T) {
+		is := is.New(t)
 		f := Field{Type: ArrayType}
 		obj, err := f.Decode(`["foo"]`)
-		if err != nil {
-			t.Fatalf("err want:nil got:%s", err)
-		}
+		is.NoErr(err)
+
 		arr, ok := obj.([]interface{})
-		if !ok {
-			t.Errorf("want:true got:false")
-		}
-		if len(arr) != 1 {
-			t.Errorf("want:1 got:%d", len(arr))
-		}
-		if arr[0] != "foo" {
-			t.Errorf("val want:foo, got:%v", arr)
-		}
+		is.True(ok)
+		is.Equal(len(arr), 1)
+		is.Equal(arr[0], "foo")
 	})
 	t.Run("Array_Failure", func(t *testing.T) {
+		is := is.New(t)
 		f := Field{Type: ArrayType}
 		_, err := f.Decode(`{"name":"foo"}`)
-		if err == nil {
-			t.Fatalf("err want:err got:nil")
-		}
+		is.True(err != nil)
 	})
 	t.Run("InvalidDate", func(t *testing.T) {
 		data := []struct {
@@ -133,43 +116,39 @@ func TestField_Decode(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := d.field.Decode(d.value); err == nil {
-					t.Errorf("want:err got:nil")
-				}
+				is := is.New(t)
+				_, err := d.field.Decode(d.value)
+				is.True(err != nil)
 			})
 		}
 	})
 	t.Run("InvalidFieldType", func(t *testing.T) {
+		is := is.New(t)
 		f := Field{Type: "invalidType"}
-		if _, err := f.Decode("42"); err == nil {
-			t.Errorf("err want:err got:nil")
-		}
+		_, err := f.Decode("42")
+		is.True(err != nil)
 	})
 	t.Run("Constraints", func(t *testing.T) {
 		t.Run("Required", func(t *testing.T) {
+			is := is.New(t)
 			f := Field{Type: StringType, Constraints: Constraints{Required: true}, MissingValues: map[string]struct{}{"NA": struct{}{}}}
-			if _, err := f.Decode("NA"); err == nil {
-				t.Fatalf("err want:err got:nil")
-			}
+			_, err := f.Decode("NA")
+			is.True(err != nil)
 		})
 	})
 }
 
 func TestUnmarshalJSON_InvalidField(t *testing.T) {
+	is := is.New(t)
 	var f Field
-	if err := json.Unmarshal([]byte("{Foo:1}"), &f); err == nil {
-		t.Errorf("want:err got:nil")
-	}
+	is.True(json.Unmarshal([]byte("{Foo:1}"), &f) != nil)
 }
 
 func TestTestString(t *testing.T) {
+	is := is.New(t)
 	f := Field{Type: "integer"}
-	if !f.TestString("42") {
-		t.Errorf("want:true, got:false")
-	}
-	if f.TestString("boo") {
-		t.Errorf("want:false, got:true")
-	}
+	is.True(f.TestString("42"))
+	is.True(!f.TestString("boo"))
 }
 
 func TestField_Encode(t *testing.T) {
@@ -199,13 +178,10 @@ func TestField_Encode(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				got, err := d.field.Encode(d.value)
-				if err != nil {
-					t.Fatalf("err want:nil got:%q", err)
-				}
-				if d.want != got {
-					t.Fatalf("val want:%s got:%s", d.want, got)
-				}
+				is.NoErr(err)
+				is.Equal(d.want, got)
 			})
 		}
 	})
@@ -221,9 +197,9 @@ func TestField_Encode(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := d.field.Encode(d.value); err == nil {
-					t.Errorf("want:err got:nil")
-				}
+				is := is.New(t)
+				_, err := d.field.Encode(d.value)
+				is.True(err != nil)
 			})
 		}
 	})

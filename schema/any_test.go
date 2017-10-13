@@ -1,25 +1,21 @@
 package schema
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/matryer/is"
+)
 
 func TestCastAny(t *testing.T) {
+	is := is.New(t)
 	got, err := castAny("foo")
-	if err != nil {
-		t.Fatalf("err want:nil got:%q", err)
-	}
-	want := "foo"
-	if want != got {
-		t.Fatalf("val want:%s got:%s", want, got)
-	}
+	is.NoErr(err)
+	is.Equal("foo", got)
 }
 
 func TestEncodeAny(t *testing.T) {
+	is := is.New(t)
 	got, err := encodeAny(10)
-	if err != nil {
-		t.Fatalf("err want:nil got:%q", err)
-	}
-	want := "10"
-	if want != got {
-		t.Fatalf("val want:%s got:%s", want, got)
-	}
+	is.NoErr(err)
+	is.Equal("10", got)
 }

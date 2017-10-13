@@ -1,6 +1,10 @@
 package schema
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/matryer/is"
+)
 
 const notBareInt = false
 
@@ -23,25 +27,22 @@ func TestCastInt(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				got, err := castInt(d.bn, d.number, Constraints{})
-				if err != nil {
-					t.Fatalf("err want:nil got:%q", err)
-				}
-				if d.want != got {
-					t.Fatalf("val want:%d got:%d", d.want, got)
-				}
+				is.NoErr(err)
+				is.Equal(d.want, got)
 			})
 		}
 	})
 	t.Run("ValidMaximum", func(t *testing.T) {
-		if _, err := castInt(defaultBareNumber, "2", Constraints{Maximum: "2"}); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is := is.New(t)
+		_, err := castInt(defaultBareNumber, "2", Constraints{Maximum: "2"})
+		is.NoErr(err)
 	})
 	t.Run("ValidMinimum", func(t *testing.T) {
-		if _, err := castInt(defaultBareNumber, "2", Constraints{Minimum: "1"}); err != nil {
-			t.Fatalf("err want:nil got:%q", err)
-		}
+		is := is.New(t)
+		_, err := castInt(defaultBareNumber, "2", Constraints{Minimum: "1"})
+		is.NoErr(err)
 	})
 	t.Run("Error", func(t *testing.T) {
 		data := []struct {
@@ -57,9 +58,9 @@ func TestCastInt(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
-				if _, err := castInt(defaultBareNumber, d.number, d.constraints); err == nil {
-					t.Fatalf("err want:err got:nil")
-				}
+				is := is.New(t)
+				_, err := castInt(defaultBareNumber, d.number, d.constraints)
+				is.True(err != nil)
 			})
 		}
 	})

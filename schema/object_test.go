@@ -1,6 +1,7 @@
 package schema
 
 import "testing"
+import "github.com/matryer/is"
 
 type eoStruct struct {
 	Name string `json:"name"`
@@ -16,13 +17,10 @@ func TestEncodeObject(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			got, err := encodeObject(d.value)
-			if err != nil {
-				t.Fatalf("err want:nil got:%q", err)
-			}
-			if d.want != got {
-				t.Fatalf("val want:%s got:%s", d.want, got)
-			}
+			is.NoErr(err)
+			is.Equal(d.want, got)
 		})
 	}
 }

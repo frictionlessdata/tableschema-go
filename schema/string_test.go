@@ -3,20 +3,22 @@ package schema
 import (
 	"regexp"
 	"testing"
+
+	"github.com/matryer/is"
 )
 
 // To be in par with the python library.
 func TestDecodeString_URIMustRequireScheme(t *testing.T) {
-	if _, err := decodeString(stringURI, "google.com", Constraints{}); err == nil {
-		t.Errorf("want:err got:nil")
-	}
+	is := is.New(t)
+	_, err := decodeString(stringURI, "google.com", Constraints{})
+	is.True(err != nil)
 }
 
 func TestDecodeString_InvalidUUIDVersion(t *testing.T) {
+	is := is.New(t)
 	// This is a uuid3: namespace DNS and python.org.
-	if _, err := decodeString(stringUUID, "6fa459ea-ee8a-3ca4-894e-db77e160355e", Constraints{}); err == nil {
-		t.Errorf("want:err got:nil")
-	}
+	_, err := decodeString(stringUUID, "6fa459ea-ee8a-3ca4-894e-db77e160355e", Constraints{})
+	is.True(err != nil)
 }
 
 func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
@@ -38,9 +40,9 @@ func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
-			if _, err := decodeString(d.format, d.value, d.constraints); err == nil {
-				t.Fatalf("err want:err got:nil")
-			}
+			is := is.New(t)
+			_, err := decodeString(d.format, d.value, d.constraints)
+			is.True(err != nil)
 		})
 	}
 }
@@ -58,13 +60,10 @@ func TestDecodeString_Success(t *testing.T) {
 	}
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
 			v, err := decodeString(d.format, d.value, d.constraints)
-			if err != nil {
-				t.Errorf("want:nil got:%q", err)
-			}
-			if v != d.value {
-				t.Errorf("want:%s got:%s", d.value, v)
-			}
+			is.NoErr(err)
+			is.Equal(v, d.value)
 		})
 	}
 }

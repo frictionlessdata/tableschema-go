@@ -1,6 +1,10 @@
 package schema
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/matryer/is"
+)
 
 func TestCastBoolean(t *testing.T) {
 	data := []struct {
@@ -15,21 +19,19 @@ func TestCastBoolean(t *testing.T) {
 		{"duplicate value, true wins", []string{"1"}, []string{"1"}, "1", true},
 	}
 	for _, d := range data {
-		b, err := castBoolean(d.Value, d.TrueValues, d.FalseValues)
-		if err != nil {
-			t.Errorf("[%s] err want:nil got:%q", d.Desc, err)
-		}
-		if b != d.Expected {
-			t.Errorf("[%s] val want:%v got:%v", d.Desc, d.Expected, b)
-		}
+		t.Run(d.Desc, func(t *testing.T) {
+			is := is.New(t)
+			b, err := castBoolean(d.Value, d.TrueValues, d.FalseValues)
+			is.NoErr(err)
+			is.Equal(b, d.Expected)
+		})
 	}
 }
 
 func TestCastBoolean_Error(t *testing.T) {
+	is := is.New(t)
 	_, err := castBoolean("foo", defaultTrueValues, defaultFalseValues)
-	if err == nil {
-		t.Errorf("want:err got:nil")
-	}
+	is.True(err != nil)
 }
 
 func TestEncodeBoolean(t *testing.T) {
@@ -48,13 +50,10 @@ func TestEncodeBoolean(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				got, err := encodeBoolean(d.value, d.trueValues, d.falseValues)
-				if err != nil {
-					t.Fatalf("err want:nil got:%q", err)
-				}
-				if d.want != got {
-					t.Errorf("val want:%s got:%s", d.want, got)
-				}
+				is.NoErr(err)
+				is.Equal(d.want, got)
 			})
 		}
 	})
@@ -70,10 +69,9 @@ func TestEncodeBoolean(t *testing.T) {
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
 				_, err := encodeBoolean(d.value, d.trueValues, d.falseValues)
-				if err == nil {
-					t.Fatalf("err want:err got:nil")
-				}
+				is.True(err != nil)
 			})
 		}
 	})
