@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-
-	"github.com/matryer/is"
-
 	"strings"
 	"testing"
 
 	"github.com/frictionlessdata/tableschema-go/table"
+	"github.com/matryer/is"
 )
 
 func ExampleSchema_Decode() {
