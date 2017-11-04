@@ -2,11 +2,35 @@ package schema
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/matryer/is"
 )
+
+func ExampleField_Decode() {
+	in := `{
+		"name": "id",
+		"type": "string",
+		"format": "default",
+		"constraints": {
+			"required": true,
+			"minLen": "5",
+			"maxLen": "10",
+			"pattern": ".*11$",
+			"enum":["1234511"]
+		}
+	}`
+	var field Field
+	json.Unmarshal([]byte(in), &field)
+	v, err := field.Decode("1234511")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(v)
+	// Output: 1234511
+}
 
 func TestDefaultValues(t *testing.T) {
 	data := []struct {
