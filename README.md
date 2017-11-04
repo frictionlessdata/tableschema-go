@@ -137,6 +137,53 @@ If you have a lot of data and can no load everything in memory, you can easily i
 * [Table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Table)
 * [Iterator](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Iterator)
 
+### Field
+
+Class represents field in the schema.
+
+For example, data values can be decoded to native Go types. Decoding a value will check if the value is of the expected type, is in the correct format, and complies with any constraints imposed by a schema.
+
+```javascript
+{
+    'name': 'birthday',
+    'type': 'date',
+    'format': 'default',
+    'constraints': {
+        'required': True,
+        'minimum': '2015-05-30'
+    }
+}
+```
+
+The following example will raise exception the passed-in is less than allowed by `minimum` constraints of the field. `Errors` will be returned as well when the user tries to decode values which are not well formatted dates.
+
+```go
+date, err := field.Decode("2014-05-29")
+// uh oh, something went wrong
+```
+
+Values that can't be decoded will return an `error`.
+Decodeing a value that doesn't meet the constraints will return an `error`.
+
+Available types, formats and resultant value of the cast:
+
+| Type | Formats | Casting result |
+| ---- | ------- | -------------- |
+| any | default | interface{} |
+| object | default | interface{} |
+| array | default | []interface{} |
+| boolean | default | bool |
+| duration | default | time.Time |
+| geopoint | default, array, object | [float64, float64] |
+| integer | default | int64 |
+| number | default | float64 |
+| string | default, uri, email, binary | string |
+| date | default, any, <PATTERN> | time.Time |
+| datetime | default, any, <PATTERN> | time.Time |
+| time | default, any, <PATTERN> | time.Time |
+| year | default | time.Time |
+| yearmonth | default | time.Time |
+
 ## Saving Tabular Data
 
 Once you're done processing the data, it is time to persist results. As an example, let us assume we have a remote table schema called `summary`, which contains two fields:

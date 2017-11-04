@@ -135,6 +135,52 @@ func TestField_Decode(t *testing.T) {
 			_, err := f.Decode("NA")
 			is.True(err != nil)
 		})
+		t.Run("Enum", func(t *testing.T) {
+			data := []struct {
+				desc  string
+				field Field
+				value string
+			}{
+				{
+					"SimpleCase",
+					Field{Type: IntegerType, Constraints: Constraints{encodedEnum: map[string]struct{}{"1": struct{}{}}}},
+					"1",
+				},
+				{
+					"NilEnumList",
+					Field{Type: IntegerType},
+					"10",
+				},
+				{
+					"EmptyEnumList",
+					Field{Type: IntegerType, Constraints: Constraints{encodedEnum: map[string]struct{}{}}},
+					"10",
+				},
+			}
+			for _, d := range data {
+				t.Run(d.desc, func(t *testing.T) {
+					is := is.New(t)
+					_, err := d.field.Decode(d.value)
+					is.NoErr(err)
+				})
+			}
+		})
+		t.Run("EnumError", func(t *testing.T) {
+			data := []struct {
+				desc  string
+				field Field
+				value string
+			}{
+				{"NonEmptyEnumList", Field{Type: IntegerType, Constraints: Constraints{encodedEnum: map[string]struct{}{"8": struct{}{}, "9": struct{}{}}}}, "10"},
+			}
+			for _, d := range data {
+				t.Run(d.desc, func(t *testing.T) {
+					is := is.New(t)
+					_, err := d.field.Decode(d.value)
+					is.True(err != nil)
+				})
+			}
+		})
 	})
 }
 
