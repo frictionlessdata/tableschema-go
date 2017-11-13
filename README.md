@@ -92,7 +92,7 @@ sch, _ := schema.LoadRemote("http://myfoobar/users/schema.json")
 
 ## Processing Tabular Data
 
-Once you have the data, you would like to process using language data types. [schema.Uncast](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-Uncast) and [schema.UncastTable](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-UncastTable) are your friends on this journey.
+Once you have the data, you would like to process using language data types. [schema.CastTable](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-CastTable) and [schema.CastRow](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-CastRow) are your friends on this journey.
 
 ```go
 package main
@@ -215,7 +215,7 @@ func WriteSummary(summary []summaryEntry, path string) {
 
    w.Write([]string{"Date", "AverageAge"})
    for _, summ := range summary{
-       row, _ := sch.Uncast(summ)
+       row, _ := sch.UncastRow(summ)
        w.Write(row)
    }
 }
