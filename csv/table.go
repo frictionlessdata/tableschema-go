@@ -1,6 +1,7 @@
 package csv
 
 import (
+	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -62,6 +63,18 @@ func (table *Table) ReadAll() ([][]string, error) {
 // Headers returns the headers of the tabular data.
 func (table *Table) Headers() []string {
 	return table.headers
+}
+
+// String returns a string version of the table.
+func (table *Table) String() string {
+	var buf bytes.Buffer
+	w := csv.NewWriter(&buf)
+	rows, err := table.ReadAll()
+	if err != nil {
+		return ""
+	}
+	w.WriteAll(rows)
+	return buf.String()
 }
 
 func newIterator(source io.ReadCloser, skipHeaders bool) *csvIterator {
@@ -198,7 +211,7 @@ func errorOpts(headers ...string) CreationOpts {
 	}
 }
 
-// NewWriter creates a writer which appends records to a CSV encoded file.
+// NewWriter creates a writer which appends records to a CSV raw file.
 //
 // As returned by NewWriter, a csv.Writer writes records terminated by a
 // newline and uses ',' as the field delimiter. The exported fields can be

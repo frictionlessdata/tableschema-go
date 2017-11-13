@@ -60,7 +60,7 @@ type StringWriter struct {
 	content *bytes.Buffer
 }
 
-// String returns the content that has been written so far encoded as CSV.
+// String returns the content that has been written so far as raw CSV.
 func (s *StringWriter) String() string {
 	return s.content.String()
 }

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -183,16 +184,16 @@ func (s *Schema) SaveToFile(path string) error {
 	return s.Write(f)
 }
 
-// Decode decodes the passed-in row to schema types and stores it in the value pointed
+// CastRow casts the passed-in row to schema types and stores it in the value pointed
 // by out. The out value must be pointer to a struct. Only exported fields will be unmarshalled.
 // The lowercased field name is used as the key for each exported field.
 //
 // If a value in the row cannot be marshalled to its respective schema field (Field.Unmarshal),
 // this call will return an error. Furthermore, this call is also going to return an error if
 // the schema field value can not be unmarshalled to the struct field type.
-func (s *Schema) Decode(row []string, out interface{}) error {
+func (s *Schema) CastRow(row []string, out interface{}) error {
 	if reflect.ValueOf(out).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(out)).Kind() != reflect.Struct {
-		return fmt.Errorf("can only decode pointer to structs")
+		return fmt.Errorf("can only cast pointer to structs")
 	}
 	outv := reflect.Indirect(reflect.ValueOf(out))
 	outt := outv.Type()
@@ -210,7 +211,7 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 				if s.isMissingValue(cell) {
 					continue
 				}
-				v, err := f.Decode(cell)
+				v, err := f.Cast(cell)
 				if err != nil {
 					return err
 				}
@@ -226,27 +227,27 @@ func (s *Schema) Decode(row []string, out interface{}) error {
 	return nil
 }
 
-type encodedCell struct {
+type rawCell struct {
 	pos int
 	val string
 }
 
-type encodedRow []encodedCell
+type rawRow []rawCell
 
-func (r encodedRow) Len() int           { return len(r) }
-func (r encodedRow) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
-func (r encodedRow) Less(i, j int) bool { return r[i].pos < r[j].pos }
+func (r rawRow) Len() int           { return len(r) }
+func (r rawRow) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
+func (r rawRow) Less(i, j int) bool { return r[i].pos < r[j].pos }
 
-// Encode encodes struct into a row. This method can only encode structs (or pointer to structs) and
+// UncastRow uncasts struct into a row. This method can only uncast structs (or pointer to structs) and
 // will error out if nil is passed.
 // The order of the cells in the returned row is the schema declaration order.
-func (s *Schema) Encode(in interface{}) ([]string, error) {
+func (s *Schema) UncastRow(in interface{}) ([]string, error) {
 	inValue := reflect.Indirect(reflect.ValueOf(in))
 	if inValue.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("can only encode structs and does not support nil pointers")
+		return nil, fmt.Errorf("can only uncast structs and does not support nil pointers")
 	}
 	inType := inValue.Type()
-	var row encodedRow
+	var row rawRow
 	for i := 0; i < inType.NumField(); i++ {
 		structFieldValue := inValue.Field(i)
 		fieldName, ok := inType.Field(i).Tag.Lookup(tableheaderTag)
@@ -255,11 +256,11 @@ func (s *Schema) Encode(in interface{}) ([]string, error) {
 		}
 		f, fieldIndex := s.GetField(fieldName)
 		if fieldIndex != InvalidPosition {
-			cell, err := f.Encode(structFieldValue.Interface())
+			cell, err := f.Uncast(structFieldValue.Interface())
 			if err != nil {
 				return nil, err
 			}
-			row = append(row, encodedCell{fieldIndex, cell})
+			row = append(row, rawCell{fieldIndex, cell})
 		}
 	}
 	sort.Sort(row)
@@ -338,11 +339,11 @@ type uniqueKey struct {
 	KeyValue interface{}
 }
 
-// DecodeTable loads and decodes all table rows.
+// CastTable loads and casts all table rows.
 //
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
-func (s *Schema) DecodeTable(tab table.Table, out interface{}) error {
+func (s *Schema) CastTable(tab table.Table, out interface{}) error {
 	outv := reflect.ValueOf(out)
 	if outv.Kind() != reflect.Ptr || outv.Elem().Kind() != reflect.Slice {
 		return fmt.Errorf("out argument must be a slice address")
@@ -363,17 +364,15 @@ func (s *Schema) DecodeTable(tab table.Table, out interface{}) error {
 	for iter.Next() {
 		i++
 		elemp := reflect.New(elemt)
-		if err := s.Decode(iter.Row(), elemp.Interface()); err != nil {
+		if err := s.CastRow(iter.Row(), elemp.Interface()); err != nil {
 			return err
 		}
 		for _, k := range uniqueFieldIndexes {
 			field := elemp.Elem().Field(k)
 			if _, ok := uniqueCache[uniqueKey{k, field.Interface()}]; ok {
 				return fmt.Errorf("field(s) '%s' duplicates in row %v", elemp.Elem().Type().Field(k).Name, i)
-			} else {
-				uniqueCache[uniqueKey{k, field.Interface()}] = struct{}{}
 			}
-
+			uniqueCache[uniqueKey{k, field.Interface()}] = struct{}{}
 		}
 		slicev = reflect.Append(slicev, elemp.Elem())
 		slicev = slicev.Slice(0, slicev.Len())
@@ -403,19 +402,30 @@ func extractUniqueFieldIndexes(s *Schema) []int {
 	return keys
 }
 
-// EncodeTable encodes each element (struct) of the passed-in slice and
-func (s *Schema) EncodeTable(in interface{}) ([][]string, error) {
+// UncastTable uncasts each element (struct) of the passed-in slice and
+func (s *Schema) UncastTable(in interface{}) ([][]string, error) {
 	inVal := reflect.Indirect(reflect.ValueOf(in))
 	if inVal.Kind() != reflect.Slice {
 		return nil, fmt.Errorf("tables must be slice of structs")
 	}
 	var t [][]string
 	for i := 0; i < inVal.Len(); i++ {
-		r, err := s.Encode(inVal.Index(i).Interface())
+		r, err := s.UncastRow(inVal.Index(i).Interface())
 		if err != nil {
 			return nil, err
 		}
 		t = append(t, r)
 	}
 	return t, nil
+}
+
+// String returns an human readable version of the schema.
+func (s *Schema) String() string {
+	var buf bytes.Buffer
+	pp, err := json.Marshal(s)
+	if err != nil {
+		return ""
+	}
+	buf.Write(pp)
+	return buf.String()
 }

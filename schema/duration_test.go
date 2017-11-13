@@ -49,7 +49,7 @@ func TestCastDuration_Error(t *testing.T) {
 	}
 }
 
-func TestEncodeDuration(t *testing.T) {
+func TestUncastDuration(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		data := []struct {
 			desc  string
@@ -61,7 +61,7 @@ func TestEncodeDuration(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				got, err := encodeDuration(d.value)
+				got, err := uncastDuration(d.value)
 				is.NoErr(err)
 				is.Equal(d.want, got)
 			})
@@ -77,7 +77,7 @@ func TestEncodeDuration(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := encodeDuration(d.value)
+				_, err := uncastDuration(d.value)
 				is.True(err != nil)
 			})
 		}

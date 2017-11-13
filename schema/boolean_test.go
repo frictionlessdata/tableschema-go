@@ -34,7 +34,7 @@ func TestCastBoolean_Error(t *testing.T) {
 	is.True(err != nil)
 }
 
-func TestEncodeBoolean(t *testing.T) {
+func TestUncastBoolean(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		data := []struct {
 			desc        string
@@ -51,7 +51,7 @@ func TestEncodeBoolean(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				got, err := encodeBoolean(d.value, d.trueValues, d.falseValues)
+				got, err := uncastBoolean(d.value, d.trueValues, d.falseValues)
 				is.NoErr(err)
 				is.Equal(d.want, got)
 			})
@@ -70,7 +70,7 @@ func TestEncodeBoolean(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := encodeBoolean(d.value, d.trueValues, d.falseValues)
+				_, err := uncastBoolean(d.value, d.trueValues, d.falseValues)
 				is.True(err != nil)
 			})
 		}

@@ -6,20 +6,20 @@ import (
 	"time"
 )
 
-func decodeTime(format, value string, c Constraints) (time.Time, error) {
-	y, err := decodeTimeWithoutCheckConstraints(format, value)
+func castTime(format, value string, c Constraints) (time.Time, error) {
+	y, err := castTimeWithoutCheckConstraints(format, value)
 	if err != nil {
 		return y, err
 	}
 	var max, min time.Time
 	if c.Maximum != "" {
-		max, err = decodeTimeWithoutCheckConstraints(format, c.Maximum)
+		max, err = castTimeWithoutCheckConstraints(format, c.Maximum)
 		if err != nil {
 			return y, err
 		}
 	}
 	if c.Minimum != "" {
-		min, err = decodeTimeWithoutCheckConstraints(format, c.Minimum)
+		min, err = castTimeWithoutCheckConstraints(format, c.Minimum)
 		if err != nil {
 			return y, err
 		}
@@ -27,11 +27,11 @@ func decodeTime(format, value string, c Constraints) (time.Time, error) {
 	return checkConstraints(y, max, min, TimeType)
 }
 
-func decodeTimeWithoutCheckConstraints(format, value string) (time.Time, error) {
-	return decodeDefaultOrCustomTime("03:04:05", format, value)
+func castTimeWithoutCheckConstraints(format, value string) (time.Time, error) {
+	return castDefaultOrCustomTime("03:04:05", format, value)
 }
 
-func encodeTime(v interface{}) (string, error) {
+func uncastTime(v interface{}) (string, error) {
 	value, ok := v.(time.Time)
 	if !ok {
 		return "", fmt.Errorf("invalid date - value:%v type:%v", v, reflect.ValueOf(v).Type())

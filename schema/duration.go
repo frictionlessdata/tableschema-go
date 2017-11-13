@@ -50,7 +50,7 @@ func parseSeconds(v string) time.Duration {
 	return time.Duration(d * 10e8)
 }
 
-func encodeDuration(in interface{}) (string, error) {
+func uncastDuration(in interface{}) (string, error) {
 	v, ok := in.(time.Duration)
 	if !ok {
 		return "", fmt.Errorf("invalid duration - value:%v type:%v", in, reflect.ValueOf(in).Type())

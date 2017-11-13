@@ -7,15 +7,15 @@ import (
 	"github.com/matryer/is"
 )
 
-func TestDecodeTime(t *testing.T) {
+func TestCastTime(t *testing.T) {
 	t.Run("ValidMaximum", func(t *testing.T) {
 		is := is.New(t)
-		_, err := decodeTime(defaultFieldFormat, "11:45:00", Constraints{Maximum: "11:45:01"})
+		_, err := castTime(defaultFieldFormat, "11:45:00", Constraints{Maximum: "11:45:01"})
 		is.NoErr(err)
 	})
 	t.Run("ValidMinimum", func(t *testing.T) {
 		is := is.New(t)
-		_, err := decodeTime(defaultFieldFormat, "11:45:00", Constraints{Minimum: "11:44:59"})
+		_, err := castTime(defaultFieldFormat, "11:45:00", Constraints{Minimum: "11:44:59"})
 		is.NoErr(err)
 	})
 	t.Run("Error", func(t *testing.T) {
@@ -33,14 +33,14 @@ func TestDecodeTime(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := decodeTime(defaultFieldFormat, d.time, d.constraints)
+				_, err := castTime(defaultFieldFormat, d.time, d.constraints)
 				is.True(err != nil)
 			})
 		}
 	})
 }
 
-func TestEncodeTime(t *testing.T) {
+func TestUncastTime(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		data := []struct {
 			desc  string
@@ -52,7 +52,7 @@ func TestEncodeTime(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				got, err := encodeTime(d.value)
+				got, err := uncastTime(d.value)
 				is.NoErr(err)
 				is.Equal(d.want, got)
 			})
@@ -68,7 +68,7 @@ func TestEncodeTime(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := encodeTime(d.value)
+				_, err := uncastTime(d.value)
 				is.True(err != nil)
 			})
 		}

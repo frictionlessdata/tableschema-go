@@ -19,7 +19,7 @@ func castBoolean(value string, trueValues, falseValues []string) (bool, error) {
 	return false, fmt.Errorf("invalid boolean value:%s", value)
 }
 
-func encodeBoolean(value interface{}, trueValues, falseValues []string) (string, error) {
+func uncastBoolean(value interface{}, trueValues, falseValues []string) (string, error) {
 	switch value.(type) {
 	case bool:
 		return fmt.Sprintf("%v", value), nil

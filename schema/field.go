@@ -54,7 +54,7 @@ type Constraints struct {
 	Required bool `json:"required,omitempty"`
 
 	// Unique indicates whether this field is allowed to have duplicates.
-	// This constrain is only relevant for Schema.DecodeTable
+	// This constrain is only relevant for Schema.CastTable
 	Unique bool `json:"unique,omitempty"`
 
 	Maximum         string `json:"maximum,omitempty"`
@@ -68,8 +68,8 @@ type Constraints struct {
 	// The values of the fields could need encoding, depending on the type.
 	// It applies to all field types.
 	Enum []interface{} `json:"enum,omitempty"`
-	// encodedEnum keeps the encoded version of the enum objects, to make validation faster and easier.
-	encodedEnum map[string]struct{}
+	// rawEnum keeps the raw version of the enum objects, to make validation faster and easier.
+	rawEnum map[string]struct{}
 }
 
 // Field describes a single field in the table schema.
@@ -136,80 +136,80 @@ func (f *Field) UnmarshalJSON(data []byte) error {
 		f.Constraints.compiledPattern = p
 	}
 	if f.Constraints.Enum != nil {
-		f.Constraints.encodedEnum = make(map[string]struct{})
+		f.Constraints.rawEnum = make(map[string]struct{})
 		for i := range f.Constraints.Enum {
-			e, err := f.Encode(f.Constraints.Enum[i])
+			e, err := f.Uncast(f.Constraints.Enum[i])
 			if err != nil {
 				return err
 			}
-			f.Constraints.encodedEnum[e] = struct{}{}
+			f.Constraints.rawEnum[e] = struct{}{}
 		}
 	}
 	return nil
 }
 
-// Decode decodes the passed-in string against field type. Returns an error
+// Cast casts the passed-in string against field type. Returns an error
 // if the value can not be cast or any field constraint can not be satisfied.
-func (f *Field) Decode(value string) (interface{}, error) {
+func (f *Field) Cast(value string) (interface{}, error) {
 	if f.Constraints.Required {
 		_, ok := f.MissingValues[value]
 		if ok {
 			return nil, fmt.Errorf("%s is required", f.Name)
 		}
 	}
-	var decoded interface{}
+	var castd interface{}
 	var err error
 	switch f.Type {
 	case IntegerType:
-		decoded, err = castInt(f.BareNumber, value, f.Constraints)
+		castd, err = castInt(f.BareNumber, value, f.Constraints)
 	case StringType:
-		decoded, err = decodeString(f.Format, value, f.Constraints)
+		castd, err = castString(f.Format, value, f.Constraints)
 	case BooleanType:
-		decoded, err = castBoolean(value, f.TrueValues, f.FalseValues)
+		castd, err = castBoolean(value, f.TrueValues, f.FalseValues)
 	case NumberType:
-		decoded, err = castNumber(f.DecimalChar, f.GroupChar, f.BareNumber, value, f.Constraints)
+		castd, err = castNumber(f.DecimalChar, f.GroupChar, f.BareNumber, value, f.Constraints)
 	case DateType:
-		decoded, err = decodeDate(f.Format, value, f.Constraints)
+		castd, err = castDate(f.Format, value, f.Constraints)
 	case ObjectType:
-		decoded, err = castObject(value)
+		castd, err = castObject(value)
 	case ArrayType:
-		decoded, err = castArray(value)
+		castd, err = castArray(value)
 	case TimeType:
-		decoded, err = decodeTime(f.Format, value, f.Constraints)
+		castd, err = castTime(f.Format, value, f.Constraints)
 	case YearMonthType:
-		decoded, err = decodeYearMonth(value, f.Constraints)
+		castd, err = castYearMonth(value, f.Constraints)
 	case YearType:
-		decoded, err = decodeYear(value, f.Constraints)
+		castd, err = castYear(value, f.Constraints)
 	case DateTimeType:
-		decoded, err = decodeDateTime(value, f.Constraints)
+		castd, err = castDateTime(value, f.Constraints)
 	case DurationType:
-		decoded, err = castDuration(value)
+		castd, err = castDuration(value)
 	case GeoPointType:
-		decoded, err = castGeoPoint(f.Format, value)
+		castd, err = castGeoPoint(f.Format, value)
 	case AnyType:
-		decoded, err = castAny(value)
+		castd, err = castAny(value)
 	}
 	if err != nil {
 		return nil, err
 	}
-	if decoded == nil {
+	if castd == nil {
 		return nil, fmt.Errorf("invalid field type: %s", f.Type)
 	}
-	if len(f.Constraints.encodedEnum) > 0 {
-		encodedValue, err := f.Encode(decoded)
+	if len(f.Constraints.rawEnum) > 0 {
+		rawValue, err := f.Uncast(castd)
 		if err != nil {
 			return nil, err
 		}
-		if _, ok := f.Constraints.encodedEnum[encodedValue]; !ok {
-			return nil, fmt.Errorf("decoded value:%s does not match enum constraints:%v", encodedValue, f.Constraints.encodedEnum)
+		if _, ok := f.Constraints.rawEnum[rawValue]; !ok {
+			return nil, fmt.Errorf("castd value:%s does not match enum constraints:%v", rawValue, f.Constraints.rawEnum)
 		}
 	}
-	return decoded, nil
+	return castd, nil
 }
 
-// Encode encodes the passed-in value into a string. It returns an error if the
+// Uncast uncasts the passed-in value into a string. It returns an error if the
 // the type of the passed-in value can not be converted to field type.
-func (f *Field) Encode(in interface{}) (string, error) {
+func (f *Field) Uncast(in interface{}) (string, error) {
 	// This indirect avoids the need to custom-case pointer types.
 	inValue := reflect.Indirect(reflect.ValueOf(in))
 	inInterface := inValue.Interface()
@@ -228,21 +228,21 @@ func (f *Field) Encode(in interface{}) (string, error) {
 			inInterface = inValue.Convert(reflect.ValueOf(a).Type()).Interface()
 		}
 	case BooleanType:
-		return encodeBoolean(in, f.TrueValues, f.FalseValues)
+		return uncastBoolean(in, f.TrueValues, f.FalseValues)
 	case DurationType:
-		return encodeDuration(inInterface)
+		return uncastDuration(inInterface)
 	case GeoPointType:
-		return encodeGeoPoint(f.Format, in)
+		return uncastGeoPoint(f.Format, in)
 	case DateType, DateTimeType, TimeType, YearMonthType, YearType:
-		return encodeTime(inInterface)
+		return uncastTime(inInterface)
 	case ObjectType:
-		return encodeObject(inInterface)
+		return uncastObject(inInterface)
 	case StringType:
 		_, ok = inInterface.(string)
 	case ArrayType:
 		ok = reflect.TypeOf(inInterface).Kind() == reflect.Slice
 	case AnyType:
-		return encodeAny(in)
+		return uncastAny(in)
 	}
 	if !ok {
 		return "", fmt.Errorf("can not convert \"%d\" which type is %s to type %s", in, reflect.TypeOf(in), f.Type)
@@ -252,7 +252,7 @@ func (f *Field) Encode(in interface{}) (string, error) {
 
 // TestString checks whether the value can be unmarshalled to the field type.
 func (f *Field) TestString(value string) bool {
-	_, err := f.Decode(value)
+	_, err := f.Cast(value)
 	return err == nil
 }
 

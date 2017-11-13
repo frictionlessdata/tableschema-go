@@ -34,7 +34,7 @@ func checkStringConstraints(v string, c Constraints) error {
 	return nil
 }
 
-func decodeString(format, value string, c Constraints) (string, error) {
+func castString(format, value string, c Constraints) (string, error) {
 	err := checkStringConstraints(value, c)
 	if err != nil {
 		return value, err

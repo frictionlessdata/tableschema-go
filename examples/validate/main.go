@@ -33,7 +33,7 @@ func main() {
 	}
 	field, _ := capitalSchema.GetField("URL")
 	if field.TestString("http://new.url.com") {
-		value, err := field.Decode("http://new.url.com")
+		value, err := field.Cast("http://new.url.com")
 		log.Printf("URL unmarshal to value: %v\n", value)
 		if err != nil {
 			log.Fatalf("Error casting value: %q", err)
@@ -52,9 +52,9 @@ func main() {
 
 	iter, _ := table.Iter()
 	for iter.Next() {
-		if err := capitalSchema.Decode(iter.Row(), &capitalRow); err != nil {
+		if err := capitalSchema.CastRow(iter.Row(), &capitalRow); err != nil {
 			log.Fatalf("Couldn't unmarshal row:%v err:%q", iter.Row(), err)
 		}
-		log.Printf("Unmarshal Row: %+v\n", capitalRow)
+		log.Printf("Cast Row: %+v\n", capitalRow)
 	}
 }

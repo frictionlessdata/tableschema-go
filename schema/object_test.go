@@ -7,7 +7,7 @@ type eoStruct struct {
 	Name string `json:"name"`
 }
 
-func TestEncodeObject(t *testing.T) {
+func TestUncastObject(t *testing.T) {
 	data := []struct {
 		desc  string
 		value interface{}
@@ -18,7 +18,7 @@ func TestEncodeObject(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
 			is := is.New(t)
-			got, err := encodeObject(d.value)
+			got, err := uncastObject(d.value)
 			is.NoErr(err)
 			is.Equal(d.want, got)
 		})

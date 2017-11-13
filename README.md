@@ -92,7 +92,7 @@ sch, _ := schema.LoadRemote("http://myfoobar/users/schema.json")
 
 ## Processing Tabular Data
 
-Once you have the data, you would like to process using language data types. [schema.Encode](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-Encode) and [schema.EncodeTable](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-EncodeTable) are your friends on this journey.
+Once you have the data, you would like to process using language data types. [schema.Uncast](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-Uncast) and [schema.UncastTable](https://godoc.org/github.com/frictionlessdata/tableschema-go/schema#example-Schema-UncastTable) are your friends on this journey.
 
 ```go
 package main
@@ -112,8 +112,8 @@ func main() {
    tab, _ := csv.NewTable(csv.FromFile("users.csv"), csv.LoadHeaders())
    sch, _ := schema.Infer(tab)
    var users []user
-   sch.DecodeTable(tab, &users)
-   // Users slice contains the table contents properly encoded into
+   sch.CastTable(tab, &users)
+   // Users slice contains the table contents properly raw into
    // language types. Each row will be a new user appended to the slice.
 }
 ```
@@ -125,8 +125,8 @@ If you have a lot of data and can no load everything in memory, you can easily i
    iter, _ := sch.Iter()
    for iter.Next() {
       var u user
-      sch.Decode(iter.Row(), &u)
-      // Variable u is now filled with row contents properly encoded
+      sch.CastRow(iter.Row(), &u)
+      // Variable u is now filled with row contents properly raw
       // to language types.
    }
 ...
@@ -141,7 +141,7 @@ If you have a lot of data and can no load everything in memory, you can easily i
 
 Class represents field in the schema.
 
-For example, data values can be decoded to native Go types. Decoding a value will check if the value is of the expected type, is in the correct format, and complies with any constraints imposed by a schema.
+For example, data values can be castd to native Go types. Decoding a value will check if the value is of the expected type, is in the correct format, and complies with any constraints imposed by a schema.
 
 ```javascript
 {
@@ -155,15 +155,15 @@ For example, data values can be decoded to native Go types. Decoding a value wil
 }
 ```
 
-The following example will raise exception the passed-in is less than allowed by `minimum` constraints of the field. `Errors` will be returned as well when the user tries to decode values which are not well formatted dates.
+The following example will raise exception the passed-in is less than allowed by `minimum` constraints of the field. `Errors` will be returned as well when the user tries to cast values which are not well formatted dates.
 
 ```go
-date, err := field.Decode("2014-05-29")
+date, err := field.Cast("2014-05-29")
 // uh oh, something went wrong
 ```
 
-Values that can't be decoded will return an `error`.
-Decodeing a value that doesn't meet the constraints will return an `error`.
+Values that can't be castd will return an `error`.
+Casting a value that doesn't meet the constraints will return an `error`.
 
 Available types, formats and resultant value of the cast:
 
@@ -215,7 +215,7 @@ func WriteSummary(summary []summaryEntry, path string) {
 
    w.Write([]string{"Date", "AverageAge"})
    for _, summ := range summary{
-       row, _ := sch.Encode(summ)
+       row, _ := sch.Uncast(summ)
        w.Write(row)
    }
 }

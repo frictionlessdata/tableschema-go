@@ -9,7 +9,7 @@ import (
 	"github.com/matryer/is"
 )
 
-func ExampleField_Decode() {
+func ExampleField_Cast() {
 	in := `{
 		"name": "id",
 		"type": "string",
@@ -24,7 +24,7 @@ func ExampleField_Decode() {
 	}`
 	var field Field
 	json.Unmarshal([]byte(in), &field)
-	v, err := field.Decode("1234511")
+	v, err := field.Cast("1234511")
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +61,7 @@ func TestDefaultValues(t *testing.T) {
 	}
 }
 
-func TestField_Decode(t *testing.T) {
+func TestField_Cast(t *testing.T) {
 	data := []struct {
 		Desc     string
 		Value    string
@@ -90,7 +90,7 @@ func TestField_Decode(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
 			is := is.New(t)
-			c, err := d.Field.Decode(d.Value)
+			c, err := d.Field.Cast(d.Value)
 			is.NoErr(err)
 			is.Equal(c, d.Expected)
 		})
@@ -98,7 +98,7 @@ func TestField_Decode(t *testing.T) {
 	t.Run("Object_Success", func(t *testing.T) {
 		is := is.New(t)
 		f := Field{Type: ObjectType}
-		obj, err := f.Decode(`{"name":"foo"}`)
+		obj, err := f.Cast(`{"name":"foo"}`)
 		is.NoErr(err)
 
 		objMap, ok := obj.(map[string]interface{})
@@ -109,13 +109,13 @@ func TestField_Decode(t *testing.T) {
 	t.Run("Object_Failure", func(t *testing.T) {
 		is := is.New(t)
 		f := Field{Type: ObjectType}
-		_, err := f.Decode(`{"name"}`)
+		_, err := f.Cast(`{"name"}`)
 		is.True(err != nil)
 	})
 	t.Run("Array_Success", func(t *testing.T) {
 		is := is.New(t)
 		f := Field{Type: ArrayType}
-		obj, err := f.Decode(`["foo"]`)
+		obj, err := f.Cast(`["foo"]`)
 		is.NoErr(err)
 
 		arr, ok := obj.([]interface{})
@@ -126,7 +126,7 @@ func TestField_Decode(t *testing.T) {
 	t.Run("Array_Failure", func(t *testing.T) {
 		is := is.New(t)
 		f := Field{Type: ArrayType}
-		_, err := f.Decode(`{"name":"foo"}`)
+		_, err := f.Cast(`{"name":"foo"}`)
 		is.True(err != nil)
 	})
 	t.Run("InvalidDate", func(t *testing.T) {
@@ -141,7 +141,7 @@ func TestField_Decode(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := d.field.Decode(d.value)
+				_, err := d.field.Cast(d.value)
 				is.True(err != nil)
 			})
 		}
@@ -149,14 +149,14 @@ func TestField_Decode(t *testing.T) {
 	t.Run("InvalidFieldType", func(t *testing.T) {
 		is := is.New(t)
 		f := Field{Type: "invalidType"}
-		_, err := f.Decode("42")
+		_, err := f.Cast("42")
 		is.True(err != nil)
 	})
 	t.Run("Constraints", func(t *testing.T) {
 		t.Run("Required", func(t *testing.T) {
 			is := is.New(t)
 			f := Field{Type: StringType, Constraints: Constraints{Required: true}, MissingValues: map[string]struct{}{"NA": struct{}{}}}
-			_, err := f.Decode("NA")
+			_, err := f.Cast("NA")
 			is.True(err != nil)
 		})
 		t.Run("Enum", func(t *testing.T) {
@@ -167,7 +167,7 @@ func TestField_Decode(t *testing.T) {
 			}{
 				{
 					"SimpleCase",
-					Field{Type: IntegerType, Constraints: Constraints{encodedEnum: map[string]struct{}{"1": struct{}{}}}},
+					Field{Type: IntegerType, Constraints: Constraints{rawEnum: map[string]struct{}{"1": struct{}{}}}},
 					"1",
 				},
 				{
@@ -177,14 +177,14 @@ func TestField_Decode(t *testing.T) {
 				},
 				{
 					"EmptyEnumList",
-					Field{Type: IntegerType, Constraints: Constraints{encodedEnum: map[string]struct{}{}}},
+					Field{Type: IntegerType, Constraints: Constraints{rawEnum: map[string]struct{}{}}},
 					"10",
 				},
 			}
 			for _, d := range data {
 				t.Run(d.desc, func(t *testing.T) {
 					is := is.New(t)
-					_, err := d.field.Decode(d.value)
+					_, err := d.field.Cast(d.value)
 					is.NoErr(err)
 				})
 			}
@@ -195,12 +195,12 @@ func TestField_Decode(t *testing.T) {
 				field Field
 				value string
 			}{
-				{"NonEmptyEnumList", Field{Type: IntegerType, Constraints: Constraints{encodedEnum: map[string]struct{}{"8": struct{}{}, "9": struct{}{}}}}, "10"},
+				{"NonEmptyEnumList", Field{Type: IntegerType, Constraints: Constraints{rawEnum: map[string]struct{}{"8": struct{}{}, "9": struct{}{}}}}, "10"},
 			}
 			for _, d := range data {
 				t.Run(d.desc, func(t *testing.T) {
 					is := is.New(t)
-					_, err := d.field.Decode(d.value)
+					_, err := d.field.Cast(d.value)
 					is.True(err != nil)
 				})
 			}
@@ -221,7 +221,7 @@ func TestTestString(t *testing.T) {
 	is.True(!f.TestString("boo"))
 }
 
-func TestField_Encode(t *testing.T) {
+func TestField_Uncast(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		data := []struct {
 			desc  string
@@ -249,7 +249,7 @@ func TestField_Encode(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				got, err := d.field.Encode(d.value)
+				got, err := d.field.Uncast(d.value)
 				is.NoErr(err)
 				is.Equal(d.want, got)
 			})
@@ -268,7 +268,7 @@ func TestField_Encode(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := d.field.Encode(d.value)
+				_, err := d.field.Uncast(d.value)
 				is.True(err != nil)
 			})
 		}

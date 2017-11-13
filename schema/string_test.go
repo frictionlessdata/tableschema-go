@@ -8,20 +8,20 @@ import (
 )
 
 // To be in par with the python library.
-func TestDecodeString_URIMustRequireScheme(t *testing.T) {
+func TestCastString_URIMustRequireScheme(t *testing.T) {
 	is := is.New(t)
-	_, err := decodeString(stringURI, "google.com", Constraints{})
+	_, err := castString(stringURI, "google.com", Constraints{})
 	is.True(err != nil)
 }
 
-func TestDecodeString_InvalidUUIDVersion(t *testing.T) {
+func TestCastString_InvalidUUIDVersion(t *testing.T) {
 	is := is.New(t)
 	// This is a uuid3: namespace DNS and python.org.
-	_, err := decodeString(stringUUID, "6fa459ea-ee8a-3ca4-894e-db77e160355e", Constraints{})
+	_, err := castString(stringUUID, "6fa459ea-ee8a-3ca4-894e-db77e160355e", Constraints{})
 	is.True(err != nil)
 }
 
-func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
+func TestCastString_ErrorCheckingConstraints(t *testing.T) {
 	data := []struct {
 		desc        string
 		value       string
@@ -41,13 +41,13 @@ func TestDecodeString_ErrorCheckingConstraints(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
 			is := is.New(t)
-			_, err := decodeString(d.format, d.value, d.constraints)
+			_, err := castString(d.format, d.value, d.constraints)
 			is.True(err != nil)
 		})
 	}
 }
 
-func TestDecodeString_Success(t *testing.T) {
+func TestCastString_Success(t *testing.T) {
 	var data = []struct {
 		desc        string
 		value       string
@@ -61,7 +61,7 @@ func TestDecodeString_Success(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
 			is := is.New(t)
-			v, err := decodeString(d.format, d.value, d.constraints)
+			v, err := castString(d.format, d.value, d.constraints)
 			is.NoErr(err)
 			is.Equal(v, d.value)
 		})

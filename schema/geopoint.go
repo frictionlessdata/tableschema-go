@@ -70,7 +70,7 @@ func applyGeoPointRegexp(r *regexp.Regexp, value string) (GeoPoint, error) {
 	return GeoPoint{lon, lat}, nil
 }
 
-func encodeGeoPoint(format string, gp interface{}) (string, error) {
+func uncastGeoPoint(format string, gp interface{}) (string, error) {
 	switch format {
 	case "", defaultFieldFormat:
 		value, ok := gp.(string)
@@ -81,7 +81,7 @@ func encodeGeoPoint(format string, gp interface{}) (string, error) {
 			}
 			return value, nil
 		}
-		return "", fmt.Errorf("invalid object type to encode to geopoint dfault format. want:string got:%v", reflect.TypeOf(gp).String())
+		return "", fmt.Errorf("invalid object type to uncast to geopoint dfault format. want:string got:%v", reflect.TypeOf(gp).String())
 	case GeoPointArrayFormat:
 		value, ok := gp.(string)
 		if ok {
@@ -91,13 +91,13 @@ func encodeGeoPoint(format string, gp interface{}) (string, error) {
 			}
 			return value, nil
 		}
-		return "", fmt.Errorf("invalid object type to encode to geopoint %s format. want:string got:%v", GeoPointArrayFormat, reflect.TypeOf(gp).String())
+		return "", fmt.Errorf("invalid object type to uncast to geopoint %s format. want:string got:%v", GeoPointArrayFormat, reflect.TypeOf(gp).String())
 	case GeoPointObjectFormat:
 		value, ok := gp.(GeoPoint)
 		if ok {
 			return fmt.Sprintf("%+v", value), nil
 		}
-		return "", fmt.Errorf("invalid object type to encode to geopoint %s format. want:schema.Geopoint got:%v", GeoPointObjectFormat, reflect.TypeOf(gp).String())
+		return "", fmt.Errorf("invalid object type to uncast to geopoint %s format. want:schema.Geopoint got:%v", GeoPointObjectFormat, reflect.TypeOf(gp).String())
 	}
 	return "", fmt.Errorf("invalid geopoint - type:%v value:\"%v\" format:%s", gp, reflect.ValueOf(gp).Type(), format)
 }

@@ -170,7 +170,7 @@ func findType(value string, checkOrder []string) string {
 				return NumberType
 			}
 		case DateType:
-			if _, err := decodeDate(defaultFieldFormat, value, noConstraints); err == nil {
+			if _, err := castDate(defaultFieldFormat, value, noConstraints); err == nil {
 				return DateType
 			}
 		case ArrayType:
@@ -182,19 +182,19 @@ func findType(value string, checkOrder []string) string {
 				return ObjectType
 			}
 		case TimeType:
-			if _, err := decodeTime(defaultFieldFormat, value, noConstraints); err == nil {
+			if _, err := castTime(defaultFieldFormat, value, noConstraints); err == nil {
 				return TimeType
 			}
 		case YearMonthType:
-			if _, err := decodeYearMonth(value, noConstraints); err == nil {
+			if _, err := castYearMonth(value, noConstraints); err == nil {
 				return YearMonthType
 			}
 		case YearType:
-			if _, err := decodeYear(value, noConstraints); err == nil {
+			if _, err := castYear(value, noConstraints); err == nil {
 				return YearType
 			}
 		case DateTimeType:
-			if _, err := decodeDateTime(value, noConstraints); err == nil {
+			if _, err := castDateTime(value, noConstraints); err == nil {
 				return DateTimeType
 			}
 		case DurationType:

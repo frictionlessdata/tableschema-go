@@ -13,9 +13,9 @@ func TestCastAny(t *testing.T) {
 	is.Equal("foo", got)
 }
 
-func TestEncodeAny(t *testing.T) {
+func TestUncastAny(t *testing.T) {
 	is := is.New(t)
-	got, err := encodeAny(10)
+	got, err := uncastAny(10)
 	is.NoErr(err)
 	is.Equal("10", got)
 }

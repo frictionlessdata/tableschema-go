@@ -6,15 +6,15 @@ import (
 	"github.com/matryer/is"
 )
 
-func TestDecodeDate(t *testing.T) {
+func TestCastDate(t *testing.T) {
 	t.Run("ValidMaximum", func(t *testing.T) {
 		is := is.New(t)
-		_, err := decodeDate("2006-01-02", "2006-01-02", Constraints{Maximum: "2007-01-02"})
+		_, err := castDate("2006-01-02", "2006-01-02", Constraints{Maximum: "2007-01-02"})
 		is.NoErr(err)
 	})
 	t.Run("ValidMinimum", func(t *testing.T) {
 		is := is.New(t)
-		_, err := decodeDate("2006-01-02", "2007-01-02", Constraints{Minimum: "2006-01-02"})
+		_, err := castDate("2006-01-02", "2007-01-02", Constraints{Minimum: "2006-01-02"})
 		is.NoErr(err)
 	})
 	t.Run("Error", func(t *testing.T) {
@@ -32,7 +32,7 @@ func TestDecodeDate(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := decodeDate("2006-01-02", d.date, d.constraints)
+				_, err := castDate("2006-01-02", d.date, d.constraints)
 				is.True(err != nil)
 			})
 		}

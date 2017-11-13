@@ -56,7 +56,7 @@ func TestCastGeoPoint(t *testing.T) {
 	})
 }
 
-func TestEncodeGeoPoint(t *testing.T) {
+func TestUncastGeoPoint(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		data := []struct {
 			desc   string
@@ -71,7 +71,7 @@ func TestEncodeGeoPoint(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				got, err := encodeGeoPoint(d.format, d.value)
+				got, err := uncastGeoPoint(d.format, d.value)
 				is.NoErr(err)
 				is.Equal(d.want, got)
 			})
@@ -94,7 +94,7 @@ func TestEncodeGeoPoint(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := encodeGeoPoint(d.format, d.value)
+				_, err := uncastGeoPoint(d.format, d.value)
 				is.True(err != nil)
 			})
 		}
