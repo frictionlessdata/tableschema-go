@@ -113,3 +113,23 @@ func TestSetHeaders(t *testing.T) {
 	is.Equal(want, iter.Row())
 	is.True(!iter.Next())
 }
+
+func TestDelimiter(t *testing.T) {
+	is := is.New(t)
+	in := "Foo;Bar"
+	table, err := NewTable(FromString(in), Delimiter(';'))
+	is.NoErr(err)
+	contents, err := table.ReadAll()
+	is.NoErr(err)
+	is.Equal(contents, [][]string{{"Foo", "Bar"}})
+}
+
+func TestConsiderInitialSpace(t *testing.T) {
+	is := is.New(t)
+	in := " Foo"
+	table, err := NewTable(FromString(in), ConsiderInitialSpace())
+	is.NoErr(err)
+	contents, err := table.ReadAll()
+	is.NoErr(err)
+	is.Equal(contents, [][]string{{" Foo"}})
+}

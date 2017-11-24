@@ -18,7 +18,7 @@ const (
 func TestNewIterator(t *testing.T) {
 	t.Run("EmptyString", func(t *testing.T) {
 		is := is.New(t)
-		iter := newIterator(stringReadCloser(""), dontSkipHeaders)
+		iter := newIterator(stringReadCloser(""), defaultDialect, dontSkipHeaders)
 		is.True(!iter.Next()) // more iterations than it should
 		is.NoErr(iter.Err())
 	})
@@ -27,7 +27,7 @@ func TestNewIterator(t *testing.T) {
 func TestIterator_Next(t *testing.T) {
 	t.Run("TwoRows", func(t *testing.T) {
 		is := is.New(t)
-		iter := newIterator(stringReadCloser("foo\nbar"), dontSkipHeaders)
+		iter := newIterator(stringReadCloser("foo\nbar"), defaultDialect, dontSkipHeaders)
 		is.True(iter.Next())  // want two more iterations
 		is.True(iter.Next())  // want one more interation
 		is.True(!iter.Next()) // more iterations than it should
@@ -35,7 +35,7 @@ func TestIterator_Next(t *testing.T) {
 	})
 	t.Run("TwoRowsSkipHeaders", func(t *testing.T) {
 		is := is.New(t)
-		iter := newIterator(stringReadCloser("name\nbar"), skipHeaders)
+		iter := newIterator(stringReadCloser("name\nbar"), defaultDialect, skipHeaders)
 		is.True(iter.Next())  // want one interation
 		is.True(!iter.Next()) // more iterations than it should
 		is.NoErr(iter.Err())
@@ -45,7 +45,7 @@ func TestIterator_Next(t *testing.T) {
 func TestIterator_Row(t *testing.T) {
 	t.Run("OneRow", func(t *testing.T) {
 		is := is.New(t)
-		iter := newIterator(stringReadCloser("name"), dontSkipHeaders)
+		iter := newIterator(stringReadCloser("name"), defaultDialect, dontSkipHeaders)
 		is.True(iter.Next()) // want one iteration
 
 		got := iter.Row()

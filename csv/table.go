@@ -20,12 +20,29 @@ type Table struct {
 	headers     []string
 	source      Source
 	skipHeaders bool
+	dialect     dialect
+}
+
+// dialect represents CSV dialect configuration options.
+// http://frictionlessdata.io/specs/csv-dialect/
+type dialect struct {
+	// Delimiter specifies the character sequence which should separate fields (aka columns).
+	delimiter rune
+	// Specifies how to interpret whitespace which immediately follows a delimiter;
+	// if false, it means that whitespace immediately after a delimiter should be treated as part of the following field.
+	skipInitialSpace bool
+}
+
+var defaultDialect = dialect{
+	delimiter:        ',',
+	skipInitialSpace: true,
 }
 
 // NewTable creates a table.Table from the CSV table physical representation.
 // CreationOpts are executed in the order they are declared.
+// If a dialect is not configured via SetDialect, DefautltDialect is used.
 func NewTable(source Source, opts ...CreationOpts) (*Table, error) {
-	t := Table{source: source}
+	t := Table{source: source, dialect: defaultDialect}
 	for _, opt := range opts {
 		if err := opt(&t); err != nil {
 			return nil, err
@@ -43,7 +60,7 @@ func (table *Table) Iter() (table.Iterator, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newIterator(src, table.skipHeaders), nil
+	return newIterator(src, table.dialect, table.skipHeaders), nil
 }
 
 // ReadAll reads all rows from the table and return it as strings.
@@ -77,10 +94,13 @@ func (table *Table) String() string {
 	return buf.String()
 }
 
-func newIterator(source io.ReadCloser, skipHeaders bool) *csvIterator {
+func newIterator(source io.ReadCloser, dialect dialect, skipHeaders bool) *csvIterator {
+	r := csv.NewReader(source)
+	r.Comma = dialect.delimiter
+	r.TrimLeadingSpace = dialect.skipInitialSpace
 	return &csvIterator{
 		source:      source,
-		reader:      csv.NewReader(source),
+		reader:      r,
 		skipHeaders: skipHeaders,
 	}
 }
@@ -185,6 +205,7 @@ func errorSource() Source {
 // The header line will be skipped during iteration
 func LoadHeaders() CreationOpts {
 	return func(reader *Table) error {
+		reader.skipHeaders = false
 		iter, err := reader.Iter()
 		if err != nil {
 			return err
@@ -201,6 +222,22 @@ func LoadHeaders() CreationOpts {
 func SetHeaders(headers ...string) CreationOpts {
 	return func(reader *Table) error {
 		reader.headers = headers
+		return nil
+	}
+}
+
+// Delimiter specifies the character sequence which should separate fields (aka columns).
+func Delimiter(d rune) CreationOpts {
+	return func(t *Table) error {
+		t.dialect.delimiter = d
+		return nil
+	}
+}
+
+// ConsiderInitialSpace configures the CSV parser to treat the whitespace immediately after a delimiter as part of the following field.
+func ConsiderInitialSpace() CreationOpts {
+	return func(t *Table) error {
+		t.dialect.skipInitialSpace = false
 		return nil
 	}
 }
