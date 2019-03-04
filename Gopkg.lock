@@ -3,19 +3,26 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:75c1683ea11a036d530edcfe7f14b61a10898907feaa7f3410bda5eaf8666985"
   name = "github.com/matryer/is"
   packages = ["."]
+  pruneopts = ""
   revision = "c0323ceb4e996e4a8795670d1fb6f60e65b82fd2"
 
 [[projects]]
+  digest = "1:6b55df4b0517a459af9d3879c99330af4367adcf45f3d0d37ded80a6272ae057"
   name = "github.com/satori/go.uuid"
   packages = ["."]
+  pruneopts = ""
   revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
   version = "v1.1.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1ad488c5d7626ee23a29a6f0e4de915d8668ad0eff6659419ef4cf5f02d1a692"
+  input-imports = [
+    "github.com/matryer/is",
+    "github.com/satori/go.uuid",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
