@@ -8,8 +8,8 @@ import (
 )
 
 func castNumber(decimalChar, groupChar string, bareNumber bool, value string, c Constraints) (float64, error) {
-	dc := decimalChar
-	if groupChar != "" {
+	dc := defaultDecimalChar
+	if decimalChar != "" {
 		dc = decimalChar
 	}
 	v := strings.Replace(value, dc, ".", 1)
