@@ -29,6 +29,7 @@ func TestCastNumber(t *testing.T) {
 			{"BareNumber_TrailingAtEndSpace", "95 %", 95, defaultDecimalChar, defaultGroupChar, notBareNumber},
 			{"GroupChar", "100,000", 100000, defaultDecimalChar, defaultGroupChar, defaultBareNumber},
 			{"DecimalChar", "95;10", 95.10, ";", defaultGroupChar, defaultBareNumber},
+			{"DecimalCharDefault", "95.10", 95.10, "", defaultGroupChar, defaultBareNumber},
 			{"Mix", "EUR 95;10", 95.10, ";", ";", notBareNumber},
 		}
 		for _, d := range data {
@@ -82,6 +83,7 @@ func TestCastNumber(t *testing.T) {
 			{"InvalidMaximum", "1", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{Maximum: "boo"}},
 			{"NumSmallerThanMinimum", "1", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{Minimum: "2"}},
 			{"InvalidMinimum", "1", defaultDecimalChar, defaultGroupChar, notBareNumber, Constraints{Minimum: "boo"}},
+			{"DecimalCharDefault", "95;10", "", defaultGroupChar, defaultBareNumber, Constraints{}},
 		}
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
