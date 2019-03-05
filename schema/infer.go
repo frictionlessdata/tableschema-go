@@ -43,29 +43,43 @@ var (
 	noConstraints = Constraints{}
 )
 
-// Maximum number of rows used to infer schema.
-const maxNumRowsInfer = 100
+// Default maximum number of rows used to infer schema.
+const defaultMaxNumRowsInfer = 100
 
 // Infer infers a schema from a slice of the tabular data. For columns that contain
 // cells that can inferred as different types, the most popular type is set as the field
 // type. For instance, a column with values 10.1, 10, 10 will inferred as being of type
 // "integer".
-func Infer(tab table.Table) (*Schema, error) {
-	s, err := sample(tab)
+func Infer(tab table.Table, opts ...InferOpts) (*Schema, error) {
+	cfg := &inferConfig{}
+	for _, opt := range opts {
+		if err := opt(cfg); err != nil {
+			return nil, err
+		}
+	}
+	s, err := sample(tab, cfg)
 	if err != nil {
 		return nil, err
 	}
 	return infer(tab.Headers(), s)
 }
 
-func sample(tab table.Table) ([][]string, error) {
+func sample(tab table.Table, cfg *inferConfig) ([][]string, error) {
+	limit := defaultMaxNumRowsInfer
+	if cfg.sampleLimit != 0 {
+		limit = cfg.sampleLimit
+	}
 	iter, err := tab.Iter()
 	if err != nil {
 		return nil, err
 	}
 	var t [][]string
-	for count := 0; count < maxNumRowsInfer && iter.Next(); count++ {
+	for count := 0; iter.Next(); count++ {
 		t = append(t, iter.Row())
+		// A negative limit will continue to sample the entire table.
+		if limit > 0 && count == limit-1 {
+			break
+		}
 	}
 	if iter.Err() != nil {
 		return nil, iter.Err()
@@ -86,7 +100,7 @@ func infer(headers []string, table [][]string) (*Schema, error) {
 			if inferredTypes[cellIndex] == nil {
 				inferredTypes[cellIndex] = make(map[string]int)
 			}
-			// The list bellow must be ordered by the narrower field type.
+			// The list below must be ordered by the narrower field type.
 			t := findType(cell, orderedTypes)
 			inferredTypes[cellIndex][t]++
 		}
@@ -117,7 +131,7 @@ func infer(headers []string, table [][]string) (*Schema, error) {
 //
 // For medium to big tables, this method is faster than the Infer.
 func InferImplicitCasting(tab table.Table) (*Schema, error) {
-	s, err := sample(tab)
+	s, err := sample(tab, &inferConfig{})
 	if err != nil {
 		return nil, err
 	}
@@ -208,4 +222,19 @@ func findType(value string, checkOrder []string) string {
 		}
 	}
 	return StringType
+}
+
+// InferOpts defines functional options for inferring a schema.
+type InferOpts func(c *inferConfig) error
+
+type inferConfig struct {
+	sampleLimit int
+}
+
+// SampleLimit specifies the maximum number of rows to sample for inference.
+func SampleLimit(limit int) InferOpts {
+	return func(c *inferConfig) error {
+		c.sampleLimit = limit
+		return nil
+	}
 }
