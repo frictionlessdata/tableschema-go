@@ -138,8 +138,14 @@ func infer(headers []string, table [][]string) (*Schema, error) {
 // will inferred as being of type "number" ("integer" can be implicitly cast to "number").
 //
 // For medium to big tables, this method is faster than the Infer.
-func InferImplicitCasting(tab table.Table) (*Schema, error) {
-	s, err := sample(tab, &inferConfig{})
+func InferImplicitCasting(tab table.Table, opts ...InferOpts) (*Schema, error) {
+	cfg := &inferConfig{}
+	for _, opt := range opts {
+		if err := opt(cfg); err != nil {
+			return nil, err
+		}
+	}
+	s, err := sample(tab, cfg)
 	if err != nil {
 		return nil, err
 	}
