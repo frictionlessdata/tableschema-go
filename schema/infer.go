@@ -43,8 +43,16 @@ var (
 	noConstraints = Constraints{}
 )
 
-// Default maximum number of rows used to infer schema.
-const defaultMaxNumRowsInfer = 100
+const (
+	// SampleAllRows can be passed to schema.SampleLimit(int) to sample all rows.
+	// schema.SampleLimit(int) is an optional argument to
+	// schema.Infer(table.Table, ...InferOpts)
+	SampleAllRows = -1
+	// Default maximum number of rows used to infer schema.
+	// This can be changed by passing schema.SampleLimit(int) to
+	// schema.Infer(table.Table, ...InferOpts)
+	defaultMaxNumRowsInfer = 100
+)
 
 // Infer infers a schema from a slice of the tabular data. For columns that contain
 // cells that can inferred as different types, the most popular type is set as the field
