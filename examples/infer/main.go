@@ -20,7 +20,7 @@ func main() {
 	}
 	fmt.Println("## Raw Table ##")
 	fmt.Println(tab)
-	sch, err := schema.Infer(tab)
+	sch, err := schema.Infer(tab, schema.SampleLimit(schema.SampleAllRows))
 	if err != nil {
 		panic(err)
 	}

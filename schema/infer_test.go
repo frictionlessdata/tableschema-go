@@ -46,6 +46,56 @@ func ExampleInferImplicitCasting() {
 	// {Name:Height Type:number Format:default}
 }
 
+func TestInferSampleLimit(t *testing.T) {
+	data := []struct {
+		desc        string
+		sampleLimit int
+		headers     []string
+		table       [][]string
+		want        int
+	}{
+		{"SampleZero", 0, []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 3},
+		{"SampleOne", 1, []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 1},
+		{"SampleTwo", 2, []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 2},
+		{"SampleThree", 3, []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 3},
+		{"SampleTen", 10, []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 3},
+		{"SampleMinusOne", -1, []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 3},
+		{"SampleMinusTen", -10, []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 3},
+		{"SampleEmptyZero", 0, []string{"Age"}, [][]string{}, 0},
+		{"SampleEmptyOne", 1, []string{"Age"}, [][]string{}, 0},
+		{"SampleEmptyMinusTen", -10, []string{"Age"}, [][]string{}, 0},
+	}
+	for _, d := range data {
+		t.Run(d.desc, func(t *testing.T) {
+			is := is.New(t)
+			s, err := sample(table.FromSlices(d.headers, d.table), &inferConfig{sampleLimit: d.sampleLimit})
+			is.NoErr(err)
+
+			is.Equal(len(s), d.want)
+		})
+	}
+	t.Run("LimitNotSpecified", func(t *testing.T) {
+		data := []struct {
+			desc    string
+			headers []string
+			table   [][]string
+			want    int
+		}{
+			{"SampleDefault", []string{"Age"}, [][]string{[]string{"1"}, []string{"2"}, []string{"3"}}, 3},
+			{"SampleDefault", []string{"Age"}, [][]string{}, 0},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				is := is.New(t)
+				s, err := sample(table.FromSlices(d.headers, d.table), &inferConfig{})
+				is.NoErr(err)
+
+				is.Equal(len(s), d.want)
+			})
+		}
+	})
+}
+
 func TestInfer(t *testing.T) {
 	data := []struct {
 		desc    string
