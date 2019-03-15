@@ -156,8 +156,10 @@ func inferWithPrecedence(headers []string, table [][]string) (*Schema, error) {
 	// These consts specify the type order of precedence when inferring.
 	// The types are weighted from least specific to most specific.
 	const (
-		ObjectPrecedence TypePrecedence = iota
+		AnyPrecedence TypePrecedence = iota
+		ObjectPrecedence
 		ArrayPrecedence
+		StringPrecedence
 		GeoPointPrecedence
 		BooleanPrecedence
 		IntegerPrecedence
@@ -172,8 +174,10 @@ func inferWithPrecedence(headers []string, table [][]string) (*Schema, error) {
 
 	// A lookup table to get precedence weight from type name.
 	typePrecedenceMap := map[string]TypePrecedence{
+		AnyType:       AnyPrecedence,
 		ObjectType:    ObjectPrecedence,
 		ArrayType:     ArrayPrecedence,
+		StringType:    StringPrecedence,
 		GeoPointType:  GeoPointPrecedence,
 		BooleanType:   BooleanPrecedence,
 		IntegerType:   IntegerPrecedence,
