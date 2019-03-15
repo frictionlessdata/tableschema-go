@@ -10,6 +10,106 @@ import (
 	"github.com/frictionlessdata/tableschema-go/table"
 )
 
+// Demonstrations.
+
+// Demonstrations of incorrect inference.
+
+// ExampleInferBoolWrongly should infer Value to be number, but infers bool.
+func ExampleInferBoolWrongly() {
+	tab := table.FromSlices(
+		[]string{"Item", "Value"},
+		[][]string{
+			[]string{"A", "1.2"},
+			[]string{"B", "0"},
+			[]string{"C", "0"},
+			[]string{"D", "0"},
+			[]string{"E", "5.2"},
+		})
+	s, _ := Infer(tab)
+	fmt.Println("Fields:")
+	for _, f := range s.Fields {
+		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
+	}
+	// Output: Fields:
+	// {Name:Item Type:string Format:default}
+	// {Name:Value Type:number Format:default}
+}
+
+// ExampleInferStringWrongly should infer Value to be number, but infers string.
+func ExampleInferStringWrongly() {
+	tab := table.FromSlices(
+		[]string{"Item", "Value"},
+		[][]string{
+			[]string{"A", "1.2"},
+			[]string{"B", "0"},
+			[]string{"C", ""},
+			[]string{"D", ""},
+			[]string{"E", ""},
+			[]string{"F", ""},
+			[]string{"G", ""},
+			[]string{"H", "0"},
+			[]string{"I", "5.2"},
+		})
+	s, _ := Infer(tab)
+	fmt.Println("Fields:")
+	for _, f := range s.Fields {
+		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
+	}
+	// Output: Fields:
+	// {Name:Item Type:string Format:default}
+	// {Name:Value Type:number Format:default}
+}
+
+// Demostration of precedence inference.
+
+// ExampleInferPrecedenceNumberNotBool correctly infers as number.
+func ExampleInferPrecedenceNumberNotBool() {
+	tab := table.FromSlices(
+		[]string{"Item", "Value"},
+		[][]string{
+			[]string{"A", "1.2"},
+			[]string{"B", "0"},
+			[]string{"C", "0"},
+			[]string{"D", "0"},
+			[]string{"E", "5.2"},
+		})
+	s, _ := InferWithPrecedence(tab)
+	fmt.Println("Fields:")
+	for _, f := range s.Fields {
+		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
+	}
+	// Output: Fields:
+	// {Name:Item Type:string Format:default}
+	// {Name:Value Type:number Format:default}
+}
+
+// ExampleInferPrecedenceNumberNotString correctly infers as number.
+func ExampleInferPrecedenceNumberNotString() {
+	tab := table.FromSlices(
+		[]string{"Item", "Value"},
+		[][]string{
+			[]string{"A", "1.2"},
+			[]string{"B", "0"},
+			[]string{"C", ""},
+			[]string{"D", ""},
+			[]string{"E", ""},
+			[]string{"F", ""},
+			[]string{"G", ""},
+			[]string{"H", "0"},
+			[]string{"I", "5.2"},
+		})
+	s, _ := InferWithPrecedence(tab)
+	fmt.Println("Fields:")
+	for _, f := range s.Fields {
+		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
+	}
+	// Output: Fields:
+	// {Name:Item Type:string Format:default}
+	// {Name:Value Type:number Format:default}
+}
+
+// End of Demonstrations
+
 func Exampleinfer() {
 	tab := table.FromSlices(
 		[]string{"Person", "Height"},
