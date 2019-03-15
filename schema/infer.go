@@ -72,6 +72,22 @@ func Infer(tab table.Table, opts ...InferOpts) (*Schema, error) {
 	return infer(tab.Headers(), s)
 }
 
+// InferWithPrecedence infers a schema using a type precedence list to
+// prioritize a type when there is ambiguity eg 1 as int before bool.
+func InferWithPrecedence(tab table.Table, opts ...InferOpts) (*Schema, error) {
+	cfg := &inferConfig{}
+	for _, opt := range opts {
+		if err := opt(cfg); err != nil {
+			return nil, err
+		}
+	}
+	s, err := sample(tab, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return inferWithPrecedence(tab.Headers(), s)
+}
+
 func sample(tab table.Table, cfg *inferConfig) ([][]string, error) {
 	limit := defaultMaxNumRowsInfer
 	if cfg.sampleLimit != 0 {
@@ -129,6 +145,81 @@ func infer(headers []string, table [][]string) (*Schema, error) {
 				count = c
 			}
 		}
+	}
+	return &schema, nil
+}
+
+func inferWithPrecedence(headers []string, table [][]string) (*Schema, error) {
+	type TypePrecedence int
+	inferredTypes := make([]TypePrecedence, len(headers))
+
+	// These consts specify the type order of precedence when inferring.
+	// The types are weighted from least specific to most specific.
+	const (
+		ObjectPrecedence TypePrecedence = iota
+		ArrayPrecedence
+		GeoPointPrecedence
+		BooleanPrecedence
+		IntegerPrecedence
+		NumberPrecedence
+		YearPrecedence
+		YearMonthPrecedence
+		TimePrecedence
+		DatePrecedence
+		DateTimePrecedence
+		DurationPrecedence
+	)
+
+	// A lookup table to get precedence weight from type name.
+	typePrecedenceMap := map[string]TypePrecedence{
+		ObjectType:    ObjectPrecedence,
+		ArrayType:     ArrayPrecedence,
+		GeoPointType:  GeoPointPrecedence,
+		BooleanType:   BooleanPrecedence,
+		IntegerType:   IntegerPrecedence,
+		NumberType:    NumberPrecedence,
+		YearType:      YearPrecedence,
+		YearMonthType: YearMonthPrecedence,
+		TimeType:      TimePrecedence,
+		DateType:      DatePrecedence,
+		DateTimeType:  DateTimePrecedence,
+		DurationType:  DurationPrecedence,
+	}
+
+	// The inverse lookup table of the above lookup table.
+	precedenceTypeMap := func(m map[string]TypePrecedence) map[TypePrecedence]string {
+		mm := make(map[TypePrecedence]string)
+		for k, v := range m {
+			mm[v] = k
+		}
+		return mm
+	}(typePrecedenceMap)
+
+	for rowID := range table {
+		row := table[rowID]
+		// TODO(danielfireman): the python version does some normalization on
+		// the number of columns and headers. Need to look closer at this.
+		if len(headers) != len(row) {
+			return nil, fmt.Errorf("data is not tabular. headers:%v row[%d]:%v", headers, rowID, row)
+		}
+		for cellIndex, cell := range row {
+			// The list below must be ordered by the narrower field type.
+			t := findType(cell, orderedTypes)
+
+			if typePrecedenceMap[t] > inferredTypes[cellIndex] {
+				inferredTypes[cellIndex] = typePrecedenceMap[t]
+			}
+		}
+	}
+
+	schema := Schema{}
+	for index := range headers {
+		schema.Fields = append(schema.Fields,
+			Field{
+				Name:   headers[index],
+				Type:   precedenceTypeMap[inferredTypes[index]],
+				Format: defaultFieldFormat,
+			})
 	}
 	return &schema, nil
 }
