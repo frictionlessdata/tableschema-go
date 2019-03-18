@@ -17,7 +17,7 @@ func ExampleSchema_CastRow() {
 	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
 
 	// And a Table.
-	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+	t := table.FromSlices("ExampleTable", []string{"Name", "Age"}, [][]string{
 		{"Foo", "42"},
 		{"Bar", "43"}})
 
@@ -46,7 +46,7 @@ func ExampleSchema_CastTable() {
 	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType, Constraints: Constraints{Unique: true}}}}
 
 	// And a Table.
-	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+	t := table.FromSlices("ExampleTable", []string{"Name", "Age"}, [][]string{
 		{"Foo", "42"},
 		{"Bar", "43"}})
 
@@ -345,6 +345,7 @@ func TestValidate_Invalid(t *testing.T) {
 func TestWrite(t *testing.T) {
 	is := is.New(t)
 	s := Schema{
+		Name:        "TestTable",
 		Fields:      []Field{{Name: "Foo"}, {Name: "Bar"}},
 		PrimaryKeys: []string{"Foo"},
 		ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"Foo"}}},
@@ -353,6 +354,7 @@ func TestWrite(t *testing.T) {
 	is.NoErr(s.Write(buf))
 
 	want := `{
+    "name": "TestTable",
     "fields": [
         {
             "name": "Foo",
@@ -443,6 +445,7 @@ func TestCastTable(t *testing.T) {
 		t.Run(d.desc, func(t *testing.T) {
 			is := is.New(t)
 			tab := table.FromSlices(
+				"ExampleTable",
 				[]string{"Name"},
 				[][]string{{"foo"}, {"bar"}})
 			s := &Schema{Fields: []Field{{Name: "Name", Type: StringType}}}
@@ -455,6 +458,7 @@ func TestCastTable(t *testing.T) {
 	t.Run("MoarData", func(t *testing.T) {
 		is := is.New(t)
 		tab := table.FromSlices(
+			"ExampleTable",
 			[]string{"ID", "Age", "Name"},
 			[][]string{{"1", "39", "Paul"}, {"2", "23", "Jimmy"}, {"3", "36", "Jane"}, {"4", "28", "Judy"}, {"5", "37", "Iñtërnâtiônàlizætiøn"}})
 
@@ -472,7 +476,7 @@ func TestCastTable(t *testing.T) {
 	})
 	t.Run("EmptyTable", func(t *testing.T) {
 		is := is.New(t)
-		tab := table.FromSlices([]string{}, [][]string{})
+		tab := table.FromSlices("", []string{}, [][]string{})
 		s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		var got []csvRow
 		is.NoErr(s.CastTable(tab, &got))
@@ -480,12 +484,13 @@ func TestCastTable(t *testing.T) {
 	})
 	t.Run("Error_OutNotAPointerToSlice", func(t *testing.T) {
 		is := is.New(t)
-		tab := table.FromSlices([]string{"name"}, [][]string{{""}})
+		tab := table.FromSlices("", []string{"name"}, [][]string{{""}})
 		s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		is.True(s.CastTable(tab, []csvRow{}) != nil)
 	})
 	t.Run("Error_UniqueConstrain", func(t *testing.T) {
 		tab := table.FromSlices(
+			"ExampleTable",
 			[]string{"ID", "Point"},
 			[][]string{{"1", "10,11"}, {"2", "11,10"}, {"3", "10,10"}, {"4", "10,11"}})
 		s := &Schema{Fields: []Field{{Name: "ID", Type: IntegerType}, {Name: "Point", Type: GeoPointType, Constraints: Constraints{Unique: true}}}}
@@ -504,6 +509,7 @@ func TestCastTable(t *testing.T) {
 	})
 	t.Run("Error_PrimaryKeyAndUniqueConstrain", func(t *testing.T) {
 		tab := table.FromSlices(
+			"ExampleTable",
 			[]string{"ID", "Age", "Name"},
 			[][]string{{"1", "39", "Paul"}, {"2", "23", "Jimmy"}, {"3", "36", "Jane"}, {"4", "28", "Judy"}, {"4", "37", "John"}})
 

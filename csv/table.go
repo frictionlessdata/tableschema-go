@@ -17,6 +17,7 @@ import (
 
 // Table represents a Table backed by a CSV physical representation.
 type Table struct {
+	name        string
 	headers     []string
 	source      Source
 	skipHeaders bool
@@ -75,6 +76,10 @@ func (table *Table) ReadAll() ([][]string, error) {
 		r = append(r, iter.Row())
 	}
 	return r, nil
+}
+
+func (table *Table) Name() string {
+	return table.name
 }
 
 // Headers returns the headers of the tabular data.
@@ -198,6 +203,13 @@ func stringReadCloser(s string) io.ReadCloser {
 func errorSource() Source {
 	return func() (io.ReadCloser, error) {
 		return nil, fmt.Errorf("error source")
+	}
+}
+
+func SetTableName(s string) CreationOpts {
+	return func(reader *Table) error {
+		reader.name = s
+		return nil
 	}
 }
 

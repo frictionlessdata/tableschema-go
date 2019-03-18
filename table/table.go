@@ -24,6 +24,8 @@ import (
 // Table provides functionality to iterate and write tabular data. This is the logical
 // representation and is meant to be encoding/format agnostic.
 type Table interface {
+	Name() string
+
 	// Headers returns the headers of the tabular data.
 	Headers() []string
 
@@ -73,14 +75,19 @@ func NewStringWriter() *StringWriter {
 }
 
 // FromSlices creates a new SliceTable using passed-in arguments.
-func FromSlices(headers []string, content [][]string) *SliceTable {
-	return &SliceTable{headers, content}
+func FromSlices(name string, headers []string, content [][]string) *SliceTable {
+	return &SliceTable{name, headers, content}
 }
 
 // SliceTable offers a simple table implementation backed by slices.
 type SliceTable struct {
+	name    string
 	headers []string
 	content [][]string
+}
+
+func (t *SliceTable) Name() string {
+	return t.name
 }
 
 // Headers returns the headers of the tabular data.

@@ -69,7 +69,11 @@ func Infer(tab table.Table, opts ...InferOpts) (*Schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	return infer(tab.Headers(), s)
+	sch, err := infer(tab.Headers(), s)
+	if err == nil {
+		sch.Name = tab.Name()
+	}
+	return sch, err
 }
 
 // InferWithPrecedence infers a schema using a type precedence list to
@@ -85,7 +89,11 @@ func InferWithPrecedence(tab table.Table, opts ...InferOpts) (*Schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	return inferWithPrecedence(tab.Headers(), s)
+	sch, err := inferWithPrecedence(tab.Headers(), s)
+	if err == nil {
+		sch.Name = tab.Name()
+	}
+	return sch, err
 }
 
 func sample(tab table.Table, cfg *inferConfig) ([][]string, error) {
@@ -244,7 +252,11 @@ func InferImplicitCasting(tab table.Table, opts ...InferOpts) (*Schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	return inferImplicitCasting(tab.Headers(), s)
+	sch, err := inferImplicitCasting(tab.Headers(), s)
+	if err == nil {
+		sch.Name = tab.Name()
+	}
+	return sch, err
 }
 
 func inferImplicitCasting(headers []string, table [][]string) (*Schema, error) {

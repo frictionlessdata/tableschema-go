@@ -114,6 +114,7 @@ type ForeignKeys struct {
 
 // Schema describes tabular data.
 type Schema struct {
+	Name                  string      `json:"name,omitempty"`
 	Fields                Fields      `json:"fields,omitempty"`
 	PrimaryKeyPlaceholder interface{} `json:"primaryKey,omitempty"`
 	PrimaryKeys           []string    `json:"-"`
