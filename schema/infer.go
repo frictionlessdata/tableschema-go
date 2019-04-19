@@ -69,23 +69,10 @@ func Infer(tab table.Table, opts ...InferOpts) (*Schema, error) {
 	if err != nil {
 		return nil, err
 	}
+	if cfg.inferWithPrecedence {
+		return inferWithPrecedence(tab.Headers(), s)
+	}
 	return infer(tab.Headers(), s)
-}
-
-// InferWithPrecedence infers a schema using a type precedence list to
-// prioritize a type when there is ambiguity eg 1 as int before bool.
-func InferWithPrecedence(tab table.Table, opts ...InferOpts) (*Schema, error) {
-	cfg := &inferConfig{}
-	for _, opt := range opts {
-		if err := opt(cfg); err != nil {
-			return nil, err
-		}
-	}
-	s, err := sample(tab, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return inferWithPrecedence(tab.Headers(), s)
 }
 
 func sample(tab table.Table, cfg *inferConfig) ([][]string, error) {
@@ -337,13 +324,23 @@ func findType(value string, checkOrder []string) string {
 type InferOpts func(c *inferConfig) error
 
 type inferConfig struct {
-	sampleLimit int
+	sampleLimit         int
+	inferWithPrecedence bool
 }
 
 // SampleLimit specifies the maximum number of rows to sample for inference.
 func SampleLimit(limit int) InferOpts {
 	return func(c *inferConfig) error {
 		c.sampleLimit = limit
+		return nil
+	}
+}
+
+// InferWithPrecedence infers a schema using a type precedence list to
+// prioritize a type when there is ambiguity eg 1 as int before bool.
+func InferWithPrecedence(b bool) InferOpts {
+	return func(c *inferConfig) error {
+		c.inferWithPrecedence = b
 		return nil
 	}
 }
