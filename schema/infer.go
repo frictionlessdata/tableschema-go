@@ -162,10 +162,10 @@ func inferWithPrecedence(headers []string, table [][]string) (*Schema, error) {
 		StringPrecedence
 		GeoPointPrecedence
 		BooleanPrecedence
-		IntegerPrecedence
-		NumberPrecedence
 		YearPrecedence
 		YearMonthPrecedence
+		IntegerPrecedence
+		NumberPrecedence
 		TimePrecedence
 		DatePrecedence
 		DateTimePrecedence
