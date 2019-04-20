@@ -40,6 +40,17 @@ func TestIterator_Next(t *testing.T) {
 		is.True(!iter.Next()) // more iterations than it should
 		is.NoErr(iter.Err())
 	})
+	t.Run("MismatchingNumberOfFieldsShouldReturnTrue", func(t *testing.T) {
+		// For reference: https://github.com/frictionlessdata/tableschema-go/issues/73
+		is := is.New(t)
+		table, err := NewTable(FromString("\"name\"\nfoo\nbar,bez,boo"), LoadHeaders())
+		is.NoErr(err)
+		iter, err := table.Iter()
+		is.NoErr(err)
+		defer iter.Close()
+		is.True(iter.Next())
+		is.True(iter.Next())
+	})
 }
 
 func TestIterator_Row(t *testing.T) {

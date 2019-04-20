@@ -125,7 +125,11 @@ func (i *csvIterator) Next() bool {
 	}
 	var err error
 	i.current, err = i.reader.Read()
-	if err != io.EOF {
+	if err != nil && err != io.EOF {
+		// For reference: https://github.com/frictionlessdata/tableschema-go/issues/73
+		if newErr, ok := err.(*csv.ParseError); ok && newErr.Err == csv.ErrFieldCount {
+			return true
+		}
 		i.err = err
 	}
 	if i.skipHeaders {

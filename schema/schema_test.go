@@ -633,3 +633,20 @@ func TestUncastTable(t *testing.T) {
 		is.True(err != nil)
 	})
 }
+
+func TestSchema_CastRow(t *testing.T) {
+	is := is.New(t)
+	sch := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+	rec := struct {
+		Name string
+		Age  int
+	}{}
+	is.NoErr(sch.CastRow([]string{"Foo", "42"}, &rec))
+	// Valid row.
+	is.Equal(42, rec.Age)
+	is.Equal("Foo", rec.Name)
+
+	// Invalid Row.
+	is.True(sch.CastRow([]string{"Foo", "42", "boo"}, &rec) != nil) // More columns than #Fields
+	is.True(sch.CastRow([]string{"Foo"}, &rec) != nil)              // Less columns than #Fields
+}

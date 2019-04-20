@@ -12,7 +12,9 @@ import (
 
 // Demonstrations.
 
-// Demonstrations of incorrect inference.
+/* Demonstrations of incorrect inference.
+	NOTE 	These are here only for review experimentation -
+			they fail and won't pass CI tests.
 
 // ExampleInferBoolWrongly should infer Value to be number, but infers bool.
 /* TODO: uncomment once discussion of InferWithPrecedence is complete.
@@ -79,7 +81,7 @@ func ExampleInferPrecedenceNumberNotBool() {
 			[]string{"D", "0"},
 			[]string{"E", "5.2"},
 		})
-	s, _ := InferWithPrecedence(tab)
+	s, _ := Infer(tab, InferWithPrecedence(true))
 	fmt.Println("Fields:")
 	for _, f := range s.Fields {
 		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
@@ -105,7 +107,7 @@ func ExampleInferPrecedenceNumberNotString() {
 			[]string{"H", "0"},
 			[]string{"I", "5.2"},
 		})
-	s, _ := InferWithPrecedence(tab)
+	s, _ := Infer(tab, InferWithPrecedence(true))
 	fmt.Println("Fields:")
 	for _, f := range s.Fields {
 		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)

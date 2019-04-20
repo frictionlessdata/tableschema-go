@@ -196,6 +196,9 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 	if reflect.ValueOf(out).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(out)).Kind() != reflect.Struct {
 		return fmt.Errorf("can only cast pointer to structs")
 	}
+	if len(row) != len(s.Fields) {
+		return fmt.Errorf("The row with %d values does not match the %d fields in the schema", len(row), len(s.Fields))
+	}
 	outv := reflect.Indirect(reflect.ValueOf(out))
 	outt := outv.Type()
 	for i := 0; i < outt.NumField(); i++ {
