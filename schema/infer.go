@@ -21,24 +21,24 @@ var (
 	// This structure is optmized for querying.
 	// It should point a type to what is allowed to be implicitly cast.
 	// The inner set must be sorted by the narrower first.
-	implicitCast = map[string][]string{
-		IntegerType:   []string{IntegerType, NumberType, StringType},
-		NumberType:    []string{NumberType, StringType},
-		BooleanType:   []string{BooleanType, IntegerType, NumberType, StringType},
-		YearMonthType: []string{YearMonthType, DateType, StringType},
-		YearType:      []string{YearType, IntegerType, NumberType, StringType},
-		DateType:      []string{DateType, DateTimeType, StringType},
-		DateTimeType:  []string{DateTimeType, StringType},
-		TimeType:      []string{TimeType, StringType},
-		DurationType:  []string{DurationType, StringType},
-		ObjectType:    []string{ObjectType, StringType},
-		ArrayType:     []string{ArrayType, StringType},
-		GeoPointType:  []string{GeoPointType, ArrayType, StringType},
-		StringType:    []string{},
+	implicitCast = map[FieldType][]FieldType{
+		IntegerType:   []FieldType{IntegerType, NumberType, StringType},
+		NumberType:    []FieldType{NumberType, StringType},
+		BooleanType:   []FieldType{BooleanType, IntegerType, NumberType, StringType},
+		YearMonthType: []FieldType{YearMonthType, DateType, StringType},
+		YearType:      []FieldType{YearType, IntegerType, NumberType, StringType},
+		DateType:      []FieldType{DateType, DateTimeType, StringType},
+		DateTimeType:  []FieldType{DateTimeType, StringType},
+		TimeType:      []FieldType{TimeType, StringType},
+		DurationType:  []FieldType{DurationType, StringType},
+		ObjectType:    []FieldType{ObjectType, StringType},
+		ArrayType:     []FieldType{ArrayType, StringType},
+		GeoPointType:  []FieldType{GeoPointType, ArrayType, StringType},
+		StringType:    []FieldType{},
 	}
 
 	// Types ordered from narrower to wider.
-	orderedTypes = []string{BooleanType, YearType, IntegerType, GeoPointType, NumberType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, ArrayType, ObjectType}
+	orderedTypes = []FieldType{BooleanType, YearType, IntegerType, GeoPointType, NumberType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, ArrayType, ObjectType}
 
 	noConstraints = Constraints{}
 )
@@ -96,7 +96,7 @@ func sample(tab table.Table, cfg *inferConfig) ([][]string, error) {
 }
 
 func infer(headers []string, table [][]string) (*Schema, error) {
-	inferredTypes := make([]map[string]int, len(headers))
+	inferredTypes := make([]map[FieldType]int, len(headers))
 	for rowID := range table {
 		row := table[rowID]
 		// TODO(danielfireman): the python version does some normalization on
@@ -106,7 +106,7 @@ func infer(headers []string, table [][]string) (*Schema, error) {
 		}
 		for cellIndex, cell := range row {
 			if inferredTypes[cellIndex] == nil {
-				inferredTypes[cellIndex] = make(map[string]int)
+				inferredTypes[cellIndex] = make(map[FieldType]int)
 			}
 			// The list below must be ordered by the narrower field type.
 			t := findType(cell, orderedTypes)
@@ -153,7 +153,7 @@ func InferImplicitCasting(tab table.Table, opts ...InferOpts) (*Schema, error) {
 }
 
 func inferImplicitCasting(headers []string, table [][]string) (*Schema, error) {
-	inferredTypes := make([]string, len(headers))
+	inferredTypes := make([]FieldType, len(headers))
 	for rowID := range table {
 		row := table[rowID]
 		// TODO(danielfireman): the python version does some normalization on
@@ -182,7 +182,7 @@ func inferImplicitCasting(headers []string, table [][]string) (*Schema, error) {
 	return &schema, nil
 }
 
-func findType(value string, checkOrder []string) string {
+func findType(value string, checkOrder []FieldType) FieldType {
 	for _, t := range checkOrder {
 		switch t {
 		case BooleanType:

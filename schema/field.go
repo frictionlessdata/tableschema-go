@@ -22,22 +22,25 @@ var (
 	defaultBareNumber  = true
 )
 
+// FieldType defines the field types.
+type FieldType string
+
 // Field types.
 const (
-	IntegerType   = "integer"
-	StringType    = "string"
-	BooleanType   = "boolean"
-	NumberType    = "number"
-	DateType      = "date"
-	ObjectType    = "object"
-	ArrayType     = "array"
-	DateTimeType  = "datetime"
-	TimeType      = "time"
-	YearMonthType = "yearmonth"
-	YearType      = "year"
-	DurationType  = "duration"
-	GeoPointType  = "geopoint"
-	AnyType       = "any"
+	IntegerType   FieldType = "integer"
+	StringType    FieldType = "string"
+	BooleanType   FieldType = "boolean"
+	NumberType    FieldType = "number"
+	DateType      FieldType = "date"
+	ObjectType    FieldType = "object"
+	ArrayType     FieldType = "array"
+	DateTimeType  FieldType = "datetime"
+	TimeType      FieldType = "time"
+	YearMonthType FieldType = "yearmonth"
+	YearType      FieldType = "year"
+	DurationType  FieldType = "duration"
+	GeoPointType  FieldType = "geopoint"
+	AnyType       FieldType = "any"
 )
 
 // Formats.
@@ -76,9 +79,9 @@ type Constraints struct {
 // More: https://specs.frictionlessdata.io/table-schema/#field-descriptors
 type Field struct {
 	// Name of the field. It is mandatory and shuold correspond to the name of field/column in the data file (if it has a name).
-	Name   string `json:"name"`
-	Type   string `json:"type,omitempty"`
-	Format string `json:"format,omitempty"`
+	Name   string    `json:"name"`
+	Type   FieldType `json:"type,omitempty"`
+	Format string    `json:"format,omitempty"`
 	// A human readable label or title for the field.
 	Title string `json:"title,omitempty"`
 	// A description for this field e.g. "The recipient of the funds"
