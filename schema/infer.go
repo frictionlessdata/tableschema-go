@@ -69,7 +69,11 @@ func Infer(tab table.Table, opts ...InferOpts) (*Schema, error) {
 	if err != nil {
 		return nil, err
 	}
-	return infer(tab.Headers(), s)
+	precedenceOrder := orderedTypes
+	if len(cfg.precedenceOrder) > 0 {
+		precedenceOrder = cfg.precedenceOrder
+	}
+	return infer(tab.Headers(), s, precedenceOrder)
 }
 
 func sample(tab table.Table, cfg *inferConfig) ([][]string, error) {
@@ -95,7 +99,7 @@ func sample(tab table.Table, cfg *inferConfig) ([][]string, error) {
 	return t, nil
 }
 
-func infer(headers []string, table [][]string) (*Schema, error) {
+func infer(headers []string, table [][]string, precedenceOrder []FieldType) (*Schema, error) {
 	inferredTypes := make([]map[FieldType]int, len(headers))
 	for rowID := range table {
 		row := table[rowID]
@@ -108,8 +112,7 @@ func infer(headers []string, table [][]string) (*Schema, error) {
 			if inferredTypes[cellIndex] == nil {
 				inferredTypes[cellIndex] = make(map[FieldType]int)
 			}
-			// The list below must be ordered by the narrower field type.
-			t := findType(cell, orderedTypes)
+			t := findType(cell, precedenceOrder)
 			inferredTypes[cellIndex][t]++
 		}
 	}
@@ -242,13 +245,22 @@ func findType(value string, checkOrder []FieldType) FieldType {
 type InferOpts func(c *inferConfig) error
 
 type inferConfig struct {
-	sampleLimit int
+	sampleLimit     int
+	precedenceOrder []FieldType
 }
 
 // SampleLimit specifies the maximum number of rows to sample for inference.
 func SampleLimit(limit int) InferOpts {
 	return func(c *inferConfig) error {
 		c.sampleLimit = limit
+		return nil
+	}
+}
+
+// WithPrecedenceOrder allows users to specify the priority order of types used to infer fields.
+func WithPrecedenceOrder(precedendeOrder []FieldType) InferOpts {
+	return func(c *inferConfig) error {
+		c.precedenceOrder = precedendeOrder
 		return nil
 	}
 }
