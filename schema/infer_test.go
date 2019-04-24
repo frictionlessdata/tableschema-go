@@ -38,7 +38,7 @@ func ExampleInfer_withPrecedence() {
 
 	s, _ := Infer(
 		tab,
-		WithPrecedenceOrder([]FieldType{NumberType, BooleanType, YearType, IntegerType, GeoPointType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, ArrayType, ObjectType}))
+		WithPriorityOrder([]FieldType{NumberType, BooleanType, YearType, IntegerType, GeoPointType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, ArrayType, ObjectType}))
 	fmt.Println("Fields:")
 	for _, f := range s.Fields {
 		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)

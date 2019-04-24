@@ -257,8 +257,8 @@ func SampleLimit(limit int) InferOpts {
 	}
 }
 
-// WithPrecedenceOrder allows users to specify the priority order of types used to infer fields.
-func WithPrecedenceOrder(precedendeOrder []FieldType) InferOpts {
+// WithPriorityOrder allows users to specify the priority order of types used to infer fields.
+func WithPriorityOrder(precedendeOrder []FieldType) InferOpts {
 	return func(c *inferConfig) error {
 		c.precedenceOrder = precedendeOrder
 		return nil
