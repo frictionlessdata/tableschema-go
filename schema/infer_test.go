@@ -138,6 +138,26 @@ func Exampleinfer() {
 	// {Name:Height Type:integer Format:default}
 }
 
+func ExampleInfer_withPrecedence() {
+	tab := table.FromSlices(
+		[]string{"Person", "Height"},
+		[][]string{
+			[]string{"Foo", "0"},
+			[]string{"Bar", "0"},
+		})
+
+	s, _ := Infer(
+		tab,
+		WithPriorityOrder([]FieldType{NumberType, BooleanType, YearType, IntegerType, GeoPointType, YearMonthType, DateType, DateTimeType, TimeType, DurationType, ArrayType, ObjectType}))
+	fmt.Println("Fields:")
+	for _, f := range s.Fields {
+		fmt.Printf("{Name:%s Type:%s Format:%s}\n", f.Name, f.Type, f.Format)
+	}
+	// Output: Fields:
+	// {Name:Person Type:string Format:default}
+	// {Name:Height Type:number Format:default}
+}
+
 func ExampleInferImplicitCasting() {
 	tab := table.FromSlices(
 		"ExampleTable",
@@ -247,7 +267,7 @@ func TestInfer(t *testing.T) {
 	for _, d := range data {
 		t.Run(d.desc, func(t *testing.T) {
 			is := is.New(t)
-			s, err := infer(d.headers, d.table)
+			s, err := infer(d.headers, d.table, orderedTypes)
 			is.NoErr(err)
 
 			sort.Sort(s.Fields)
@@ -266,7 +286,7 @@ func TestInfer(t *testing.T) {
 		for _, d := range data {
 			t.Run(d.desc, func(t *testing.T) {
 				is := is.New(t)
-				_, err := infer(d.headers, d.table)
+				_, err := infer(d.headers, d.table, orderedTypes)
 				is.True(err != nil)
 			})
 		}
@@ -350,7 +370,7 @@ var (
 
 func benchmarkinfer(growthMultiplier int, b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		infer(benchmarkHeaders, generateBenchmarkTable(growthMultiplier))
+		infer(benchmarkHeaders, generateBenchmarkTable(growthMultiplier), orderedTypes)
 	}
 }
 

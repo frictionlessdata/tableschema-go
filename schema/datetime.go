@@ -106,7 +106,7 @@ func castDateTimeWithoutChecks(value string) (time.Time, error) {
 	return time.Parse(time.RFC3339, value)
 }
 
-func checkConstraints(v, max, min time.Time, t string) (time.Time, error) {
+func checkConstraints(v, max, min time.Time, t FieldType) (time.Time, error) {
 	if !max.IsZero() && v.After(max) {
 		return v, fmt.Errorf("constraint check error: %s:%v > maximum:%v", t, v, max)
 	}
