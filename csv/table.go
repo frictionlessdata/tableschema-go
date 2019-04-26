@@ -210,6 +210,7 @@ func errorSource() Source {
 	}
 }
 
+// SetTableName set the name of the table being created.
 func SetTableName(s string) CreationOpts {
 	return func(reader *Table) error {
 		reader.name = s

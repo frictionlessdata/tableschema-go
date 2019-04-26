@@ -133,3 +133,12 @@ func TestConsiderInitialSpace(t *testing.T) {
 	is.NoErr(err)
 	is.Equal(contents, [][]string{{" Foo"}})
 }
+
+func TestString(t *testing.T) {
+	is := is.New(t)
+	in := "name\nfoo\nbar"
+	want := "name\nfoo\nbar\n"
+	table, err := NewTable(FromString(in))
+	is.NoErr(err)
+	is.Equal(want, table.String())
+}
