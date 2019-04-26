@@ -2,7 +2,9 @@ package csv
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -132,6 +134,25 @@ func TestConsiderInitialSpace(t *testing.T) {
 	contents, err := table.ReadAll()
 	is.NoErr(err)
 	is.Equal(contents, [][]string{{" Foo"}})
+}
+
+func TestReadAll(t *testing.T) {
+	is := is.New(t)
+	in := "name\nfoo\nbar"
+	want := [][]string{[]string{"name"}, []string{"foo"}, []string{"bar"}}
+
+	table, err := NewTable(FromString(in))
+	is.NoErr(err)
+	rows, err := table.ReadAll()
+	is.NoErr(err)
+	is.Equal(want, rows)
+
+	table, err = NewTable(
+		func() (io.ReadCloser, error) {
+			return nil, errors.New("this is a source test error")
+		})
+	_, err = table.ReadAll()
+	is.True(err != nil)
 }
 
 func TestString(t *testing.T) {

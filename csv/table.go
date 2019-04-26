@@ -78,6 +78,7 @@ func (table *Table) ReadAll() ([][]string, error) {
 	return r, nil
 }
 
+// Name returns the name of the table, specified at creation.
 func (table *Table) Name() string {
 	return table.name
 }
