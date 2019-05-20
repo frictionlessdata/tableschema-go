@@ -1,0 +1,4 @@
+github.com/matryer/is v0.0.0-20170112134659-c0323ceb4e99 h1:cIAyXQXBuSY59PAN6nK4tnaeUcATlXS/GRNCKA1+JB0=
+github.com/matryer/is v0.0.0-20170112134659-c0323ceb4e99/go.mod h1:2fLPjFQM9rhQ15aVEtbuwhJinnOqrmgXPNdZsdwlWXA=
+github.com/satori/go.uuid v1.1.0 h1:B9KXyj+GzIpJbV7gmr873NsY6zpbxNy24CBtGrk7jHo=
+github.com/satori/go.uuid v1.1.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
