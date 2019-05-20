@@ -5,12 +5,16 @@ go:
  - 1.8.x
  - 1.9.x
  - 1.10.x
+ - 1.11.x
 
 notificaitons:
   email:
     recipients: danielfireman@gmail.com
     on_success: change
     on_failure: always
+
+env:
+  - GO111MODULE=on
 
 before_install:
   - go get github.com/mattn/goveralls
