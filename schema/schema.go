@@ -419,8 +419,8 @@ func (s *Schema) CastColumn(col []string, name string, out interface{}) error {
 		return fmt.Errorf("invalid field name \"%s\"", name)
 	}
 	slicev := outv.Elem()
-	slicev = slicev.Slice(0, 0) // Trucantes the passed-in slice.
-	elemt := slicev.Type().Elem()
+	slicev = slicev.Slice(0, 0)   // Trucantes the passed-in slice.
+	elemt := slicev.Type().Elem() // Last Elem() needed because the pointer type.
 	for _, v := range col {
 		cast, err := f.Cast(v)
 		if err != nil {
