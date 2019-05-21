@@ -118,6 +118,24 @@ func ExampleSchema_UncastTable() {
 	// Bar,43
 }
 
+func ExampleSchema_CastColumn() {
+	// Lets assume we have a schema ...
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType, Constraints: Constraints{Unique: true}}}}
+	// And a Table.
+	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+		{"Foo", "42"},
+		{"Bar", "43"}})
+	// And we would like to process the column Age using Go types. First we need to create a
+	// slice to hold the column contents.
+	var ages []float64
+	// Extract the column.
+	col, _ := t.ReadColumn("Age")
+	// And profit!
+	s.CastColumn(col, "Age", &ages)
+	fmt.Print(ages)
+	// Output: [42 43]
+}
+
 func TestLoadRemote(t *testing.T) {
 	is := is.New(t)
 	h := func(w http.ResponseWriter, r *http.Request) {
@@ -643,4 +661,28 @@ func TestSchema_CastRow(t *testing.T) {
 	// Invalid Row.
 	is.True(sch.CastRow([]string{"Foo", "42", "boo"}, &rec) != nil) // More columns than #Fields
 	is.True(sch.CastRow([]string{"Foo"}, &rec) != nil)              // Less columns than #Fields
+}
+
+func TestSchema_CastColumn(t *testing.T) {
+	sch := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
+	t.Run("ErrorArgMustBeSlicePointer", func(t *testing.T) {
+		is := is.New(t)
+		var f []string
+		is.True(sch.CastColumn([]string{"42"}, "Age", f) != nil) // Must err because f is not a pointer.
+	})
+	t.Run("ErrorInvalidFieldName", func(t *testing.T) {
+		is := is.New(t)
+		var f []string
+		is.True(sch.CastColumn([]string{"42"}, "Name", f) != nil) // Must err because Name is not a valid field.
+	})
+	t.Run("ErrorCanNotCast", func(t *testing.T) {
+		is := is.New(t)
+		var f []int
+		is.True(sch.CastColumn([]string{"Foo"}, "Age", f) != nil) // Must err because Foo can not be cast to integer.
+	})
+	t.Run("ErrorCanNotConvert", func(t *testing.T) {
+		is := is.New(t)
+		var f []string
+		is.True(sch.CastColumn([]string{"42"}, "Age", f) != nil) // Must err because 42 (integer) can not be converted to string.
+	})
 }
