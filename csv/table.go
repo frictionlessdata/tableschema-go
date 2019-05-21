@@ -82,6 +82,29 @@ func (table *Table) Headers() []string {
 	return table.headers
 }
 
+// ReadColumn reads a specific column from the table and return it as strings.
+func (table *Table) ReadColumn(name string) ([]string, error) {
+	index := -1
+	for i, h := range table.headers {
+		if name == h {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return nil, fmt.Errorf("column name \"%s\" not found in headers", name)
+	}
+	iter, err := table.Iter()
+	if err != nil {
+		return nil, fmt.Errorf("error creating iterator:%q", err)
+	}
+	var col []string
+	for iter.Next() {
+		col = append(col, iter.Row()[index])
+	}
+	return col, nil
+}
+
 // String returns a string version of the table.
 func (table *Table) String() string {
 	var buf bytes.Buffer

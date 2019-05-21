@@ -19,6 +19,7 @@ package table
 import (
 	"bytes"
 	"encoding/csv"
+	"fmt"
 )
 
 // Table provides functionality to iterate and write tabular data. This is the logical
@@ -34,6 +35,9 @@ type Table interface {
 
 	// ReadAll reads all rows from the table and return it as strings.
 	ReadAll() ([][]string, error)
+
+	// ReadColumn reads a specific column from the table and return it as strings.
+	ReadColumn(string) ([]string, error)
 }
 
 // A Writer writes rows to a table file. The idea behind the writer is to
@@ -98,6 +102,29 @@ func (t *SliceTable) ReadAll() ([][]string, error) {
 // is backed by a new reading process.
 func (t *SliceTable) Iter() (Iterator, error) {
 	return &sliceIterator{content: t.content}, nil
+}
+
+// ReadColumn reads a specific column from the table and return it as strings.
+func (t *SliceTable) ReadColumn(name string) ([]string, error) {
+	index := -1
+	for i, h := range t.headers {
+		if name == h {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return nil, fmt.Errorf("column name \"%s\" not found in headers", name)
+	}
+	iter, err := t.Iter()
+	if err != nil {
+		return nil, fmt.Errorf("error creating iterator:%q", err)
+	}
+	var col []string
+	for iter.Next() {
+		col = append(col, iter.Row()[index])
+	}
+	return col, nil
 }
 
 type sliceIterator struct {

@@ -118,6 +118,24 @@ func ExampleSchema_UncastTable() {
 	// Bar,43
 }
 
+func ExampleSchema_CastColumn() {
+	// Lets assume we have a schema ...
+	s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType, Constraints: Constraints{Unique: true}}}}
+	// And a Table.
+	t := table.FromSlices([]string{"Name", "Age"}, [][]string{
+		{"Foo", "42"},
+		{"Bar", "43"}})
+	// And we would like to process the column Age using Go types. First we need to create a
+	// slice to hold the column contents.
+	var ages []float64
+	// Extract the column.
+	col, _ := t.ReadColumn("Age")
+	// And profit!
+	s.CastColumn(col, "Age", &ages)
+	fmt.Print(ages)
+	// Output: [42 43]
+}
+
 func TestLoadRemote(t *testing.T) {
 	is := is.New(t)
 	h := func(w http.ResponseWriter, r *http.Request) {
@@ -643,4 +661,28 @@ func TestSchema_CastRow(t *testing.T) {
 	// Invalid Row.
 	is.True(sch.CastRow([]string{"Foo", "42", "boo"}, &rec) != nil) // More columns than #Fields
 	is.True(sch.CastRow([]string{"Foo"}, &rec) != nil)              // Less columns than #Fields
+}
+
+func TestSchema_CastColumn(t *testing.T) {
+	sch := Schema{Fields: []Field{{Name: "Age", Type: IntegerType}}}
+	t.Run("Errors", func(t *testing.T) {
+		data := []struct {
+			desc    string
+			col     []string
+			colName string
+			out     interface{}
+		}{
+			{"OutNotASlicePointer", []string{"42"}, "Age", []int{}},
+			{"InvalidFieldName", []string{"42"}, "Name", &([]string{})},
+			{"CanNotCast", []string{"Foo"}, "Age", &([]int{})},
+			{"CanNotConvert", []string{"42"}, "Age", &([]*int{})},
+		}
+		for _, d := range data {
+			t.Run(d.desc, func(t *testing.T) {
+				if sch.CastColumn(d.col, d.colName, d.out) == nil {
+					t.Errorf("want:err got:nil col:%v colName:%v out:%v", d.col, d.colName, d.out)
+				}
+			})
+		}
+	})
 }

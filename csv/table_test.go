@@ -34,6 +34,13 @@ func ExampleTable_ReadAll() {
 	// Output:[[foo] [bar]]
 }
 
+func ExampleTable_ReadColumn() {
+	table, _ := NewTable(FromString("name,age\nfoo,25\nbar,48"), LoadHeaders())
+	cols, _ := table.ReadColumn("name")
+	fmt.Print(cols)
+	// Output:[foo bar]
+}
+
 func ExampleNewWriter() {
 	var buf bytes.Buffer
 	w := NewWriter(&buf)
@@ -162,4 +169,22 @@ func TestString(t *testing.T) {
 	table, err := NewTable(FromString(in))
 	is.NoErr(err)
 	is.Equal(want, table.String())
+}
+
+func TestReadColumn(t *testing.T) {
+	t.Run("HeaderNotFound", func(t *testing.T) {
+		is := is.New(t)
+		tab, err := NewTable(FromString("name\nfoo"), LoadHeaders())
+		is.NoErr(err)
+		_, err = tab.ReadColumn("age")
+		is.True(err != nil) // Must err as there is no column called age.
+	})
+	t.Run("ErrorCreatingIter", func(t *testing.T) {
+		is := is.New(t)
+		tab, err := NewTable(errorSource())
+		is.NoErr(err)
+		tab.headers = []string{"age"}
+		_, err = tab.ReadColumn("age")
+		is.True(err != nil) // Must err as the source will error.
+	})
 }

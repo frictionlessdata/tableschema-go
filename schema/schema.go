@@ -405,6 +405,41 @@ func extractUniqueFieldIndexes(s *Schema) []int {
 	return keys
 }
 
+// CastColumn loads and casts all rows from a single column.
+//
+// The result argument must necessarily be the address for a slice. The slice
+// may be nil or previously allocated.
+func (s *Schema) CastColumn(col []string, name string, out interface{}) error {
+	outv := reflect.ValueOf(out)
+	if outv.Kind() != reflect.Ptr || outv.Elem().Kind() != reflect.Slice {
+		return fmt.Errorf("out argument must be a slice address")
+	}
+	f, err := s.GetField(name)
+	if err == InvalidPosition {
+		return fmt.Errorf("invalid field name \"%s\"", name)
+	}
+	slicev := outv.Elem()
+	slicev = slicev.Slice(0, 0)   // Trucantes the passed-in slice.
+	elemt := slicev.Type().Elem() // Last Elem() needed because the pointer type.
+	for _, v := range col {
+		cast, err := f.Cast(v)
+		if err != nil {
+			return fmt.Errorf("error casting column value(%s):%q", v, err)
+		}
+		toSetValue := reflect.ValueOf(cast)
+		toSetType := toSetValue.Type()
+		if !toSetType.ConvertibleTo(elemt) {
+			return fmt.Errorf("value:%s field:%s - can not convert from %v to %v", v, f.Name, toSetType, elemt)
+		}
+		elem := reflect.New(elemt).Elem()
+		elem.Set(toSetValue.Convert(elemt))
+		slicev = reflect.Append(slicev, elem)
+		slicev = slicev.Slice(0, slicev.Len())
+	}
+	outv.Elem().Set(slicev.Slice(0, len(col)))
+	return nil
+}
+
 // UncastTable uncasts each element (struct) of the passed-in slice and
 func (s *Schema) UncastTable(in interface{}) ([][]string, error) {
 	inVal := reflect.Indirect(reflect.ValueOf(in))
