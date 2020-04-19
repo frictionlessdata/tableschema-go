@@ -10,13 +10,29 @@
 
 This package uses [semantic versioning 2.0.0](http://semver.org/). 
 
-### Using dep
+### Go version >= 1.11
+
+Please [use go modules](https://blog.golang.org/using-go-modules) if you're using a version that supports it. To know which version of Go you're running, please run:
+
+```bassh
+$ go version
+go version go1.14 linux/amd64
+```
+
+If you're running go1.13+, you're good to go! 
+
+If you can not upgrade right now, you need to make sure your environment is using Go modules by setting the `GO111MODULE` environment variable. In bash, that could be done with the following command:
+
+```bash
+$ export GO111MODULE=on
+```
+
+### Go version >= 1.8 && < 1.11
 
 ```sh
 $ dep init
 $ dep ensure -add github.com/frictionlessdata/tableschema-go/csv@>=0.1
 ```
-
 
 # Main Features
 
