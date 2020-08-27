@@ -198,36 +198,70 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 	if len(row) != len(s.Fields) {
 		return fmt.Errorf("The row with %d values does not match the %d fields in the schema", len(row), len(s.Fields))
 	}
+	fields, err := getStructFields(out)
+	if err != nil {
+		return fmt.Errorf("Errror extracting field information from the struct:%q", err)
+	}
+	for _, f := range fields {
+		fieldName, ok := f.StructField.Tag.Lookup(tableheaderTag)
+		if !ok { // if no tag is set use own name
+			fieldName = f.StructField.Name
+		}
+		schemaField, fieldIndex := s.GetField(fieldName)
+		if fieldIndex != InvalidPosition {
+			cell := row[fieldIndex]
+			if s.isMissingValue(cell) {
+				continue
+			}
+			v, err := schemaField.Cast(cell)
+			if err != nil {
+				return err
+			}
+			if err := f.Set(v); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+type structField struct {
+	reflect.StructField
+	value reflect.Value
+}
+
+func (s *structField) Set(v interface{}) error {
+	toSetValue := reflect.ValueOf(v)
+	toSetType := toSetValue.Type()
+	if !toSetType.ConvertibleTo(s.Type) {
+		return fmt.Errorf("field:%s value:%v - can not convert from %v to %v", s.Name, v, toSetType, s.Type)
+	}
+	s.value.Set(toSetValue.Convert(s.Type))
+	return nil
+}
+
+func getStructFields(out interface{}) ([]structField, error) {
+	if reflect.ValueOf(out).Kind() != reflect.Ptr || reflect.Indirect(reflect.ValueOf(out)).Kind() != reflect.Struct {
+		return nil, fmt.Errorf("can only cast pointer to structs")
+	}
+	var fields []structField
 	outv := reflect.Indirect(reflect.ValueOf(out))
 	outt := outv.Type()
 	for i := 0; i < outt.NumField(); i++ {
 		fieldValue := outv.Field(i)
 		if fieldValue.CanSet() { // Only consider exported fields.
-			field := outt.Field(i)
-			fieldName, ok := field.Tag.Lookup(tableheaderTag)
-			if !ok { // if no tag is set use own name
-				fieldName = field.Name
-			}
-			f, fieldIndex := s.GetField(fieldName)
-			if fieldIndex != InvalidPosition {
-				cell := row[fieldIndex]
-				if s.isMissingValue(cell) {
-					continue
-				}
-				v, err := f.Cast(cell)
+			if fieldValue.Kind() == reflect.Struct {
+				newF, err := getStructFields(fieldValue.Addr().Interface())
 				if err != nil {
-					return err
+					return nil, err
 				}
-				toSetValue := reflect.ValueOf(v)
-				toSetType := toSetValue.Type()
-				if !toSetType.ConvertibleTo(field.Type) {
-					return fmt.Errorf("value:%s field:%s - can not convert from %v to %v", field.Name, cell, toSetType, field.Type)
-				}
-				fieldValue.Set(toSetValue.Convert(field.Type))
+				fields = append(fields, newF...)
+				continue
 			}
+			fields = append(fields, structField{outt.Field(i), fieldValue})
 		}
 	}
-	return nil
+	return fields, nil
 }
 
 type rawCell struct {
