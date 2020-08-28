@@ -196,7 +196,7 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 		return fmt.Errorf("can only cast pointer to structs")
 	}
 	if len(row) != len(s.Fields) {
-		return fmt.Errorf("The row with %d values does not match the %d fields in the schema", len(row), len(s.Fields))
+		return fmt.Errorf("the row with %d values does not match the %d fields in the schema", len(row), len(s.Fields))
 	}
 	fields, err := getStructFields(out)
 	if err != nil {
