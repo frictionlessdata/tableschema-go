@@ -234,7 +234,7 @@ func (s *structField) Set(v interface{}) error {
 	toSetValue := reflect.ValueOf(v)
 	toSetType := toSetValue.Type()
 	if !toSetType.ConvertibleTo(s.Type) {
-		return fmt.Errorf("field:%s value:%v - can not convert from %v to %v", s.Name, v, toSetType, s.Type)
+		return fmt.Errorf("field:%s value:%v - cannot convert from %v to %v", s.Name, v, toSetType, s.Type)
 	}
 	s.value.Set(toSetValue.Convert(s.Type))
 	return nil
