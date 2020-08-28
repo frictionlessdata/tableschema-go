@@ -200,7 +200,7 @@ func (s *Schema) CastRow(row []string, out interface{}) error {
 	}
 	fields, err := getStructFields(out)
 	if err != nil {
-		return fmt.Errorf("Errror extracting field information from the struct:%q", err)
+		return fmt.Errorf("error extracting field information from the struct:%q", err)
 	}
 	for _, f := range fields {
 		fieldName, ok := f.StructField.Tag.Lookup(tableheaderTag)
