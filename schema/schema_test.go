@@ -278,6 +278,20 @@ func TestSchema_Cast(t *testing.T) {
 		is.Equal(t1.MyName, "Foo")
 		is.Equal(t1.MyAge, int64(42))
 	})
+	t.Run("EmbeddedStruct", func(t *testing.T) {
+		is := is.New(t)
+		type EmbededT struct {
+			MyAge int64 `tableheader:"Age"`
+		}
+		t1 := struct {
+			MyName string `tableheader:"Name"`
+			EmbededT
+		}{}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1)) // BOOOOOO
+		is.Equal(t1.MyName, "Foo")
+		is.Equal(t1.MyAge, int64(42))
+	})
 	t.Run("ImplicitCastToInt", func(t *testing.T) {
 		is := is.New(t)
 		t1 := struct{ Age int }{}
