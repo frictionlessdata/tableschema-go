@@ -278,6 +278,17 @@ func TestSchema_Cast(t *testing.T) {
 		is.Equal(t1.MyName, "Foo")
 		is.Equal(t1.MyAge, int64(42))
 	})
+	t.Run("PointerFields", func(t *testing.T) {
+		is := is.New(t)
+		t1 := struct {
+			MyName *string `tableheader:"Name"`
+			MyAge  *int64  `tableheader:"Age"`
+		}{}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1))
+		is.Equal(*t1.MyName, "Foo")
+		is.Equal(*t1.MyAge, int64(42))
+	})
 	t.Run("EmbeddedStruct", func(t *testing.T) {
 		is := is.New(t)
 		type EmbededT struct {
@@ -288,9 +299,37 @@ func TestSchema_Cast(t *testing.T) {
 			EmbededT
 		}{}
 		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
-		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1)) // BOOOOOO
+		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1))
 		is.Equal(t1.MyName, "Foo")
 		is.Equal(t1.MyAge, int64(42))
+	})
+	t.Run("StructField", func(t *testing.T) {
+		is := is.New(t)
+		type EmbededT struct {
+			MyAge int64 `tableheader:"Age"`
+		}
+		t1 := struct {
+			MyName string `tableheader:"Name"`
+			E      EmbededT
+		}{}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1))
+		is.Equal(t1.MyName, "Foo")
+		is.Equal(t1.E.MyAge, int64(42))
+	})
+	t.Run("StructPointerField", func(t *testing.T) {
+		is := is.New(t)
+		type EmbededT struct {
+			MyAge int64 `tableheader:"Age"`
+		}
+		t1 := struct {
+			MyName string `tableheader:"Name"`
+			E      *EmbededT
+		}{}
+		s := Schema{Fields: []Field{{Name: "Name", Type: StringType}, {Name: "Age", Type: IntegerType}}}
+		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1))
+		is.Equal(t1.MyName, "Foo")
+		is.Equal(t1.E.MyAge, int64(42))
 	})
 	t.Run("ImplicitCastToInt", func(t *testing.T) {
 		is := is.New(t)
@@ -299,10 +338,17 @@ func TestSchema_Cast(t *testing.T) {
 		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1))
 		is.Equal(t1.Age, 42)
 	})
-	t.Run("Error_SchemaFieldAndStructFieldDifferentTypes", func(t *testing.T) {
+	t.Run("Error_SchemaAndStructDifferentTypes", func(t *testing.T) {
 		is := is.New(t)
 		// Field is string and struct is int.
 		t1 := struct{ Age int }{}
+		s := Schema{Fields: []Field{{Name: "Age", Type: StringType}}}
+		is.True(s.CastRow([]string{"42"}, &t1) != nil)
+	})
+	t.Run("Error_SchemaAndStructDifferentTypes_Pointer", func(t *testing.T) {
+		is := is.New(t)
+		// Field is string and struct is int.
+		t1 := struct{ Age *int }{}
 		s := Schema{Fields: []Field{{Name: "Age", Type: StringType}}}
 		is.True(s.CastRow([]string{"42"}, &t1) != nil)
 	})
