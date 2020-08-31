@@ -462,6 +462,10 @@ type csvRow struct {
 	Name string
 }
 
+type intCSVRow struct {
+	Value int `tableheader:"value"`
+}
+
 func TestCastTable(t *testing.T) {
 	data := []struct {
 		desc string
@@ -516,6 +520,16 @@ func TestCastTable(t *testing.T) {
 		s := &Schema{Fields: []Field{{Name: "name", Type: StringType}}}
 		is.True(s.CastTable(tab, []csvRow{}) != nil)
 	})
+	t.Run("Error_ManyErrors", func(t *testing.T) {
+		is := is.New(t)
+		tab := table.FromSlices([]string{"value"}, [][]string{{"boo"}, {"1"}, {"bii"}})
+		s := &Schema{Fields: []Field{{Name: "value", Type: IntegerType}}} // Integer won't be cast to string
+		var ret []intCSVRow
+		err := s.CastTable(tab, &ret).(*ConversionError)
+		is.Equal(2, len(err.Errors))
+		is.Equal(0, err.Errors[0].LineNumber)
+		is.Equal(2, err.Errors[1].LineNumber)
+	})
 	t.Run("Error_UniqueConstrain", func(t *testing.T) {
 		tab := table.FromSlices(
 			[]string{"ID", "Point"},
@@ -530,11 +544,8 @@ func TestCastTable(t *testing.T) {
 		if err := s.CastTable(tab, &got); err == nil {
 			t.Fatalf("err want:err got:nil")
 		}
-		if len(got) != 0 {
-			t.Fatalf("len(got) want:0 got:%v", len(got))
-		}
 	})
-	t.Run("Error_PrimaryKeyAndUniqueConstrain", func(t *testing.T) {
+	t.Run("Error_PrimaryKeyAndUniqueConstraint", func(t *testing.T) {
 		tab := table.FromSlices(
 			[]string{"ID", "Age", "Name"},
 			[][]string{{"1", "39", "Paul"}, {"2", "23", "Jimmy"}, {"3", "36", "Jane"}, {"4", "28", "Judy"}, {"4", "37", "John"}})
@@ -548,9 +559,6 @@ func TestCastTable(t *testing.T) {
 		got := []data{}
 		if err := s.CastTable(tab, &got); err == nil {
 			t.Fatalf("err want:nil got:%q", err)
-		}
-		if len(got) != 0 {
-			t.Fatalf("len(got) want:0 got:%v", len(got))
 		}
 	})
 }

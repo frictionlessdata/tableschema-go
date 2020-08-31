@@ -376,7 +376,25 @@ type uniqueKey struct {
 	KeyValue interface{}
 }
 
-// CastTable loads and casts all table rows.
+// RowConversionError stores information about an error converting (cast or uncasting) a single row.
+type RowConversionError struct {
+	LineNumber int
+	Err        error
+}
+
+// ConversionError aggregates all errors that happened during a conversion operation (i.e., CastTable or
+// UncastTable).
+type ConversionError struct {
+	Errors []RowConversionError
+}
+
+// Error returns a very simple string version of all errors found during conversion.
+func (ce *ConversionError) Error() string {
+	return fmt.Sprintf("%v", ce.Errors)
+}
+
+// CastTable loads and casts all table rows in a best effort manner.
+// Line-by-line errors will be reported as *ConversionError type
 //
 // The result argument must necessarily be the address for a slice. The slice
 // may be nil or previously allocated.
@@ -394,31 +412,44 @@ func (s *Schema) CastTable(tab table.Table, out interface{}) error {
 	uniqueFieldIndexes := extractUniqueFieldIndexes(s)
 	uniqueCache := make(map[uniqueKey]struct{})
 
+	var cv ConversionError
 	slicev := outv.Elem()
 	slicev = slicev.Slice(0, 0) // Trucantes the passed-in slice.
 	elemt := slicev.Type().Elem()
-	i := 0
+	rowIndex := -1
+	succNum := 0
 	for iter.Next() {
-		i++
+		rowIndex++
 		elemp := reflect.New(elemt)
 		if err := s.CastRow(iter.Row(), elemp.Interface()); err != nil {
-			return err
+			cv.Errors = append(cv.Errors, RowConversionError{rowIndex, err})
+			continue
 		}
+
+		// Check unique field and other constraints.
 		for _, k := range uniqueFieldIndexes {
 			field := elemp.Elem().Field(k)
 			if _, ok := uniqueCache[uniqueKey{k, field.Interface()}]; ok {
-				return fmt.Errorf("field(s) '%s' duplicates in row %v", elemp.Elem().Type().Field(k).Name, i)
+				cv.Errors = append(cv.Errors, RowConversionError{
+					rowIndex,
+					fmt.Errorf("field(s) '%s' duplicates in row %v", elemp.Elem().Type().Field(k).Name, rowIndex),
+				})
+				break
 			}
 			uniqueCache[uniqueKey{k, field.Interface()}] = struct{}{}
 		}
 		slicev = reflect.Append(slicev, elemp.Elem())
 		slicev = slicev.Slice(0, slicev.Len())
+		succNum++
 	}
 	if iter.Err() != nil {
 		return iter.Err()
 	}
-	outv.Elem().Set(slicev.Slice(0, i))
-	return nil
+	outv.Elem().Set(slicev.Slice(0, succNum))
+	if len(cv.Errors) == 0 {
+		return nil
+	}
+	return &cv
 }
 
 func extractUniqueFieldIndexes(s *Schema) []int {
