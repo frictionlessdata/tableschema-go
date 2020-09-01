@@ -230,13 +230,20 @@ type structField struct {
 	value reflect.Value
 }
 
-func (s *structField) Set(v interface{}) error {
-	toSetValue := reflect.ValueOf(v)
+func (s *structField) Set(rowValue interface{}) error {
+	toSetValue := reflect.ValueOf(rowValue)
 	toSetType := toSetValue.Type()
-	if !toSetType.ConvertibleTo(s.Type) {
-		return fmt.Errorf("field:%s value:%v - cannot convert from %v to %v", s.Name, v, toSetType, s.Type)
+	switch {
+	case s.Type.ConvertibleTo(reflect.PtrTo(toSetType)):
+		v := reflect.New(toSetType)
+		vType := v.Elem().Type()
+		v.Elem().Set(toSetValue.Convert(vType))
+		s.value.Set(v)
+	case toSetType.ConvertibleTo(s.Type):
+		s.value.Set(toSetValue.Convert(s.Type))
+	default:
+		return fmt.Errorf("field:%s value:%v - cannot convert from %v to %v", s.Name, rowValue, toSetType, s.Type)
 	}
-	s.value.Set(toSetValue.Convert(s.Type))
 	return nil
 }
 
@@ -250,8 +257,13 @@ func getStructFields(out interface{}) ([]structField, error) {
 	for i := 0; i < outt.NumField(); i++ {
 		fieldValue := outv.Field(i)
 		if fieldValue.CanSet() { // Only consider exported fields.
-			if fieldValue.Kind() == reflect.Struct {
-				newF, err := getStructFields(fieldValue.Addr().Interface())
+			// If it is an struct or a struct pointer
+			if fieldValue.Kind() == reflect.Struct ||
+				(fieldValue.Kind() == reflect.Ptr && fieldValue.Type().Elem().Kind() == reflect.Struct) {
+				if fieldValue.Kind() == reflect.Ptr {
+					fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
+				}
+				newF, err := getStructFields(reflect.Indirect(fieldValue).Addr().Interface())
 				if err != nil {
 					return nil, err
 				}
