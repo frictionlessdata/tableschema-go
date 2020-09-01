@@ -1,0 +1,33 @@
+{
+    "fields": [
+      {
+        "name": "ID",
+        "title": "",
+        "description": "",
+        "type": "integer",
+        "format": "default",
+        "constraints": {
+          "unique": true,
+          "required": true
+        }
+      },
+      {
+        "name": "Capital",
+        "title": "",
+        "description": "",
+        "bareNumber": false,
+        "decimalChar": ",",
+        "type": "number",
+        "constraints": {
+          "required" :true,
+          "minimum": "0"
+        }
+      },
+      {
+        "name": "URL",
+        "title": "",
+        "description": "",
+        "type": "string"
+      }
+    ]
+}
