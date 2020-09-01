@@ -214,6 +214,11 @@ func TestRead_Sucess(t *testing.T) {
 			`{"fields":[{"name":"n1"}], "foreignKeys":{"reference":{"fields":["n1"]}}}`,
 			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"n1"}}}},
 		},
+		{
+			"Constraints",
+			`{"fields":[{"name":"n1", "constraints":{"unique":true}}]}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1", Constraints: Constraints{Unique: true}})}},
+		},
 	}
 	for _, d := range data {
 		t.Run(d.Desc, func(t *testing.T) {
@@ -423,7 +428,7 @@ func TestValidate_Invalid(t *testing.T) {
 func TestWrite(t *testing.T) {
 	is := is.New(t)
 	s := Schema{
-		Fields:      []Field{{Name: "Foo"}, {Name: "Bar"}},
+		Fields:      []Field{{Name: "Foo", Constraints: Constraints{Unique: true}}, {Name: "Bar"}},
 		PrimaryKeys: []string{"Foo"},
 		ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"Foo"}}},
 	}
@@ -434,11 +439,13 @@ func TestWrite(t *testing.T) {
     "fields": [
         {
             "name": "Foo",
-            "Constraints": {}
+            "constraints": {
+                "unique": true
+            }
         },
         {
             "name": "Bar",
-            "Constraints": {}
+            "constraints": {}
         }
     ],
     "primaryKey": [

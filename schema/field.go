@@ -109,7 +109,7 @@ type Field struct {
 
 	// Constraints can be used by consumers to list constraints for validating
 	// field values.
-	Constraints Constraints
+	Constraints Constraints `json:"constraints,omitempty"`
 }
 
 // UnmarshalJSON sets *f to a copy of data. It will respect the default values
