@@ -187,11 +187,7 @@ func FromFile(path string) Source {
 
 		ext := strings.ToLower(filepath.Ext(path))
 		if ext == ".gz" || ext == ".gzip" {
-			g, err := gzip.NewReader(f)
-			if err != nil {
-				return nil, err
-			}
-			return g, nil
+			return gzip.NewReader(f)
 		}
 		return f, nil
 	}
