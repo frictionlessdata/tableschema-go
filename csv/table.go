@@ -2,12 +2,14 @@ package csv
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -175,12 +177,17 @@ type CreationOpts func(t *Table) error
 // Source defines a table physical data source.
 type Source func() (io.ReadCloser, error)
 
-// FromFile defines a file-based Source.
+// FromFile defines a file-based Source from a CSV or GZIP compressed CSV path.
 func FromFile(path string) Source {
 	return func() (io.ReadCloser, error) {
 		f, err := os.Open(path)
 		if err != nil {
 			return nil, err
+		}
+
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext == ".gz" || ext == ".gzip" {
+			return gzip.NewReader(f)
 		}
 		return f, nil
 	}

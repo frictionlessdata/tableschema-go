@@ -148,6 +148,14 @@ If you have a lot of data and can no load everything in memory, you can easily i
 ...
 ```
 
+If you store data in a GZIP file, you can load it compressed using the same `csv.FromFile`:
+
+```go
+...
+   tab, _ := csv.NewTable(csv.FromFile("users.csv.gz"), csv.LoadHeaders())
+...
+```
+
 > Even better if you could do it regardless the physical representation! The [table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table) package declares some interfaces that will help you to achieve this goal:
 
 * [Table](https://godoc.org/github.com/frictionlessdata/tableschema-go/table#Table)
