@@ -209,9 +209,9 @@ Available types, formats and resultant value of the cast:
 | integer | default | int64 |
 | number | default | float64 |
 | string | default, uri, email, binary | string |
-| date | default, any, <PATTERN> | time.Time |
-| datetime | default, any, <PATTERN> | time.Time |
-| time | default, any, <PATTERN> | time.Time |
+| date | default, any, \<PATTERN\> | time.Time |
+| datetime | default, any, \<PATTERN\> | time.Time |
+| time | default, any, \<PATTERN\> | time.Time |
 | year | default | time.Time |
 | yearmonth | default | time.Time |
 
