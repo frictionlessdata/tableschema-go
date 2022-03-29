@@ -114,11 +114,11 @@ type ForeignKeys struct {
 
 // Schema describes tabular data.
 type Schema struct {
-	Fields                Fields      `json:"fields,omitempty"`
-	PrimaryKeyPlaceholder interface{} `json:"primaryKey,omitempty"`
-	PrimaryKeys           []string    `json:"-"`
-	ForeignKeys           ForeignKeys `json:"foreignKeys,omitempty"`
-	MissingValues         []string    `json:"missingValues,omitempty"`
+	Fields                Fields        `json:"fields,omitempty"`
+	PrimaryKeyPlaceholder interface{}   `json:"primaryKey,omitempty"`
+	PrimaryKeys           []string      `json:"-"`
+	ForeignKeys           []ForeignKeys `json:"foreignKeys,omitempty"`
+	MissingValues         []string      `json:"missingValues,omitempty"`
 }
 
 // GetField fetches the index and field referenced by the name argument.
@@ -154,14 +154,17 @@ func (s *Schema) Validate() error {
 		}
 	}
 	// Checking foreign keys.
-	for _, fk := range s.ForeignKeys.Fields {
-		if !s.HasField(fk) {
-			return fmt.Errorf("invalid foreign keys: there is no field %s", fk)
+	for _, fk := range s.ForeignKeys {
+		for _, f := range fk.Fields {
+			if !s.HasField(f) {
+				return fmt.Errorf("invalid foreign keys: there is no field %s", fk)
+			}
+		}
+		if len(fk.Reference.Fields) != len(fk.Fields) {
+			return fmt.Errorf("invalid foreign key: foreignKey.fields must contain the same number entries as foreignKey.reference.fields")
 		}
 	}
-	if len(s.ForeignKeys.Reference.Fields) != len(s.ForeignKeys.Fields) {
-		return fmt.Errorf("invalid foreign key: foreignKey.fields must contain the same number entries as foreignKey.reference.fields")
-	}
+
 	return nil
 }
 
@@ -342,14 +345,16 @@ func (s *Schema) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("primaryKey must be either a string or list")
 	}
 	a.PrimaryKeyPlaceholder = nil
-	if err := processPlaceholder(a.ForeignKeys.FieldsPlaceholder, &a.ForeignKeys.Fields); err != nil {
-		return fmt.Errorf("foreignKeys.fields must be either a string or list")
+	for i := range a.ForeignKeys {
+		if err := processPlaceholder(a.ForeignKeys[i].FieldsPlaceholder, &a.ForeignKeys[i].Fields); err != nil {
+			return fmt.Errorf("foreignKeys.fields must be either a string or list")
+		}
+		a.ForeignKeys[i].FieldsPlaceholder = nil
+		if err := processPlaceholder(a.ForeignKeys[i].Reference.FieldsPlaceholder, &a.ForeignKeys[i].Reference.Fields); err != nil {
+			return fmt.Errorf("foreignKeys.reference.fields must be either a string or list")
+		}
+		a.ForeignKeys[i].Reference.FieldsPlaceholder = nil
 	}
-	a.ForeignKeys.FieldsPlaceholder = nil
-	if err := processPlaceholder(a.ForeignKeys.Reference.FieldsPlaceholder, &a.ForeignKeys.Reference.Fields); err != nil {
-		return fmt.Errorf("foreignKeys.reference.fields must be either a string or list")
-	}
-	a.ForeignKeys.Reference.FieldsPlaceholder = nil
 	*s = Schema(a)
 	return nil
 }
@@ -359,7 +364,9 @@ func (s *Schema) MarshalJSON() ([]byte, error) {
 	type schemaAlias Schema
 	a := schemaAlias(*s)
 	a.PrimaryKeyPlaceholder = a.PrimaryKeys
-	a.ForeignKeys.Reference.FieldsPlaceholder = a.ForeignKeys.Reference.Fields
+	for i := range a.ForeignKeys {
+		a.ForeignKeys[i].Reference.FieldsPlaceholder = a.ForeignKeys[i].Reference.Fields
+	}
 	return json.Marshal(a)
 }
 

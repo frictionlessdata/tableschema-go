@@ -196,23 +196,23 @@ func TestRead_Sucess(t *testing.T) {
 		},
 		{
 			"FKFieldsString",
-			`{"fields":[{"name":"n1"}], "foreignKeys":{"fields":"n1"}}`,
-			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Fields: []string{"n1"}}},
+			`{"fields":[{"name":"n1"}], "foreignKeys":[{"fields":"n1"}]}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: []ForeignKeys{{Fields: []string{"n1"}}}},
 		},
 		{
 			"FKFieldsSlice",
-			`{"fields":[{"name":"n1"}], "foreignKeys":{"fields":["n1"]}}`,
-			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Fields: []string{"n1"}}},
+			`{"fields":[{"name":"n1"}], "foreignKeys":[{"fields":["n1"]}]}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: []ForeignKeys{{Fields: []string{"n1"}}}},
 		},
 		{
 			"FKReferenceFieldsString",
-			`{"fields":[{"name":"n1"}], "foreignKeys":{"reference":{"fields":"n1"}}}`,
-			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"n1"}}}},
+			`{"fields":[{"name":"n1"}], "foreignKeys":[{"reference":{"fields":"n1"}}]}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: []ForeignKeys{{Reference: ForeignKeyReference{Fields: []string{"n1"}}}}},
 		},
 		{
 			"FKReferenceFieldsSlice",
-			`{"fields":[{"name":"n1"}], "foreignKeys":{"reference":{"fields":["n1"]}}}`,
-			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"n1"}}}},
+			`{"fields":[{"name":"n1"}], "foreignKeys":[{"reference":{"fields":["n1"]}}]}`,
+			Schema{Fields: []Field{asJSONField(Field{Name: "n1"})}, ForeignKeys: []ForeignKeys{{Reference: ForeignKeyReference{Fields: []string{"n1"}}}}},
 		},
 		{
 			"Constraints",
@@ -386,10 +386,10 @@ func TestValidate_SimpleValid(t *testing.T) {
 	}{
 		{"PrimaryKey", Schema{Fields: []Field{{Name: "p"}, {Name: "i"}},
 			PrimaryKeys: []string{"p"},
-			ForeignKeys: ForeignKeys{
+			ForeignKeys: []ForeignKeys{{
 				Fields:    []string{"p"},
 				Reference: ForeignKeyReference{Resource: "", Fields: []string{"i"}},
-			}},
+			}}},
 		},
 	}
 	for _, d := range data {
@@ -408,13 +408,18 @@ func TestValidate_Invalid(t *testing.T) {
 		{"MissingName", Schema{Fields: []Field{{Type: IntegerType}}}},
 		{"PKNonexistingField", Schema{Fields: []Field{{Name: "n1"}}, PrimaryKeys: []string{"n2"}}},
 		{"FKNonexistingField", Schema{Fields: []Field{{Name: "n1"}},
-			ForeignKeys: ForeignKeys{Fields: []string{"n2"}},
+			ForeignKeys: []ForeignKeys{{Fields: []string{"n2"}}},
 		}},
+		{"MissingReference", Schema{Fields: []Field{{Name: "n1"}},
+			ForeignKeys: []ForeignKeys{{
+				Fields: []string{"n1"},
+			}}},
+		},
 		{"InvalidReferences", Schema{Fields: []Field{{Name: "n1"}},
-			ForeignKeys: ForeignKeys{
+			ForeignKeys: []ForeignKeys{{
 				Fields:    []string{"n1"},
 				Reference: ForeignKeyReference{Resource: "", Fields: []string{"n1", "n2"}},
-			}},
+			}}},
 		},
 	}
 	for _, d := range data {
@@ -430,7 +435,7 @@ func TestWrite(t *testing.T) {
 	s := Schema{
 		Fields:      []Field{{Name: "Foo", Constraints: Constraints{Unique: true}}, {Name: "Bar"}},
 		PrimaryKeys: []string{"Foo"},
-		ForeignKeys: ForeignKeys{Reference: ForeignKeyReference{Fields: []string{"Foo"}}},
+		ForeignKeys: []ForeignKeys{{Reference: ForeignKeyReference{Fields: []string{"Foo"}}}},
 	}
 	buf := bytes.NewBufferString("")
 	is.NoErr(s.Write(buf))
@@ -451,13 +456,15 @@ func TestWrite(t *testing.T) {
     "primaryKey": [
         "Foo"
     ],
-    "foreignKeys": {
-        "reference": {
-            "fields": [
-                "Foo"
-            ]
+    "foreignKeys": [
+        {
+            "reference": {
+                "fields": [
+                    "Foo"
+                ]
+            }
         }
-    }
+    ]
 }`
 
 	is.Equal(buf.String(), want)
