@@ -27,9 +27,6 @@ jobs:
 
     - name: Build
       run: go build -v ./...
-
-    - name: Test
-      run: go test -v ./...
     
     - name: Vet
       run: "go vet ./..."
@@ -40,3 +37,11 @@ jobs:
         install-go: false
         cache-key: ${{ matrix.go }}
     
+    - name: Test
+      run: go test -v -coverprofile=profile.cov ./...
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: "profile.cov"
