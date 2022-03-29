@@ -1,0 +1,42 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  CI:
+    name: "Run CI"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-latest", "ubuntu-latest", "macOS-latest"]
+        go: ["1.15.x", "1.16.x", "1.17.x", "1.18.x"]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.17
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...
+    
+    - name: Vet
+      run: "go vet ./..."
+    
+    - uses: dominikh/staticcheck-action@v1.0.0
+      with:
+        version: "2021.1.1"
+        install-go: false
+        cache-key: ${{ matrix.go }}
+    
