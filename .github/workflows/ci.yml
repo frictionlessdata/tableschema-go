@@ -38,10 +38,9 @@ jobs:
         cache-key: ${{ matrix.go }}
     
     - name: Test
-      run: go test -v -coverprofile=profile.cov ./...
+      run: go test -v -race -covermode atomic -coverprofile=covprofile ./...
 
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
+    - name: Send coverage
+      uses: shogo82148/actions-goveralls@v1
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: "profile.cov"
+          path-to-profile: covprofile
