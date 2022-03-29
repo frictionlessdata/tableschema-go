@@ -1,6 +1,6 @@
 # tableschema-go
 
-[![Build Status](https://travis-ci.org/frictionlessdata/tableschema-go.svg?branch=master)](https://travis-ci.org/frictionlessdata/tableschema-go) 
+[![Build Status](https://github.com/frictionlessdata/tableschema-go/actions/workflows/ci.yml/badge.svg)](https://github.com/frictionlessdata/tableschema-go/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/frictionlessdata/tableschema-go/badge.svg?branch=master)](https://coveralls.io/github/frictionlessdata/tableschema-go?branch=master) 
 [![Go Report Card](https://goreportcard.com/badge/github.com/frictionlessdata/tableschema-go)](https://goreportcard.com/report/github.com/frictionlessdata/tableschema-go) 
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/frictionlessdata/chat) 
