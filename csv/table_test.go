@@ -12,10 +12,6 @@ import (
 	"github.com/matryer/is"
 )
 
-type csvRow struct {
-	Name string
-}
-
 func ExampleTable_Iter() {
 	table, _ := NewTable(FromString("\"name\"\nfoo\nbar"), LoadHeaders())
 	iter, _ := table.Iter()
@@ -158,6 +154,7 @@ func TestReadAll(t *testing.T) {
 		func() (io.ReadCloser, error) {
 			return nil, errors.New("this is a source test error")
 		})
+	is.NoErr(err)
 	_, err = table.ReadAll()
 	is.True(err != nil)
 }

@@ -6,10 +6,6 @@ import (
 	"github.com/matryer/is"
 )
 
-type iterTestValue struct {
-	Name string
-}
-
 const (
 	dontSkipHeaders = false
 	skipHeaders     = true

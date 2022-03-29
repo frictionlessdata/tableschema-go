@@ -214,7 +214,7 @@ func Remote(url string) Source {
 		}
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
-		return stringReadCloser(string(body)), nil
+		return stringReadCloser(string(body)), err
 	}
 }
 

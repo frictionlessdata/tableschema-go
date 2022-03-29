@@ -49,7 +49,9 @@ func main() {
 		Capital float64
 		URL     string
 	}{}
-
+	if err != nil {
+		log.Fatalf("Error creating table: %q", err)
+	}
 	if err := capitalSchema.CastTable(table, &capitals); err != nil {
 		log.Fatalf("Error casting table: %q", err)
 	}

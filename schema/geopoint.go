@@ -32,7 +32,7 @@ func (p *GeoPoint) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if a.Lon == nil || a.Lat == nil {
-		return fmt.Errorf("Invalid geopoint:\"%s\"", string(data))
+		return fmt.Errorf("invalid geopoint:\"%s\"", string(data))
 	}
 	p.Lon = *a.Lon
 	p.Lat = *a.Lat
@@ -63,7 +63,7 @@ func castGeoPoint(format, value string) (GeoPoint, error) {
 func applyGeoPointRegexp(r *regexp.Regexp, value string) (GeoPoint, error) {
 	matches := r.FindStringSubmatch(value)
 	if len(matches) == 0 || len(matches[1]) == 0 || len(matches[2]) == 0 {
-		return GeoPoint{}, fmt.Errorf("Invalid geopoint:\"%s\"", value)
+		return GeoPoint{}, fmt.Errorf("invalid geopoint:\"%s\"", value)
 	}
 	lon, _ := strconv.ParseFloat(matches[1], 64)
 	lat, _ := strconv.ParseFloat(matches[2], 64)

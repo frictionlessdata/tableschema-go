@@ -21,7 +21,7 @@ const (
 func castDuration(value string) (time.Duration, error) {
 	matches := durationRegexp.FindStringSubmatch(value)
 	if len(matches) == 0 {
-		return 0, fmt.Errorf("Invalid duration:\"%s\"", value)
+		return 0, fmt.Errorf("invalid duration:\"%s\"", value)
 	}
 	years := parseIntDuration(matches[1], hoursInYear)
 	months := parseIntDuration(matches[2], hoursInMonth)

@@ -20,18 +20,18 @@ func castBoolean(value string, trueValues, falseValues []string) (bool, error) {
 }
 
 func uncastBoolean(value interface{}, trueValues, falseValues []string) (string, error) {
-	switch value.(type) {
+	switch val := value.(type) {
 	case bool:
 		return fmt.Sprintf("%v", value), nil
 	case string:
 		for _, v := range trueValues {
 			if value == v {
-				return value.(string), nil
+				return val, nil
 			}
 		}
 		for _, v := range falseValues {
 			if value == v {
-				return value.(string), nil
+				return val, nil
 			}
 		}
 	}
