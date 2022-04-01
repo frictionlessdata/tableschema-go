@@ -260,20 +260,41 @@ func getStructFields(out interface{}) ([]structField, error) {
 	for i := 0; i < outt.NumField(); i++ {
 		fieldValue := outv.Field(i)
 		if fieldValue.CanSet() { // Only consider exported fields.
-			// If it is an struct or a struct pointer
-			if fieldValue.Kind() == reflect.Struct ||
-				(fieldValue.Kind() == reflect.Ptr && fieldValue.Type().Elem().Kind() == reflect.Struct) {
-				if fieldValue.Kind() == reflect.Ptr {
-					fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
-				}
+			switch {
+			// Special case on datetime fields, wich is a first-class schema
+			// type, represented as a struct with all fields unexported.
+			case fieldValue.Type() == reflect.TypeOf(time.Time{}):
+				fields = append(fields, structField{outt.Field(i), fieldValue})
+
+			// It it is a struct, deep dive on fields recursively.
+			case fieldValue.Kind() == reflect.Struct:
 				newF, err := getStructFields(reflect.Indirect(fieldValue).Addr().Interface())
 				if err != nil {
 					return nil, err
 				}
 				fields = append(fields, newF...)
-				continue
+
+			// If it is a pointer.
+			case fieldValue.Kind() == reflect.Ptr:
+				// Allocate memory to it.
+				fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
+
+				// If it is not a struct, simply add to the list.
+				if fieldValue.Type().Elem().Kind() != reflect.Struct {
+					fields = append(fields, structField{outt.Field(i), fieldValue})
+					break
+				}
+
+				// It it is a struct, deep dive on fields recursively.
+				newF, err := getStructFields(reflect.Indirect(fieldValue).Addr().Interface())
+				if err != nil {
+					return nil, err
+				}
+				fields = append(fields, newF...)
+
+			default:
+				fields = append(fields, structField{outt.Field(i), fieldValue})
 			}
-			fields = append(fields, structField{outt.Field(i), fieldValue})
 		}
 	}
 	return fields, nil

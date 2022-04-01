@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/frictionlessdata/tableschema-go/table"
 	"github.com/matryer/is"
@@ -321,6 +322,17 @@ func TestSchema_Cast(t *testing.T) {
 		is.NoErr(s.CastRow([]string{"Foo", "42"}, &t1))
 		is.Equal(t1.MyName, "Foo")
 		is.Equal(t1.E.MyAge, int64(42))
+	})
+	t.Run("TimeField", func(t *testing.T) {
+		is := is.New(t)
+		t1 := struct {
+			T time.Time `tableheader:"T"`
+		}{}
+		s := Schema{Fields: []Field{{Name: "T", Type: DateTimeType, Format: "%Y-%m-%dT%H:%M:%S.fZ"}}}
+		is.NoErr(s.CastRow([]string{"2021-11-28T14:51:05.35811Z"}, &t1))
+
+		want, _ := time.Parse(time.RFC3339Nano, "2021-11-28T14:51:05.35811Z")
+		is.Equal(t1.T, want)
 	})
 	t.Run("StructPointerField", func(t *testing.T) {
 		is := is.New(t)
