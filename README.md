@@ -3,9 +3,7 @@
 [![Build Status](https://github.com/frictionlessdata/tableschema-go/actions/workflows/ci.yml/badge.svg)](https://github.com/frictionlessdata/tableschema-go/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/frictionlessdata/tableschema-go/badge.svg?branch=main)](https://coveralls.io/github/frictionlessdata/tableschema-go?branch=main) 
 [![Go Report Card](https://goreportcard.com/badge/github.com/frictionlessdata/tableschema-go)](https://goreportcard.com/report/github.com/frictionlessdata/tableschema-go) 
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/frictionlessdata/chat) 
 [![GoDoc](https://godoc.org/github.com/frictionlessdata/tableschema-go?status.svg)](https://godoc.org/github.com/frictionlessdata/tableschema-go) 
-[![Sourcegraph](https://sourcegraph.com/github.com/frictionlessdata/tableschema-go/-/badge.svg)](https://sourcegraph.com/github.com/frictionlessdata/tableschema-go?badge)
 [![Codebase](https://img.shields.io/badge/codebase-github-brightgreen)](https://github.com/frictionlessdata/tableschema-go)
 [![Support](https://img.shields.io/badge/support-discord-brightgreen)](https://discordapp.com/invite/Sewv6av)
 
